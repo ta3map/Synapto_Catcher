@@ -2,7 +2,7 @@ from os.path import splitext, basename, dirname, join
 from os import makedirs
 from pandas import read_csv, DataFrame, concat
 from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray, mean
-from matplotlib.pyplot import subplots, show, close, savefig, draw
+from matplotlib.pyplot import subplots, show, close, savefig, draw, imsave
 from matplotlib.widgets import PolygonSelector
 from matplotlib.patches import Polygon
 from czifile import CziFile
@@ -12,7 +12,9 @@ from skimage.measure import label, regionprops
 from skimage.morphology import remove_small_objects
 from matplotlib.path import Path
 from tqdm import tqdm
-
+from scipy.fftpack import fft2, ifft2, fftshift
+import numpy as np
+import matplotlib.pyplot as plt
 
 def process_file(file_path, location, slice_start, slice_end):
     with CziFile(file_path) as czi:
@@ -25,13 +27,10 @@ def process_file(file_path, location, slice_start, slice_end):
             channel_3 = 2
             print("3 channels instead of 4")
         
-        # slice_start = 2
-        # slice_end = 6
+        slide = list(range(slice_start, slice_end + 1))
         
-        slide = list(range(slice_start, slice_end+1))
-        
-        sample_slice_1 = mean(image_data[0, 0, channel_1, slide, :, :, 0], axis = 0)        
-        sample_slice_3 = mean(image_data[0, 0, channel_3, slide, :, :, 0], axis = 0)
+        sample_slice_1 = mean(image_data[0, 0, channel_1, slide, :, :, 0], axis=0)
+        sample_slice_3 = mean(image_data[0, 0, channel_3, slide, :, :, 0], axis=0)
 
         combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
         sample_slice_1_normalized = (sample_slice_1 - np_min(sample_slice_1)) / (np_max(sample_slice_1) - np_min(sample_slice_1)) * 255
@@ -44,14 +43,13 @@ def process_file(file_path, location, slice_start, slice_end):
     dpi = 200
     figsize = width / float(dpi), height / float(dpi)
     
-    fig, ax = subplots(figsize=(5, 5), dpi=dpi*0.8)
+    fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем отступы
     
     ax.imshow(combined_image)
     
     # Добавление текста на изображение
     ax.text(0.5, 0.95, f"{file_path} - {location}", transform=ax.transAxes, fontsize=5, color='white', ha='center', va='top', bbox=dict(facecolor='black', alpha=0.5))
-
     ax.axis('off')
 
     coords = []
@@ -62,7 +60,29 @@ def process_file(file_path, location, slice_start, slice_end):
         ax.add_patch(polygon)
         draw()
         close(fig)
-
+    
+    def frequency_filtering(image):
+        # Преобразование Фурье
+        f_transform = fft2(image)
+        f_transform_shifted = fftshift(f_transform)
+        
+        # Создание маски для фильтрации низких частот
+        rows, cols = image.shape
+        crow, ccol = rows // 2, cols // 2
+        mask = np.ones((rows, cols), np.uint8)
+        r = 5  # Радиус области, которую нужно удалить
+        center = [crow, ccol]
+        x, y = np.ogrid[:rows, :cols]
+        mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+        mask[mask_area] = 0
+        
+        # Применение маски и обратное преобразование Фурье
+        f_transform_shifted_filtered = f_transform_shifted * mask
+        f_transform_filtered = fftshift(f_transform_shifted_filtered)
+        image_filtered = np.abs(ifft2(f_transform_filtered))
+        
+        return image_filtered
+    
     props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
     polygon_selector = PolygonSelector(ax, onselect, props=props)
     show(block=True)
@@ -74,6 +94,19 @@ def process_file(file_path, location, slice_start, slice_end):
     coords_df = DataFrame(coords, columns=['x', 'y'])
     coords_df.to_csv(coords_file_path, sep=';', index=False)
     print(f"Coordinates saved to {coords_file_path}")
+   
+    # Применяем частотную фильтрацию
+    filtered_image = frequency_filtering(sample_slice_1)
+    # Нормализация и сохранение изображения в TIFF файл с использованием Pillow
+    filtered_image_normalized = (filtered_image - np_min(filtered_image)) / (np_max(filtered_image) - np_min(filtered_image)) * 255
+    filtered_image_normalized = filtered_image_normalized.astype('uint8')
+    
+    
+    denoised_image_path = join(dirname(file_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
+    image = Image.fromarray(filtered_image_normalized)
+    image.save(denoised_image_path, format='TIFF')
+    print(f"Denoised image saved to {denoised_image_path}")
+
 
     fig, ax = subplots(figsize=figsize, dpi=dpi)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем отступы
@@ -86,6 +119,8 @@ def process_file(file_path, location, slice_start, slice_end):
     savefig(image_file_path, bbox_inches='tight', pad_inches=0)
     close(fig)
     print(f"Image with ROI saved to {image_file_path}")
+
+
 
 def max_entropy_threshold(image):
     hist, bin_edges = histogram(image.ravel(), bins=256, density=True)
