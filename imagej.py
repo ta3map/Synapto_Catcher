@@ -112,6 +112,133 @@ summary_df.to_excel(summary_output_path, index=False)
 
 print("Постпроцессинг завершен. Обновленные данные сохранены в:", summary_output_path)
 
+#%% денойзинг
+%matplotlib qt
+import pandas as pd
+import czifile
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.fftpack import fft2, ifft2, fftshift
+from skimage import exposure
+from skimage.filters import threshold_otsu
+from skimage.morphology import remove_small_objects
+
+# Путь к CSV файлу с путями к изображениям
+csv_file_path = "E:\\iMAGES\\protocol.csv"
+
+# Загружаем данные из CSV
+df = pd.read_csv(csv_file_path, delimiter=';')
+
+idx = 164
+
+slice_start = int(df.iloc[idx]['slice_start'])
+slice_end = int(df.iloc[idx]['slice_end'])
+
+file_path = df.iloc[idx]['filepath']
+
+czi = czifile.CziFile(file_path)
+
+image_data = czi.asarray()
+
+slide = list(range(slice_start, slice_end + 1))
+
+channel_1 = 0  # Убедитесь, что правильно указали канал
+sample_slice_1 = np.mean(image_data[0, 0, channel_1, slide, :, :, 0], axis=0)
+
+# Шаг 1: Частотная фильтрация
+def frequency_filtering(image):
+    # Преобразование Фурье
+    f_transform = fft2(image)
+    f_transform_shifted = fftshift(f_transform)
+    
+    # Создание маски для фильтрации низких частот
+    rows, cols = image.shape
+    crow, ccol = rows // 2, cols // 2
+    mask = np.ones((rows, cols), np.uint8)
+    r = 5  # Радиус области, которую нужно удалить
+    center = [crow, ccol]
+    x, y = np.ogrid[:rows, :cols]
+    mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+    mask[mask_area] = 0
+    
+    # Применение маски и обратное преобразование Фурье
+    f_transform_shifted_filtered = f_transform_shifted * mask
+    f_transform_filtered = fftshift(f_transform_shifted_filtered)
+    image_filtered = np.abs(ifft2(f_transform_filtered))
+    
+    return image_filtered
+
+# Шаг 2: Повышение контраста
+def enhance_contrast(image):
+    # Используем equalize_adapthist для повышения контраста
+    image_enhanced = exposure.equalize_adapthist(image / np.max(image))
+    return image_enhanced
+
+# Шаг 3: Бинаризация методом Otsu
+def binarize_image(image):
+    # Применение метода Otsu для автоматической бинаризации
+    threshold_value = get_threshold_value(image, 'otsu')
+    binary = image > threshold_value
+    return binary
+
+def get_threshold_value(image_array, binarization_method):
+    if binarization_method == 'max_entropy':
+        threshold_value = max_entropy_threshold(image_array)
+    elif binarization_method == 'otsu':
+        threshold_value = threshold_otsu(image_array)
+    elif binarization_method == 'yen':
+        threshold_value = threshold_yen(image_array)
+    elif binarization_method == 'li':
+        threshold_value = threshold_li(image_array)
+    elif binarization_method == 'isodata':
+        threshold_value = threshold_isodata(image_array)
+    elif binarization_method == 'mean':
+        threshold_value = threshold_mean(image_array)
+    elif binarization_method == 'minimum':
+        threshold_value = threshold_minimum(image_array)
+    else:
+        raise ValueError(f"Unsupported binarization method: {binarization_method}")
+    
+    return threshold_value
+
+def max_entropy_threshold(image):
+    hist, bin_edges = histogram(image.ravel(), bins=256, density=True)
+    cdf = hist.cumsum()
+    cdf = cdf / cdf[-1]
+    
+    bin_mids = (bin_edges[:-1] + bin_edges[1:]) / 2.
+    entropy = -hist * log(hist + finfo(float).eps)
+    threshold = bin_mids[argmax(entropy)]
+    return threshold
+
+
+# Применяем частотную фильтрацию
+filtered_image = frequency_filtering(sample_slice_1)
+
+# Применяем повышение контраста
+# enhanced_image = enhance_contrast(filtered_image)
+
+# Применяем бинаризацию методом Otsu
+binary_image = binarize_image(filtered_image)
+binary_image = remove_small_objects(binary_image, min_size=50)
+
+# Отображаем результаты
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 3, 1)
+plt.title('Original Image')
+plt.imshow(sample_slice_1, cmap='gray')
+
+plt.subplot(1, 3, 2)
+plt.title('Frequency Filtering')
+plt.imshow(filtered_image, cmap='gray')
+
+plt.subplot(1, 3, 3)
+plt.title('Otsu Binarization')
+plt.imshow(binary_image, cmap='gray')
+
+plt.show()
+
 
 #%% Бинаризация после денойзинга (без ROI)
 import os
