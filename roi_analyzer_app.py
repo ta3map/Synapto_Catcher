@@ -82,7 +82,9 @@ class ROIAnalyzerApp:
             for idx in rows_to_process:
                 file_path = df.iloc[idx]['filepath']
                 location = df.iloc[idx]['location']
-                process_file(file_path, location)
+                slice_start = int(df.iloc[idx]['slice_start'])
+                slice_end = int(df.iloc[idx]['slice_end'])
+                process_file(file_path, location, slice_start, slice_end)
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 

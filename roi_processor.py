@@ -1,7 +1,7 @@
 from os.path import splitext, basename, dirname, join
 from os import makedirs
 from pandas import read_csv, DataFrame, concat
-from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray
+from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray, mean
 from matplotlib.pyplot import subplots, show, close, savefig, draw
 from matplotlib.widgets import PolygonSelector
 from matplotlib.patches import Polygon
@@ -14,27 +14,31 @@ from matplotlib.path import Path
 from tqdm import tqdm
 
 
-def process_file(file_path, location):
+def process_file(file_path, location, slice_start, slice_end):
     with CziFile(file_path) as czi:
         image_data = czi.asarray()
         print("Image shape:", image_data.shape)
-        channel_1 = 0
-        channel_3 = 3
+        channel_1 = 0 # synaptotagmin channel
+        channel_3 = 3 # cell-label channel
 
         if image_data.shape[2] == 3:
             channel_3 = 2
             print("3 channels instead of 4")
-        slide = 2
-
-        sample_slice_1 = image_data[0, 0, channel_1, slide, :, :, 0]
-        sample_slice_3 = image_data[0, 0, channel_3, slide, :, :, 0]
+        
+        # slice_start = 2
+        # slice_end = 6
+        
+        slide = list(range(slice_start, slice_end+1))
+        
+        sample_slice_1 = mean(image_data[0, 0, channel_1, slide, :, :, 0], axis = 0)        
+        sample_slice_3 = mean(image_data[0, 0, channel_3, slide, :, :, 0], axis = 0)
 
         combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
         sample_slice_1_normalized = (sample_slice_1 - np_min(sample_slice_1)) / (np_max(sample_slice_1) - np_min(sample_slice_1)) * 255
         sample_slice_3_normalized = (sample_slice_3 - np_min(sample_slice_3)) / (np_max(sample_slice_3) - np_min(sample_slice_3)) * 255
 
-        combined_image[:, :, 0] = sample_slice_1_normalized
-        combined_image[:, :, 2] = sample_slice_3_normalized
+        combined_image[:, :, 0] = sample_slice_1_normalized # synaptotagmin channel
+        combined_image[:, :, 2] = sample_slice_3_normalized # cell-label channel
 
     height, width = combined_image.shape[:2]
     dpi = 200
