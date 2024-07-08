@@ -1,14 +1,15 @@
 from tkinter import filedialog, messagebox, Button, Label, Entry, StringVar, OptionMenu, Tk
-from pandas import read_csv
 import sys
 import os
 import json
 import tempfile
+import pandas as pd
+%matplotlib qt
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-from roi_processor import process_file, binarize_images, remove_ccp, postprocess
+from roi_processor import process_file, binarize_images, remove_ccp, postprocess, filter_after_roi_selection
 
 TEMP_FILE = os.path.join(tempfile.gettempdir(), 'synapto_catch_params.json')
 
@@ -21,19 +22,25 @@ class ROIAnalyzerApp:
         self.params = self.load_params()
 
         self.create_label_and_entry("Select Protocol:", 0, self.browse_protocol, readonly=True, attr_name="protocol")
-        self.create_label_and_entry("Rows to Process:", 3, default_value='all', attr_name="rows")
+        self.create_label_and_entry("Experiment Number:", 3, default_value='all', attr_name="rows")
+        self.create_label_and_entry("slice start:", 4, default_value='2', attr_name="slice_start")
+        self.create_label_and_entry("slice end:", 5, default_value='6', attr_name="slice_end")
+        
+        self.create_button("Select ROI", self.process, 6)
+        self.create_label_and_entry("Filter radius:", 7, default_value=17, attr_name="filter_radius")
+        self.create_button("Filter", self.filter_action, 8)
+        
+        self.create_label_and_option_menu("Binarization Method:", 9, ['otsu', 'max_entropy', 'yen', 'li', 'isodata', 'mean', 'minimum'], default_value='otsu', attr_name="binarization")
+        self.create_label_and_entry("Min size of an object:", 10, default_value=20, attr_name="min_size")
+        self.create_label_and_entry("Max size of an object:", 11, default_value=200, attr_name="max_size")
+        self.create_label_and_entry("Pixel to micron ratio:", 12, default_value=0.1, attr_name="pixel_to_micron_ratio")
 
-        self.create_button("Select ROI", self.process, 4)
-        self.create_label_and_option_menu("Binarization Method:", 5, ['otsu', 'max_entropy', 'yen', 'li', 'isodata', 'mean', 'minimum'], default_value='otsu', attr_name="binarization")
-        self.create_label_and_entry("Min size of an object:", 6, default_value=50, attr_name="min_size")
-        self.create_label_and_entry("Pixel to micron ratio:", 7, default_value=0.1, attr_name="pixel_to_micron_ratio")
-
-        self.create_button("Binarize", self.binarize_action, 8)
-        self.create_button("Remove bad spots", self.remove_ccp_action, 9)
+        self.create_button("Binarize", self.binarize_action, 13)
+        self.create_button("Remove bad spots", self.remove_ccp_action, 14)
         
         # Elements for postprocess
-        self.create_label_and_entry("Output Directory:", 11, self.browse_output_dir, attr_name="output_dir")
-        self.create_button("Run Postprocess", self.run_postprocess, 13)
+        self.create_label_and_entry("Output Directory:", 15, self.browse_output_dir, attr_name="output_dir")
+        self.create_button("Run Postprocess", self.run_postprocess, 16)
 
     def create_label_and_entry(self, label_text, row, command=None, default_value='', readonly=False, attr_name=None):
         label = Label(self.root, text=label_text, width=30)
@@ -68,7 +75,7 @@ class ROIAnalyzerApp:
         setattr(self, f"{attr_name}_method", var)
 
     def browse_protocol(self):
-        protocol_path = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
+        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.csv;*.xlsx;*.xls")])
         if protocol_path:
             self.selected_protocol.set(protocol_path)
             self.save_params('protocol', protocol_path)
@@ -78,16 +85,24 @@ class ROIAnalyzerApp:
             self.save_params('output_dir', default_output_dir)
 
     def process(self):
-        try:
-            df, rows_to_process = self.prepare_data()
-            for idx in rows_to_process:
-                file_path = df.iloc[idx]['filepath']
-                location = df.iloc[idx]['location']
-                slice_start = int(df.iloc[idx]['slice_start'])
-                slice_end = int(df.iloc[idx]['slice_end'])
-                process_file(file_path, location, slice_start, slice_end)
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
+        # try:
+        df, rows_to_process = self.prepare_data()
+        for idx in rows_to_process:
+            file_path = df.iloc[idx]['filepath']
+            location = df.iloc[idx]['location']
+            slice_start = int(self.slice_start_entry.get())
+            slice_end = int(self.slice_end_entry.get())
+            
+            process_file(file_path, location, slice_start, slice_end)
+        # except Exception as e:
+        #     messagebox.showerror("Error", f"An error occurred: {e}")
+    def filter_action(self):
+        df, rows_to_process = self.prepare_data()
+        filter_radius = int(self.filter_radius_entry.get())
+        for idx in rows_to_process:
+            file_path = df.iloc[idx]['filepath']
+            location = df.iloc[idx]['location']   
+            filter_after_roi_selection(filter_radius, file_path, location)
 
 
     def binarize_action(self):
@@ -96,6 +111,7 @@ class ROIAnalyzerApp:
             binarize_images(
                 df, self.selected_protocol.get(), rows_to_process,
                 self.binarization_method.get(), int(self.min_size_entry.get()), 
+                int(self.max_size_entry.get()),
                 float(self.pixel_to_micron_ratio_entry.get())
             )
             messagebox.showinfo("Success", "Binarization completed successfully.")
@@ -125,31 +141,36 @@ class ROIAnalyzerApp:
 
     def prepare_data(self):
         protocol_path = self.selected_protocol.get()
-        rows_to_process = self.get_rows_to_process()
-
-        df = read_csv(protocol_path, delimiter=';')
-        if rows_to_process == 'all':
+        experiment_numbers = self.get_exps_to_process()
+    
+        # Определение метода чтения в зависимости от расширения файла
+        if protocol_path.endswith(('.xlsx', '.xls')):
+            df = pd.read_excel(protocol_path)
+        else:
+            df = pd.read_csv(protocol_path, delimiter=';')
+        
+        # Поиск строк с заданными номерами экспериментов
+        if experiment_numbers == 'all':
             rows_to_process = list(range(len(df)))
         else:
-            rows_to_process = [row - 2 for row in rows_to_process]
-            rows_to_process = [row for row in rows_to_process if row > -1]# remove all negative
-            
+            rows_to_process = df[df['Experiment_Number'].isin(experiment_numbers)].index.tolist()
+    
         return df, rows_to_process
 
-    def get_rows_to_process(self):
-        rows_input = self.rows_entry.get()
-        if not self.selected_protocol.get() or not rows_input:
-            raise ValueError("Please select a protocol and enter rows to process.")
+    def get_exps_to_process(self):
+        exps_input = self.rows_entry.get()
+        if not self.selected_protocol.get() or not exps_input:
+            raise ValueError("Please select a protocol and enter experiments to process.")
         
-        return self.parse_rows(rows_input)
+        return self.parse_exps(exps_input)
 
-    def parse_rows(self, rows_input):
-        if rows_input.strip().lower() == 'all':
+    def parse_exps(self, exps_input):
+        if exps_input.strip().lower() == 'all':
             return 'all'
         try:
-            return [int(row.strip()) for row in rows_input.split(',')]
+            return [int(exp.strip()) for exp in exps_input.split(',')]
         except ValueError:
-            raise ValueError("Invalid rows input. Enter comma-separated numbers or 'all'.")
+            raise ValueError("Invalid experiments input. Enter comma-separated numbers or 'all'.")
 
     def browse_output_dir(self):
         directory = filedialog.askdirectory()

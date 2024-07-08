@@ -1,11 +1,10 @@
 from os.path import splitext, basename, dirname, join
 from os import makedirs
-from pandas import read_csv, DataFrame, concat
-from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray, mean
+from pandas import read_csv, DataFrame, concat, read_excel
+from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray, mean, median
 from matplotlib.pyplot import subplots, show, close, savefig, draw, imsave
 from matplotlib.widgets import PolygonSelector
 from matplotlib.patches import Polygon
-from czifile import CziFile
 from PIL import Image, ImageOps
 from skimage.filters import threshold_otsu, threshold_yen, threshold_li, threshold_isodata, threshold_mean, threshold_minimum
 from skimage.measure import label, regionprops
@@ -15,29 +14,73 @@ from tqdm import tqdm
 from scipy.fftpack import fft2, ifft2, fftshift
 import numpy as np
 import matplotlib.pyplot as plt
+from czifile import CziFile
+from aicspylibczi import CziFile as aicCzi
+import xml.etree.ElementTree as ET
 
-def process_file(file_path, location, slice_start, slice_end):
+def extract_scaling_distances_from_czi(filename):
+    # Открываем .czi файл
+    czi = aicCzi(filename)
+    
+    # Получаем метаданные
+    metadata_xml = czi.meta
+    metadata_str = ET.tostring(metadata_xml, encoding='utf-8', method='xml')
+    
+    # Парсим строку метаданных
+    root = ET.fromstring(metadata_str)
+    
+    distances = {"X": None, "Y": None, "Z": None}
+    
+    # Ищем Scaling - Items - Distance
+    for scaling in root.findall(".//Scaling/Items/Distance"):
+        if 'Id' in scaling.attrib:
+            id_value = scaling.attrib['Id']
+            value = scaling.find('Value').text
+            if id_value == 'X':
+                distances["X"] = float(value)
+            elif id_value == 'Y':
+                distances["Y"] = float(value)
+            elif id_value == 'Z':
+                distances["Z"] = float(value)
+    
+    return distances
+
+
+
+import pickle
+
+def process_file(file_path, location, slice_start=2, slice_end=6):
     with CziFile(file_path) as czi:
         image_data = czi.asarray()
+        
+        distances = extract_scaling_distances_from_czi(file_path)
+        pixel_to_micron_ratio = distances['X']*1_000_000
+        
+        channel_1 = 0  # synaptotagmin channel
+        channel_3 = 3  # cell-label channel
+        
         print("Image shape:", image_data.shape)
-        channel_1 = 0 # synaptotagmin channel
-        channel_3 = 3 # cell-label channel
-
+        print('synaptotagmin channel:', channel_1)
+        print('cell-label channel:', channel_3)
+        print('slice start:', slice_start)
+        print('slice end:', slice_end)
+        print('pixel to micron ratio:', pixel_to_micron_ratio)
+        
         if image_data.shape[2] == 3:
             channel_3 = 2
             print("3 channels instead of 4")
         
-        slide = list(range(slice_start, slice_end + 1))
+        slide = list(range(slice_start-1, slice_end))
         
-        sample_slice_1 = mean(image_data[0, 0, channel_1, slide, :, :, 0], axis=0)
-        sample_slice_3 = mean(image_data[0, 0, channel_3, slide, :, :, 0], axis=0)
+        sample_slice_1 = np_max(image_data[0, 0, channel_1, slide, :, :, 0], axis=0)
+        sample_slice_3 = np_max(image_data[0, 0, channel_3, slide, :, :, 0], axis=0)
 
         combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
         sample_slice_1_normalized = (sample_slice_1 - np_min(sample_slice_1)) / (np_max(sample_slice_1) - np_min(sample_slice_1)) * 255
         sample_slice_3_normalized = (sample_slice_3 - np_min(sample_slice_3)) / (np_max(sample_slice_3) - np_min(sample_slice_3)) * 255
 
-        combined_image[:, :, 0] = sample_slice_1_normalized # synaptotagmin channel
-        combined_image[:, :, 2] = sample_slice_3_normalized # cell-label channel
+        combined_image[:, :, 0] = sample_slice_1_normalized  # synaptotagmin channel
+        combined_image[:, :, 2] = sample_slice_3_normalized  # cell-label channel
 
     height, width = combined_image.shape[:2]
     dpi = 200
@@ -61,28 +104,6 @@ def process_file(file_path, location, slice_start, slice_end):
         draw()
         close(fig)
     
-    def frequency_filtering(image):
-        # Преобразование Фурье
-        f_transform = fft2(image)
-        f_transform_shifted = fftshift(f_transform)
-        
-        # Создание маски для фильтрации низких частот
-        rows, cols = image.shape
-        crow, ccol = rows // 2, cols // 2
-        mask = np.ones((rows, cols), np.uint8)
-        r = 5  # Радиус области, которую нужно удалить
-        center = [crow, ccol]
-        x, y = np.ogrid[:rows, :cols]
-        mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
-        mask[mask_area] = 0
-        
-        # Применение маски и обратное преобразование Фурье
-        f_transform_shifted_filtered = f_transform_shifted * mask
-        f_transform_filtered = fftshift(f_transform_shifted_filtered)
-        image_filtered = np.abs(ifft2(f_transform_filtered))
-        
-        return image_filtered
-    
     props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
     polygon_selector = PolygonSelector(ax, onselect, props=props)
     show(block=True)
@@ -94,20 +115,11 @@ def process_file(file_path, location, slice_start, slice_end):
     coords_df = DataFrame(coords, columns=['x', 'y'])
     coords_df.to_csv(coords_file_path, sep=';', index=False)
     print(f"Coordinates saved to {coords_file_path}")
-   
-    # Применяем частотную фильтрацию
-    filtered_image = frequency_filtering(sample_slice_1)
-    # Нормализация и сохранение изображения в TIFF файл с использованием Pillow
-    filtered_image_normalized = (filtered_image - np_min(filtered_image)) / (np_max(filtered_image) - np_min(filtered_image)) * 255
-    filtered_image_normalized = filtered_image_normalized.astype('uint8')
-    
-    
-    denoised_image_path = join(dirname(file_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
-    image = Image.fromarray(filtered_image_normalized)
-    image.save(denoised_image_path, format='TIFF')
-    print(f"Denoised image saved to {denoised_image_path}")
 
-
+    height, width = combined_image.shape[:2]
+    dpi = 200
+    figsize = width / float(dpi), height / float(dpi)
+    
     fig, ax = subplots(figsize=figsize, dpi=dpi)
     fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем отступы
     ax.imshow(combined_image)
@@ -121,6 +133,102 @@ def process_file(file_path, location, slice_start, slice_end):
     print(f"Image with ROI saved to {image_file_path}")
 
 
+    data = {
+        'coords': coords,
+        'combined_image': combined_image,
+        'sample_slice_1': sample_slice_1,
+        'base_name': base_name,
+        'experiment_date': experiment_date
+    }
+
+    pickle_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_data.pkl")
+    with open(pickle_file_path, 'wb') as f:
+        pickle.dump(data, f)
+
+    print(f"Data saved to {pickle_file_path}")
+
+import cv2
+
+def frequency_filtering(image):
+    # Преобразование Фурье
+    f_transform = fft2(image)
+    f_transform_shifted = fftshift(f_transform)
+    
+    # Создание маски для фильтрации низких частот
+    rows, cols = image.shape
+    crow, ccol = rows // 2, cols // 2
+    mask = np.ones((rows, cols), np.uint8)
+    r = 5  # Радиус области, которую нужно удалить
+    center = [crow, ccol]
+    x, y = np.ogrid[:rows, :cols]
+    mask_area = (x - center[0]) ** 2 + (y - center[1]) ** 2 <= r*r
+    mask[mask_area] = 0
+    
+    # Применение маски и обратное преобразование Фурье
+    f_transform_shifted_filtered = f_transform_shifted * mask
+    f_transform_filtered = fftshift(f_transform_shifted_filtered)
+    image_filtered = np.abs(ifft2(f_transform_filtered))
+    
+    return image_filtered
+    
+def filter_after_roi_selection(filter_radius, file_path, location):
+    base_name = splitext(basename(file_path))[0]
+    experiment_date = basename(dirname(file_path))
+    pickle_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_data.pkl")
+    
+    with open(pickle_file_path, 'rb') as f:
+        data = pickle.load(f)
+
+    sample_slice_1 = data['sample_slice_1']
+    base_name = data['base_name']
+    experiment_date = data['experiment_date']
+    
+    # Применяем частотную фильтрацию
+    # sample_slice_1 = frequency_filtering(sample_slice_1)
+    
+    # Конвертация изображения в формат uint8
+    cropped_image = sample_slice_1
+    if cropped_image.dtype != np.uint8:
+        cropped_image = (255 * (cropped_image - np.min(cropped_image)) / (np.max(cropped_image) - np.min(cropped_image))).astype(np.uint8)
+    
+    # Убедимся, что изображение двумерное
+    if len(cropped_image.shape) > 2:
+        cropped_image = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2GRAY)
+        
+    # Remove background (2 steps)
+    # Step 1: Auto denoising using a rolling ball algorithm (using OpenCV)
+    background = cv2.medianBlur(cropped_image, filter_radius)
+    denoised_image = cv2.subtract(cropped_image, background)
+    
+    # Step 2: Based on ROI selection in noise
+    # noise_roi = (10, 10, 10, 10)  # Example polygon for noise region
+    # x, y, w, h = noise_roi
+    # noise_region = cropped_image[y:y+h, x:x+w]
+    
+    mean_noise_intensity = np.median(cropped_image)
+    mean_noise_intensity = round(mean_noise_intensity)
+    # print("Mean intensity in noisy region selected:", mean_noise_intensity)
+    
+    filtered_image = denoised_image# - mean_noise_intensity
+    
+    # filtered_image = cv2.bitwise_not(filtered_image)
+    
+    # filtered_image = cropped_image
+    # # Нормализация и сохранение изображения в TIFF файл с использованием Pillow
+    # filtered_image_normalized = (filtered_image - np.min(filtered_image)) / (np.max(filtered_image) - np.min(filtered_image)) * 255
+    # filtered_image_normalized = filtered_image_normalized.astype('uint8')
+    
+    denoised_image_path = join(dirname(file_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
+    # image = Image.fromarray(filtered_image_normalized)
+    # image.save(denoised_image_path, format='TIFF')
+    
+    save_image(filtered_image, denoised_image_path)
+    print(f"Denoised image saved to {denoised_image_path}")
+
+
+def save_image(image, path):
+    cv2.imwrite(path, image)
+
 
 def max_entropy_threshold(image):
     hist, bin_edges = histogram(image.ravel(), bins=256, density=True)
@@ -132,7 +240,7 @@ def max_entropy_threshold(image):
     threshold = bin_mids[argmax(entropy)]
     return threshold
 
-def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max_entropy', min_size=64, pixel_to_micron_ratio = 0.1):
+def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.1):
     # pixel_to_micron_ratio Коэффициент перевода из пикселей в микрометры
     # df = read_csv(csv_file_path, delimiter=';')
     
@@ -175,8 +283,8 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
 
                 denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
                 masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
-                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xls")
-                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xls")
+                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
+                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
                 roi_coords_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_coords.csv")
                 roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
 
@@ -200,14 +308,15 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
 
                 binary_image = image_array > threshold_value
                 binary_image = remove_small_objects(binary_image, min_size=min_size)
-
+                binary_image = remove_large_objects(binary_image, max_size=max_size)
+                
                 binary_image_roi = binary_image & roi_mask
 
                 binary_image_pil = Image.fromarray((binary_image_roi * 255).astype('uint8'))
                 binary_image_pil = ImageOps.invert(binary_image_pil)
                 binary_image_pil.save(masks_image_path)
 
-                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path)
+                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
 
                 print(f"Row {row_number_to_process} processed. Saved binary image as {masks_image_path}. Saved ROI mask as {roi_mask_image_path}.")
                 pbar.update(1)
@@ -224,20 +333,18 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
     else:
         print("\nNo errors occurred during processing.")
 
-def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path):
+def remove_large_objects(ar, max_size):
+    # Label connected components
+    labeled = label(ar)
+    for region in regionprops(labeled):
+        if region.area > max_size:
+            ar[labeled == region.label] = 0
+    return ar
+
+def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path):
     """
-    Обрабатывает свойства объектов, вычисляет статистические параметры и сохраняет результаты в CSV файлы.
+    Обрабатывает свойства объектов, вычисляет статистические параметры и сохраняет результаты в файлы.
 
-    Parameters:
-    props (list): Список свойств объектов, полученных с помощью regionprops.
-    roi_mask (np.ndarray): Массив, представляющий маску области интереса (ROI).
-    pixel_to_micron_ratio (float): Коэффициент перевода из пикселей в микрометры.
-    masks_image_path (str): Путь к файлу изображения маски.
-    full_result_path (str): Путь к файлу для сохранения полного результата.
-    summary_result_path (str): Путь к файлу для сохранения сводного результата.
-
-    Returns:
-    None
     """
     labeled_image = label(binary_image_roi)
     props = regionprops(labeled_image, intensity_image=image_array)
@@ -272,7 +379,7 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         })
 
     results_df = DataFrame(results)
-    results_df.to_csv(full_result_path, sep='\t', index=False)
+    results_df.to_excel(full_result_path, index=False)
 
     if total_objects > 0:
         average_size = total_area / total_objects
@@ -288,11 +395,12 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         "Total Area": f"{total_area:.3f}",
         "Average Size": f"{average_size:.3f}",
         "%Area": f"{(total_area / roi_area) * 100:.3f}",
-        "Mean": f"{average_mean_intensity:.3f}"
+        "Mean": f"{average_mean_intensity:.3f}",
+        "Binarization method": binarization_method
     }
 
     summary_df = DataFrame([summary_result])
-    summary_df.to_csv(summary_result_path, sep='\t', index=False)
+    summary_df.to_excel(summary_result_path, index=False)
 
 
 def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=200):
@@ -320,8 +428,8 @@ def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=20
                 
                 denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
                 masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
-                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xls")
-                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xls")
+                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
+                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
                 roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
 
                 image = Image.open(denoised_image_path).convert('L')
@@ -375,8 +483,11 @@ def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=20
                 new_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
                 new_masked_image_pil.save(new_masked_image_path)
                 
+                summary_data = read_excel(summary_result_path)
+                binarization_method = summary_data['Binarization method'].values[0]
+                
                 # пересохранение свойств
-                process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path)
+                process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
                 
                 pbar.update(1)
 
@@ -442,7 +553,7 @@ def postprocess(df, csv_file_path, output_directory, rows_to_process):
                 roi_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_with_roi.png")
             
                 # Path to the results file
-                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xls")
+                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
             
                 # Combine and save images
                 combined_image_path = join(output_directory, f"{experiment_date}_{base_name}_combined.tif")
@@ -454,11 +565,11 @@ def postprocess(df, csv_file_path, output_directory, rows_to_process):
                     continue
             
                 # Save the first row of the results table
-                summary_data = read_csv(summary_result_path, sep='\t')
+                summary_data = read_excel(summary_result_path)
                 if summary_data is not None:
                     summary_data['filepath'] = image_path
                     summary_data['location'] = row['location']
-                    summary_data['threshold_method'] = row['threshold_method']
+                    # summary_data['threshold_method'] = row['threshold_method']
                     summary_data['Postnatal_Age'] = row['Postnatal_Age']
                     summary_data['Experiment_Number'] = row['Experiment_Number']
                     summary_data_list.append(summary_data)
