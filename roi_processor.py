@@ -178,6 +178,7 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
                 full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xls")
                 summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xls")
                 roi_coords_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_coords.csv")
+                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
 
                 image = Image.open(denoised_image_path).convert('L')
                 image_array = array(image)
@@ -191,6 +192,10 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
                 points = vstack((x, y)).T
                 roi_mask = roi_path.contains_points(points).reshape(image_array.shape)
                 
+                # Сохранение roi_mask как PNG изображения
+                roi_mask_pil = Image.fromarray((roi_mask * 255).astype('uint8'))
+                roi_mask_pil.save(roi_mask_image_path)
+
                 threshold_value = get_threshold_value(image_array, binarization_method)
 
                 binary_image = image_array > threshold_value
@@ -202,52 +207,9 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
                 binary_image_pil = ImageOps.invert(binary_image_pil)
                 binary_image_pil.save(masks_image_path)
 
-                labeled_image = label(binary_image_roi)
-                props = regionprops(labeled_image, intensity_image=image_array)
+                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path)
 
-                results = []
-                total_objects = 0
-                total_area = 0
-                total_mean_intensity = 0
-                roi_area = roi_mask.sum() * pixel_to_micron_ratio**2
-
-                for index, prop in enumerate(props, start=1):
-                    area_microns = prop.area * pixel_to_micron_ratio**2
-                    total_objects += 1
-                    total_area += area_microns
-                    total_mean_intensity += prop.mean_intensity * area_microns
-                    results.append({
-                        "": index,
-                        "Area": f"{area_microns:.3f}",
-                        "Mean": f"{prop.mean_intensity:.3f}",
-                        "Min": int(prop.min_intensity),
-                        "Max": int(prop.max_intensity)
-                    })
-
-                results_df = DataFrame(results)
-                results_df.to_csv(full_result_path, sep='\t', index=False)
-
-                if total_objects > 0:
-                    average_size = total_area / total_objects
-                    average_mean_intensity = total_mean_intensity / total_area
-                else:
-                    average_size = 0
-                    average_mean_intensity = 0
-
-                summary_result = {
-                    "": 1,
-                    "Slice": basename(masks_image_path),
-                    "Count": total_objects,
-                    "Total Area": f"{total_area:.3f}",
-                    "Average Size": f"{average_size:.3f}",
-                    "%Area": f"{(total_area / roi_area) * 100:.3f}",
-                    "Mean": f"{average_mean_intensity:.3f}"
-                }
-
-                summary_df = DataFrame([summary_result])
-                summary_df.to_csv(summary_result_path, sep='\t', index=False)
-
-                print(f"Row {row_number_to_process} processed. Saved binary image as {masks_image_path}.")
+                print(f"Row {row_number_to_process} processed. Saved binary image as {masks_image_path}. Saved ROI mask as {roi_mask_image_path}.")
                 pbar.update(1)
 
             except Exception as e:
@@ -255,6 +217,174 @@ def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max
                 error_files.append(image_path)
                 pbar.update(1)
 
+    if error_files:
+        print("\nErrors occurred in the following files:")
+        for error_file in error_files:
+            print(error_file)
+    else:
+        print("\nNo errors occurred during processing.")
+
+def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path):
+    """
+    Обрабатывает свойства объектов, вычисляет статистические параметры и сохраняет результаты в CSV файлы.
+
+    Parameters:
+    props (list): Список свойств объектов, полученных с помощью regionprops.
+    roi_mask (np.ndarray): Массив, представляющий маску области интереса (ROI).
+    pixel_to_micron_ratio (float): Коэффициент перевода из пикселей в микрометры.
+    masks_image_path (str): Путь к файлу изображения маски.
+    full_result_path (str): Путь к файлу для сохранения полного результата.
+    summary_result_path (str): Путь к файлу для сохранения сводного результата.
+
+    Returns:
+    None
+    """
+    labeled_image = label(binary_image_roi)
+    props = regionprops(labeled_image, intensity_image=image_array)
+    
+    # отображение изображения
+    # fig, ax = subplots(figsize=(5, 5), dpi=100)
+    # fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
+    
+    # ax.imshow(labeled_image, cmap='gray')
+                
+    max_size = 500
+    
+    results = []
+    total_objects = 0
+    total_area = 0
+    total_mean_intensity = 0
+    roi_area = roi_mask.sum() * pixel_to_micron_ratio**2
+
+    for index, prop in enumerate(props, start=1):
+        area_microns = prop.area * pixel_to_micron_ratio**2
+        if area_microns > max_size:
+           continue  # Пропустить объекты, размер которых превышает max_size
+        total_objects += 1
+        total_area += area_microns
+        total_mean_intensity += prop.mean_intensity * area_microns
+        results.append({
+            "": index,
+            "Area": f"{area_microns:.3f}",
+            "Mean": f"{prop.mean_intensity:.3f}",
+            "Min": int(prop.min_intensity),
+            "Max": int(prop.max_intensity)
+        })
+
+    results_df = DataFrame(results)
+    results_df.to_csv(full_result_path, sep='\t', index=False)
+
+    if total_objects > 0:
+        average_size = total_area / total_objects
+        average_mean_intensity = total_mean_intensity / total_area
+    else:
+        average_size = 0
+        average_mean_intensity = 0
+
+    summary_result = {
+        "": 1,
+        "Slice": basename(masks_image_path),
+        "Count": total_objects,
+        "Total Area": f"{total_area:.3f}",
+        "Average Size": f"{average_size:.3f}",
+        "%Area": f"{(total_area / roi_area) * 100:.3f}",
+        "Mean": f"{average_mean_intensity:.3f}"
+    }
+
+    summary_df = DataFrame([summary_result])
+    summary_df.to_csv(summary_result_path, sep='\t', index=False)
+
+
+def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=200):
+    
+    def onselect(verts):
+        coords.extend(verts)
+        polygon = Polygon(verts, closed=True, edgecolor='#1DE720', facecolor='none', linewidth=2, alpha=0.7)
+        ax.add_patch(polygon)
+        draw()
+        close(fig)
+
+    error_files = []
+    with tqdm(total=len(rows_to_process), desc="Processing images") as pbar:
+        for row_number_to_process in rows_to_process:
+            try:
+                row = df.iloc[row_number_to_process]
+                if row['take_to_stat'] == 'no':
+                    print(f"Skipping row {row_number_to_process} because take_to_stat is 'no'")
+                    pbar.update(1)
+                    continue
+                
+                image_path = row['filepath']
+                base_name = splitext(basename(image_path))[0]
+                experiment_date = basename(dirname(image_path))
+                
+                denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised_Zprojection_crop.tif")
+                masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
+                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xls")
+                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xls")
+                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
+
+                image = Image.open(denoised_image_path).convert('L')
+                image_array = array(image)
+                
+                previous_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
+                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
+                print('Removing bad spots in ' + roi_mask_image_path)
+                
+                # чтение файла в переменную previous_masked_image из previous_masked_image_path
+                previous_masked_image = Image.open(previous_masked_image_path).convert('L')
+                previous_masked_array = np.array(previous_masked_image)
+                previous_masked_binary = (previous_masked_array > 0).astype(np.uint8)  # перевод в бинарный вид
+                
+                # чтение маски и перевод в бинарный вид
+                mask_image = Image.open(roi_mask_image_path).convert('L')
+                mask_array = np.array(mask_image)
+                previous_roi_mask = (mask_array > 0).astype(np.uint8)
+                
+                # отображение изображения
+                fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
+                fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
+                
+                ax.imshow(previous_masked_image, cmap='gray')
+                
+                # чертим полигон
+                coords = []
+                props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
+                polygon_selector = PolygonSelector(ax, onselect, props=props)
+                show(block=True)
+                
+                # создание новой маски из координат полигона
+                x, y = np.meshgrid(np.arange(previous_masked_array.shape[1]), np.arange(previous_masked_array.shape[0]))
+                x, y = x.flatten(), y.flatten()
+                points = np.vstack((x, y)).T
+                polygon = Polygon(coords)
+                new_roi_mask = polygon.contains_points(points).reshape(previous_masked_array.shape).astype(np.uint8)
+                
+                # применение устранения ошибок на изображение
+                corrected_image = previous_masked_binary | new_roi_mask
+                
+                # применение устранения ошибок на маску
+                corrected_mask = previous_roi_mask & ~new_roi_mask
+                
+                # сохранение новой маски
+                new_mask_image_pil = Image.fromarray((corrected_mask * 255).astype('uint8'))
+                new_mask_image_pil.save(roi_mask_image_path)
+                
+                # сохранение пройденного через маску изображения
+                new_masked_image_pil = Image.fromarray((corrected_image * 255).astype('uint8'))
+                new_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.tif")
+                new_masked_image_pil.save(new_masked_image_path)
+                
+                # пересохранение свойств
+                process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, masks_image_path, full_result_path, summary_result_path)
+                
+                pbar.update(1)
+
+            except Exception as e:
+                print(f"Error processing row {row_number_to_process} for file {image_path}: {e}")
+                error_files.append(image_path)
+                pbar.update(1)
+    
     if error_files:
         print("\nErrors occurred in the following files:")
         for error_file in error_files:

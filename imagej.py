@@ -1112,7 +1112,7 @@ from scipy.stats import kruskal, mannwhitneyu
 import numpy as np
 
 # Load the data
-file_path = 'E:/iMAGES/processed_images_full/collected_roi_summary_data.xlsx'
+file_path = 'E:\iMAGES/results/collected_roi_summary_data.xlsx'
 data = pd.read_excel(file_path)
 
 # Plotting function
@@ -1192,6 +1192,136 @@ for parameter in numerical_parameters:
 for parameter, p_values_df in pairwise_p_values.items():
     print(f"Pairwise p-values for {parameter}:")
     print(p_values_df)
+#%%    
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.stats import kruskal
+import scikit_posthocs as sp
+import numpy as np
+import os
+
+output_folder = 'C:/Users/ta3ma/Dropbox/RN/PhDs/PhD Azat/PhD_text/material/Synaptotagmin/media/'
+# Load the data
+file_path = 'E:/iMAGES/results/collected_roi_summary_data.xlsx'
+data = pd.read_excel(file_path)
+
+# List of numerical parameters
+numerical_parameters = ['%Area']
+
+# Filtering the data for Postnatal_Age 5, 11, 15, and 21
+filtered_data = data[data['Postnatal_Age'].isin([5, 11, 15, 21])]
+
+# Function to calculate Kruskal-Wallis p-values for each location
+def calculate_kruskal_pvalues(data, parameter, groups, group_col='Postnatal_Age', location_col='location'):
+    results = {}
+    for location in data[location_col].unique():
+        group_data = [data[(data[group_col] == group) & (data[location_col] == location)][parameter].dropna() for group in groups]
+        if all(len(g) > 0 for g in group_data):
+            stat, p_value = kruskal(*group_data)
+            results[location] = p_value
+        else:
+            results[location] = np.nan
+    return results
+
+# Function to perform pairwise comparisons using Dunn's test
+def calculate_dunn_pvalues(data, parameter, groups, group_col='Postnatal_Age', location_col='location'):
+    pairwise_results = {}
+    for location in data[location_col].unique():
+        location_data = data[data[location_col] == location]
+        dunn_results = sp.posthoc_dunn(location_data, val_col=parameter, group_col=group_col, p_adjust='bonferroni')
+        pairwise_results[location] = dunn_results
+    return pairwise_results
+
+# Function to convert p-values to stars
+def rankstars(p):
+    if not np.isnan(p):
+        if p > 0.05:
+            return 'ns'
+        elif p <= 0.0001:
+            return '****'
+        elif p <= 0.001:
+            return '***'
+        elif p <= 0.01:
+            return '**'
+        elif p <= 0.05:
+            return '*'
+    else:
+        return 'ns'
+
+# Function to map location names
+def map_location_name(location):
+    if location == 'SO':
+        return 'Stratum Oriens'
+    elif location == 'SP':
+        return 'Stratum Pyramidale'
+    elif location == 'SR':
+        return 'Stratum Radiatum'
+    return location
+
+# Function to plot violins with different colors for each figure and add p-values
+def plot_violin_with_pvalues(data, parameter, category, hue, kruskal_pvalues, dunn_pvalues):
+    locations = data[hue].unique()
+    palette = sns.color_palette("deep", len(locations))
+    groups = data[category].unique()
+    groups.sort()
+
+    for i, location in enumerate(locations):
+        plt.figure(figsize=(10, 6))
+        sns.violinplot(x=category, y=parameter, data=data[data[hue] == location], color=palette[i], fill=False)
+        plt.title(map_location_name(location))
+        plt.xlabel(category.replace('_', ' '))
+        plt.ylabel(parameter)
+        
+        # Draw pairwise p-values as stars
+        medians = data[data[hue] == location].groupby(category)[parameter].median()
+        for j, group1 in enumerate(groups):
+            for k, group2 in enumerate(groups):
+                if j < k:
+                    if group1 in medians.index and group2 in medians.index:
+                        p_value = dunn_pvalues[location].loc[group1, group2]
+                        if not np.isnan(p_value):
+                            y, h, col = data[parameter].max() + 1, 1, (0.5, 0.5, 0.5, 0.5)
+                            plt.plot([j, k], [medians[group1], medians[group2]], lw=1.5, c=col)
+                            plt.text((j + k) * .5, max(medians[group1], medians[group2]) + h, rankstars(p_value), ha='center', va='bottom', color='k')
+
+        # Remove the box around the plot
+        sns.despine()
+
+        # Save the figure
+        plt.savefig(f'{output_folder}{location}_violin_plot.png')
+        plt.close()
+
+# List of groups to compare
+groups = [5, 11, 15, 21]
+
+# Calculate Kruskal-Wallis p-values for each parameter and each location
+kruskal_p_values = {}
+for parameter in numerical_parameters:
+    kruskal_p_values[parameter] = calculate_kruskal_pvalues(filtered_data, parameter, groups)
+
+# Calculate Dunn's test pairwise p-values for each parameter and each location
+dunn_p_values = {}
+for parameter in numerical_parameters:
+    dunn_p_values[parameter] = calculate_dunn_pvalues(filtered_data, parameter, groups)
+
+# Plotting violin plots for the numerical parameters with Kruskal-Wallis and Dunn's test p-values
+for parameter in numerical_parameters:
+    plot_violin_with_pvalues(filtered_data, parameter, 'Postnatal_Age', 'location', kruskal_p_values[parameter], dunn_p_values[parameter])
+
+# Display the Kruskal-Wallis and Dunn's test p-values for each location
+for parameter, location_results in kruskal_p_values.items():
+    print(f"Kruskal-Wallis p-values for {parameter}:")
+    for location, p_value in location_results.items():
+        print(f"Location: {location}, p-value: {p_value}")
+
+for parameter, location_results in dunn_p_values.items():
+    print(f"Dunn's test pairwise p-values for {parameter}:")
+    for location, p_values_df in location_results.items():
+        print(f"Location: {location}")
+        print(p_values_df)
+
+
 #%% создаем исполняемый файл
 import subprocess
 import sys

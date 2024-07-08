@@ -8,7 +8,7 @@ import tempfile
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-from roi_processor import process_file, binarize_images, postprocess
+from roi_processor import process_file, binarize_images, remove_ccp, postprocess
 
 TEMP_FILE = os.path.join(tempfile.gettempdir(), 'synapto_catch_params.json')
 
@@ -28,8 +28,9 @@ class ROIAnalyzerApp:
         self.create_label_and_entry("Min size of an object:", 6, default_value=50, attr_name="min_size")
         self.create_label_and_entry("Pixel to micron ratio:", 7, default_value=0.1, attr_name="pixel_to_micron_ratio")
 
-        self.create_button("Binarize", self.binarize, 8)
-
+        self.create_button("Binarize", self.binarize_action, 8)
+        self.create_button("Remove bad spots", self.remove_ccp_action, 9)
+        
         # Elements for postprocess
         self.create_label_and_entry("Output Directory:", 11, self.browse_output_dir, attr_name="output_dir")
         self.create_button("Run Postprocess", self.run_postprocess, 13)
@@ -88,7 +89,8 @@ class ROIAnalyzerApp:
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
 
-    def binarize(self):
+
+    def binarize_action(self):
         try:
             df, rows_to_process = self.prepare_data()
             binarize_images(
@@ -99,7 +101,18 @@ class ROIAnalyzerApp:
             messagebox.showinfo("Success", "Binarization completed successfully.")
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
-
+            
+    def remove_ccp_action(self):
+        try:
+            df, rows_to_process = self.prepare_data()
+            csv_file_path = self.selected_protocol.get()
+            pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get())
+            remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio)
+            messagebox.showinfo("Success", "Binarization completed successfully.")
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+            
+            
     def run_postprocess(self):
         try:
             df, rows_to_process = self.prepare_data()
