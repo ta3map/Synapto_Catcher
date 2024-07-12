@@ -1211,7 +1211,7 @@ data = pd.read_excel(file_path)
 numerical_parameters = ['%Area']
 
 # Filtering the data for Postnatal_Age 5, 11, 15, and 21
-filtered_data = data[data['Postnatal_Age'].isin([5, 11, 15, 21])]
+filtered_data = data[data['Postnatal_Age'].isin([5, 11, 15, 21, 120])]
 
 # Function to calculate Kruskal-Wallis p-values for each location
 def calculate_kruskal_pvalues(data, parameter, groups, group_col='Postnatal_Age', location_col='location'):
@@ -1254,8 +1254,10 @@ def rankstars(p):
 def map_location_name(location):
     if location == 'SO':
         return 'Stratum Oriens'
-    elif location == 'SP':
-        return 'Stratum Pyramidale'
+    elif location == 'SP_CA1':
+        return 'Stratum Pyramidale CA1'
+    elif location == 'SP_CA3':
+        return 'Stratum Pyramidale CA3'
     elif location == 'SR':
         return 'Stratum Radiatum'
     return location
@@ -1269,16 +1271,22 @@ def plot_violin_with_pvalues(data, parameter, category, hue, kruskal_pvalues, du
     for i, location in enumerate(locations):
         
         local_data = data[data[hue] == location]
+        group_indexes = {group: index for index, group in enumerate(groups)}
         
         plt.figure(figsize=(10, 6))
         sns.violinplot(x=category, y=parameter, data=local_data, color=palette[i], fill=False)
+        
+        scatter_x = local_data[category].map(group_indexes)
+        scatter_x = scatter_x + np.random.uniform(-0.2, 0.2, size=len(scatter_x))
+        sns.scatterplot(x=scatter_x, y=parameter, data=local_data, color=palette[i])
+        
         plt.title(map_location_name(location))
         plt.xlabel(category.replace('_', ' '))
         plt.ylabel(parameter)
         
         # Draw pairwise p-values as stars
-        height = min(local_data[parameter])
-        h_step = (max(local_data[parameter]) - height)/size(groups)
+        height = local_data[parameter].quantile(0.05)
+        h_step = (local_data[parameter].quantile(0.95) - height)/size(groups)
         medians = data[data[hue] == location].groupby(category)[parameter].median()
         for j, group1 in enumerate(groups):
             for k, group2 in enumerate(groups):
@@ -1296,10 +1304,10 @@ def plot_violin_with_pvalues(data, parameter, category, hue, kruskal_pvalues, du
 
         # Save the figure
         plt.savefig(f'{output_folder}{location}_violin_plot.png')
-        plt.close()
+        # plt.close()
 
 # List of groups to compare
-groups = [5, 11, 15, 21]
+groups = [5, 11, 15, 21, 120]
 
 # Calculate Kruskal-Wallis p-values for each parameter and each location
 kruskal_p_values = {}
