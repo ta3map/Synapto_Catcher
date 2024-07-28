@@ -1,5 +1,5 @@
 from os.path import splitext, basename, dirname, join, exists
-from os import makedirs
+from os import makedirs, path
 from pandas import read_csv, DataFrame, concat, read_excel
 from numpy import zeros, min as np_min, max as np_max, array, arange, meshgrid, vstack, histogram, finfo, log, argmax, asarray, mean, median
 from matplotlib.pyplot import subplots, show, close, savefig, draw, imsave
@@ -17,6 +17,7 @@ import matplotlib.pyplot as plt
 from czifile import CziFile
 from aicspylibczi import CziFile as aicCzi
 import xml.etree.ElementTree as ET
+import time
 
 def extract_scaling_distances_from_czi(filename):
     # Открываем .czi файл
@@ -54,7 +55,7 @@ def extract_image_stock(file_path, location, slice_start, slice_end):
     
     base_name = splitext(basename(file_path))[0]
     experiment_date = basename(dirname(file_path))
-    print(f"{experiment_date}_{base_name}")
+    # print(f"{experiment_date}_{base_name}")
     
     with CziFile(file_path) as czi:
         image_data = czi.asarray()
@@ -62,23 +63,23 @@ def extract_image_stock(file_path, location, slice_start, slice_end):
         distances = extract_scaling_distances_from_czi(file_path)
         pixel_to_micron_ratio = distances['X']*1_000_000
         
-        channel_1 = 0  # synaptotagmin channel
+        target_ch = 0  # synaptotagmin channel
         channel_3 = 3  # cell-label channel
         
-        print("Image shape:", image_data.shape)
-        print('synaptotagmin channel:', channel_1)
-        print('cell-label channel:', channel_3)
-        print('slice start:', slice_start)
-        print('slice end:', slice_end)
-        print('pixel to micron ratio:', pixel_to_micron_ratio)
+        # print("Image shape:", image_data.shape)
+        # print('synaptotagmin channel:', target_ch)
+        # print('cell-label channel:', channel_3)
+        # print('slice start:', slice_start)
+        # print('slice end:', slice_end)
+        # print('pixel to micron ratio:', pixel_to_micron_ratio)
         
         if image_data.shape[2] == 3:
             channel_3 = 2
-            print("3 channels instead of 4")
+            # print("3 channels instead of 4")
         
         slide = list(range(slice_start-1, slice_end))
         
-        sample_slice_1 = np_max(image_data[0, 0, channel_1, slide, :, :, 0], axis=0)
+        sample_slice_1 = np_max(image_data[0, 0, target_ch, slide, :, :, 0], axis=0)
         sample_slice_3 = np_max(image_data[0, 0, channel_3, slide, :, :, 0], axis=0)
 
         combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
@@ -91,14 +92,14 @@ def extract_image_stock(file_path, location, slice_start, slice_end):
         synaptotag_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_synaptotag.png")
         save_image(sample_slice_1, synaptotag_file_path)
         
-        return sample_slice_1, sample_slice_3, combined_image
+        return sample_slice_1, sample_slice_3, combined_image, synaptotag_file_path
 
 def process_file(file_path, location, slice_start=2, slice_end=6):
     
     base_name = splitext(basename(file_path))[0]
     experiment_date = basename(dirname(file_path))
         
-    sample_slice_1, sample_slice_3, combined_image = extract_image_stock(file_path, location, slice_start, slice_end)
+    sample_slice_1, sample_slice_3, combined_image, _ = extract_image_stock(file_path, location, slice_start, slice_end)
         
     height, width = combined_image.shape[:2]
     dpi = 200
@@ -130,7 +131,7 @@ def process_file(file_path, location, slice_start=2, slice_end=6):
     roi_coords_path = join(dirname(file_path), f"{experiment_date}_{base_name}_roi_coords.csv")
     coords_df = DataFrame(coords, columns=['x', 'y'])
     coords_df.to_csv(roi_coords_path, sep=';', index=False)
-    print(f"Coordinates saved to {roi_coords_path}")
+    # print(f"Coordinates saved to {roi_coords_path}")
 
     height, width = combined_image.shape[:2]
     dpi = 200
@@ -146,8 +147,9 @@ def process_file(file_path, location, slice_start=2, slice_end=6):
     image_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_with_roi.png")
     savefig(image_file_path, bbox_inches='tight', pad_inches=0)
     close(fig)
-    print(f"Image with ROI saved to {image_file_path}")
-
+    # print(f"Image with ROI saved to {image_file_path}")
+    
+    return [roi_coords_path, image_file_path]
 
 
 import cv2
@@ -175,8 +177,8 @@ def filter_after_roi_selection(filter_radius, file_path, location):
     denoised_image_path = join(dirname(file_path), f"{experiment_date}_{base_name}_denoised.png")
     
     save_image(denoised_image, denoised_image_path)
-    print(f"Denoised image saved to {denoised_image_path}")
-
+    # print(f"Denoised image saved to {denoised_image_path}")
+    return [denoised_image_path]
 
 def save_image(image, path):
     cv2.imwrite(path, image)
@@ -194,103 +196,81 @@ def max_entropy_threshold(image):
     threshold = bin_mids[argmax(entropy)]
     return threshold
 
-def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.1):
+# def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.1):
     # pixel_to_micron_ratio Коэффициент перевода из пикселей в микрометры
     # df = read_csv(csv_file_path, delimiter=';')
-    
-    # rows_to_process = [row - 2 for row in rows_to_process]# формирование из эксель в нормальный стандарт
-    
-    error_files = []
 
-    def get_threshold_value(image_array, binarization_method):
-        if binarization_method == 'max_entropy':
-            threshold_value = max_entropy_threshold(image_array)
-        elif binarization_method == 'otsu':
-            threshold_value = threshold_otsu(image_array)
-        elif binarization_method == 'yen':
-            threshold_value = threshold_yen(image_array)
-        elif binarization_method == 'li':
-            threshold_value = threshold_li(image_array)
-        elif binarization_method == 'isodata':
-            threshold_value = threshold_isodata(image_array)
-        elif binarization_method == 'mean':
-            threshold_value = threshold_mean(image_array)
-        elif binarization_method == 'minimum':
-            threshold_value = threshold_minimum(image_array)
-        else:
-            raise ValueError(f"Unsupported binarization method: {binarization_method}")
-        
-        return threshold_value
-
-    with tqdm(total=len(rows_to_process), desc="Processing images") as pbar:
-        for row_number_to_process in rows_to_process:
-            try:
-                row = df.iloc[row_number_to_process]
-                if row['take_to_stat'] == 'no':
-                    print(f"Skipping row {row_number_to_process} because take_to_stat is 'no'")
-                    pbar.update(1)
-                    continue
-
-                image_path = row['filepath']
-                base_name = splitext(basename(image_path))[0]
-                experiment_date = basename(dirname(image_path))
-
-                denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised.png")
-                masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
-                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
-                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
-                roi_coords_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_coords.csv")
-                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
-
-                image = Image.open(denoised_image_path).convert('L')
-                image_array = array(image)
-
-                # Check if ROI coordinates file exists
-                if exists(roi_coords_path):
-                    roi_coords_df = read_csv(roi_coords_path, delimiter=';')
-                    roi_coords = roi_coords_df[['x', 'y']].values
-                    roi_path = Path(roi_coords)
-                
-                    x, y = np.meshgrid(np.arange(image_array.shape[1]), np.arange(image_array.shape[0]))
-                    x, y = x.flatten(), y.flatten()
-                    points = np.vstack((x, y)).T
-                    roi_mask = roi_path.contains_points(points).reshape(image_array.shape)
-                else:
-                    print("Warning: ROI coordinates file not found. Creating a mask the size of the entire image.")
-                    roi_mask = np.ones(image_array.shape, dtype=bool)
-                
-                # Save ROI mask as PNG image
-                roi_mask_pil = Image.fromarray((roi_mask * 255).astype('uint8'))
-                roi_mask_pil.save(roi_mask_image_path)
-
-                threshold_value = get_threshold_value(image_array, binarization_method)
-
-                binary_image = image_array > threshold_value
-                binary_image = remove_small_objects(binary_image, min_size=min_size)
-                binary_image = remove_large_objects(binary_image, max_size=max_size)
-                
-                binary_image_roi = binary_image & roi_mask
-
-                binary_image_pil = Image.fromarray((binary_image_roi * 255).astype('uint8'))
-                binary_image_pil = ImageOps.invert(binary_image_pil)
-                binary_image_pil.save(masks_image_path)
-
-                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
-
-                print(f"Row {row_number_to_process} processed. Saved binary image as {masks_image_path}. Saved ROI mask as {roi_mask_image_path}.")
-                pbar.update(1)
-
-            except Exception as e:
-                print(f"Error processing row {row_number_to_process} for file {image_path}: {e}")
-                error_files.append(image_path)
-                pbar.update(1)
-
-    if error_files:
-        print("\nErrors occurred in the following files:")
-        for error_file in error_files:
-            print(error_file)
+def get_threshold_value(image_array, binarization_method):
+    if binarization_method == 'max_entropy':
+        threshold_value = max_entropy_threshold(image_array)
+    elif binarization_method == 'otsu':
+        threshold_value = threshold_otsu(image_array)
+    elif binarization_method == 'yen':
+        threshold_value = threshold_yen(image_array)
+    elif binarization_method == 'li':
+        threshold_value = threshold_li(image_array)
+    elif binarization_method == 'isodata':
+        threshold_value = threshold_isodata(image_array)
+    elif binarization_method == 'mean':
+        threshold_value = threshold_mean(image_array)
+    elif binarization_method == 'minimum':
+        threshold_value = threshold_minimum(image_array)
     else:
-        print("\nNo errors occurred during processing.")
+        raise ValueError(f"Unsupported binarization method: {binarization_method}")
+    
+    return threshold_value
+    
+def binarize_images(file_path, row, binarization_method='max_entropy', min_size=64, max_size=100):    
+    image_path = row['filepath']
+    base_name = splitext(basename(image_path))[0]
+    experiment_date = basename(dirname(image_path))
+
+    denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised.png")
+    masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
+    full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
+    summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
+    roi_coords_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_coords.csv")
+    roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
+
+    image = Image.open(denoised_image_path).convert('L')
+    image_array = array(image)
+
+    # Check if ROI coordinates file exists
+    if exists(roi_coords_path):
+        roi_coords_df = read_csv(roi_coords_path, delimiter=';')
+        roi_coords = roi_coords_df[['x', 'y']].values
+        roi_path = Path(roi_coords)
+    
+        x, y = np.meshgrid(np.arange(image_array.shape[1]), np.arange(image_array.shape[0]))
+        x, y = x.flatten(), y.flatten()
+        points = np.vstack((x, y)).T
+        roi_mask = roi_path.contains_points(points).reshape(image_array.shape)
+    else:
+        print("Warning: ROI coordinates file not found. Creating a mask the size of the entire image.")
+        roi_mask = np.ones(image_array.shape, dtype=bool)
+    
+    # Save ROI mask as PNG image
+    roi_mask_pil = Image.fromarray((roi_mask * 255).astype('uint8'))
+    roi_mask_pil.save(roi_mask_image_path)
+    
+    threshold_value = get_threshold_value(image_array, binarization_method)
+
+    binary_image = image_array > threshold_value
+    binary_image = remove_small_objects(binary_image, min_size=min_size)
+    binary_image = remove_large_objects(binary_image, max_size=max_size)
+    
+    binary_image_roi = binary_image & roi_mask
+
+    binary_image_pil = Image.fromarray((binary_image_roi * 255).astype('uint8'))
+    binary_image_pil = ImageOps.invert(binary_image_pil)
+    binary_image_pil.save(masks_image_path)
+    
+    distances = extract_scaling_distances_from_czi(file_path)
+    pixel_to_micron_ratio = distances['X']*1_000_000
+    
+    process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
+
+    return [masks_image_path]
 
 def remove_large_objects(ar, max_size):
     # Label connected components
@@ -301,18 +281,9 @@ def remove_large_objects(ar, max_size):
     return ar
 
 def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path):
-    """
-    Обрабатывает свойства объектов, вычисляет статистические параметры и сохраняет результаты в файлы.
 
-    """
     labeled_image = label(binary_image_roi)
     props = regionprops(labeled_image, intensity_image=image_array)
-    
-    # отображение изображения
-    # fig, ax = subplots(figsize=(5, 5), dpi=100)
-    # fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
-    
-    # ax.imshow(labeled_image, cmap='gray')
                 
     max_size = 500
     
@@ -362,7 +333,7 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
     summary_df.to_excel(summary_result_path, index=False)
 
 
-def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=200):
+def remove_ccp(df, csv_file_path, rows_to_process, dpi=200):
     
     def onselect(verts):
         coords.extend(verts)
@@ -445,6 +416,9 @@ def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=20
                 summary_data = read_excel(summary_result_path)
                 binarization_method = summary_data['Binarization method'].values[0]
                 
+                distances = extract_scaling_distances_from_czi(image_path)
+                pixel_to_micron_ratio = distances['X']*1_000_000
+                
                 # пересохранение свойств
                 process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
                 
@@ -461,13 +435,14 @@ def remove_ccp(df, csv_file_path, rows_to_process, pixel_to_micron_ratio, dpi=20
             print(error_file)
     else:
         print("\nNo errors occurred during processing.")
-
+import os
 # Function to combine images and save them
 def combine_and_save_images(image1_path, image2_path, image3_path, output_path):
     image1 = Image.open(image1_path)
     image2 = Image.open(image2_path)
     image3 = Image.open(image3_path)
     
+    # print('test 1')
     # Determine the size of the new image
     combined_width = image1.width + image2.width + image3.width
     combined_height = max(image1.height, image2.height, image3.height)
@@ -478,7 +453,9 @@ def combine_and_save_images(image1_path, image2_path, image3_path, output_path):
     combined_image.paste(image1, (image3.width, 0))  # Then the denoised image
     combined_image.paste(image2, (image3.width + image1.width, 0))  # Then the masks image
     
-    # Save the combined image
+    # print('test 2')
+    print(output_path)
+    makedirs(os.path.dirname(output_path), exist_ok=True)
     combined_image.save(output_path)
 
 def combine_images(file_path, output_directory):
@@ -495,6 +472,7 @@ def combine_images(file_path, output_directory):
     combined_image_path = join(output_directory, f"{experiment_date}_{base_name}_combined.png")
     
     combine_and_save_images(denoised_image_path, masks_image_path, roi_image_path, combined_image_path)
+    return [combined_image_path]
     
     
 def pp_one(file_path, row, output_directory):
@@ -505,6 +483,7 @@ def pp_one(file_path, row, output_directory):
     
     # Check if the file exists
     if not exists(summary_result_path):
+        print('test')
         print(f"File not found: {summary_result_path}")
         return None
     
@@ -517,7 +496,7 @@ def pp_one(file_path, row, output_directory):
         summary_data['Postnatal_Age'] = row['Postnatal_Age']
         summary_data['Experiment_Number'] = row['Experiment_Number']
         
-    return summary_data
+    return summary_data, summary_result_path
     
 def postprocess(df, csv_file_path, output_directory, rows_to_process):
     
@@ -586,5 +565,6 @@ def postprocess(df, csv_file_path, output_directory, rows_to_process):
     summary_output_path = join(output_directory, "collected_roi_summary_data.xlsx")
     summary_df.to_excel(summary_output_path, index=False)
     
-    print("Post-processing completed. Updated data saved to:", summary_output_path)
+    print("Post-processing completed.", summary_output_path)
+    return [summary_output_path]
     
