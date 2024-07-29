@@ -67,7 +67,7 @@ During binarization, we get a black and white image. One of the selected binariz
 ![ROI selection example](images/example_remove_bad_spot.gif)
 
 ### 4. Combine Images
-After combining, we can simultaneously see three results at the same time. First is the original image with region of interest, second image is the filtered version from synaptotagmin channel, and on the third image is the result of binarization inside the region og interest.
+After combining, we can simultaneously see three results at the same time. First is the original image with region of interest, second image is the filtered version from synaptotagmin channel, and on the third image is the result of binarization inside the region of interest.
 
 ![Results GUI example example](images/results_gui_example.png)
 
