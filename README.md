@@ -109,8 +109,8 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 ## Selecting an experiment when working with an Excel spreadsheet
 
 You can write a list or range of desired experiments. See examples below. 
-- You can simply write **all** then all experiments in the table will be processed. 
-- You can write the range in start:stop format, for example if you write **8:100** then all experiments from 8 to 100 will be taken. 
-- You can separate the numbers with commas, for example if you write **8, 10** then two experiments number 8 and number 10 will be processed. 
+- You can simply write **"all"** then all experiments in the table will be processed. 
+- You can write the range in start:stop format, for example if you write **"8:100"** then all experiments from 8 to 100 will be taken. 
+- You can separate the numbers with commas, for example if you write **"8, 10"** then two experiments number 8 and number 10 will be processed. 
 
 ![Excel Table example](images/select_experiment_number_example.png)
