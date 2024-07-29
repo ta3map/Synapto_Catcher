@@ -84,6 +84,7 @@ It will be saved in Excel format to the Output Directory specified earlier.
 
 ## Log window
 The log window at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
+
 ![Log window GUI example](images/console_gui_example.png)
 
 ---
@@ -100,11 +101,16 @@ The table allows to process a large number of images at once.
 
 Currently, the table must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
-- **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list or a range of desired experiments.
-
-![Excel Table example](images/select_experiment_number_example.png)
-
+- **Experiment_Number:** should contain the number of the experiment, e.g. 500. 
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
+## Selecting an experiment when working with an Excel spreadsheet
+
+You can write a list or range of desired experiments. See examples below. 
+- You can simply write **all** then all experiments in the table will be processed. 
+- You can write the range in start:stop format, for example if you write **8:100** then all experiments from 8 to 100 will be taken. 
+- You can separate the numbers with commas, for example if you write **8, 10** then two experiments number 8 and number 10 will be processed. 
+
+![Excel Table example](images/select_experiment_number_example.png)
