@@ -4,6 +4,7 @@ Welcome to the Synapto Catcher! This guide will help you navigate through the fe
 
 ## Overview
 ![Synapto Catcher](images/synaptocatcher_logo.png)
+![Full example](images/demo.gif)
 
 Synapto Catcher is designed to automatically find and select synaptonagmin on CSZ format image. 
 
