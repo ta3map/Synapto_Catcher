@@ -26,7 +26,8 @@ Specify the range of layers to be stacked.
 - **slice end:** Specify the ending slice number.
 
 ## Image Analysis
-
+All steps described below are necessary to obtain statistics on synaptotagmin in the CSZ image.
+If you are [working with an Excel table](#working-with-excel-table), each processing step is performed for each experiment selected in the “Experiment Number” field.
 ### 1. Select ROI
 Click **Select ROI:**  button to choose the Region of Interest (ROI) for the current image.
 The ROI and the image with superimposed region will be saved in the folder with the CSZ image that is being processed.
@@ -72,7 +73,7 @@ After combining, we can simultaneously see three results at the same time. First
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 5. Postprocess
-Postprocessing provides a table that contains all computed results. In case if you work with Excel Table, it does this for each experiment selected in the **Experiment Number** box.
+Postprocessing provides a table that contains all computed results.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
 
