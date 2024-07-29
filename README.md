@@ -30,8 +30,11 @@ Currently, the table must necessarily contain the columns: **filepath, comment, 
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
+
 ### Set Experiment Parameters
-- **Experiment Number (only if Excel table is selected):** Enter the experiment number associated with the images.
+
+![Select slice number example](images/select_slice_number_example.png)
+
 - **slice start:** Specify the starting slice number.
 - **slice end:** Specify the ending slice number.
 
