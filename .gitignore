@@ -1,2 +1,6 @@
 *.asv
 *.exe
+*.pyc
+/__pycache__
+/output
+/setup

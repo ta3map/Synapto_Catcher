@@ -37,7 +37,6 @@ class RedirectText(object):
     def write(self, string):
         self.text_widget.insert(tk.END, string)
         self.text_widget.see(tk.END)  # Automatically scrolls the text field down
-
     def flush(self):  # Need for compatibility with sys.stdout
         pass
     
@@ -430,10 +429,40 @@ def start_event_loop(loop):
     asyncio.set_event_loop(loop)
     loop.run_forever()
 
+try:
+    import pyi_splash
+    pyi_splash.update_text('UI Loaded ...')
+    pyi_splash.close()
+except:
+    pass
+    
 if __name__ == "__main__":
     root = tk.Tk()
     app = ROIAnalyzerApp(root)
 
+    # Определите размеры экрана
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
+    # Определите размеры окна
+    window_width = 400
+    window_height = 900
+    
+    # Рассчитайте координаты для размещения окна
+    position_right = int(screen_width / 2 - window_width / 2)
+    position_down = int(screen_height / 2 - window_height / 2)
+    
+    
+    # root.resizable(False, False)  # Отключение изменения размеров окна
+    
+    # Вывести окно на передний план
+    root.lift()
+    root.attributes('-topmost', True)
+    root.after_idle(root.attributes, '-topmost', False)
+    root.focus_force()
+    # Установите размеры и положение окна
+    root.geometry(f'{window_width}x{window_height}+{position_right}+{position_down}')
+    
     # Create a new asyncio event loop and run it in a separate thread
     new_loop = asyncio.new_event_loop()
     t = Thread(target=start_event_loop, args=(new_loop,))

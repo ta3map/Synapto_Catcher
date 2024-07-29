@@ -11,7 +11,7 @@
   },
   {
    "optionDest": "onefile",
-   "value": true
+   "value": false
   },
   {
    "optionDest": "console",
@@ -28,6 +28,10 @@
   {
    "optionDest": "clean_build",
    "value": true
+  },
+  {
+   "optionDest": "splash",
+   "value": "C:/Users/ta3ma/Documents/Synapto_Catcher/synaptocatcher_splash.png"
   },
   {
    "optionDest": "strip",
@@ -64,6 +68,10 @@
   {
    "optionDest": "datas",
    "value": "C:/Users/ta3ma/Documents/Synapto_Catcher/synaptocatcher.ico;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/ta3ma/Documents/Synapto_Catcher/synaptocatcher_splash.png;."
   }
  ],
  "nonPyinstallerOptions": {

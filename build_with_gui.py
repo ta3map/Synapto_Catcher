@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os
+import shutil
 
 # Path to your Python interpreter
 python_interpreter = 'C:\\Users\\ta3ma\\anaconda3\\python.exe'
@@ -15,11 +16,17 @@ script_path = 'C:\\Users\\ta3ma\\Documents\\synapto_catcher\\roi_analyzer_app.py
 script_name = os.path.splitext(os.path.basename(script_path))[0]
 script_name = 'Synapto Catcher'
 output_file = os.path.join(output_dir, f'{script_name}.exe')
+output_dir_without_ext = os.path.join(output_dir, script_name)
 
 # Remove the output file if it exists
 if os.path.exists(output_file):
     os.remove(output_file)
     print(f'Existing file removed: {output_file}')
+
+# Remove the output directory if it exists
+if os.path.exists(output_dir_without_ext):
+    shutil.rmtree(output_dir_without_ext)
+    print(f'Existing directory removed: {output_dir_without_ext}')
 
 # Command to run auto-py-to-exe
 command = [
