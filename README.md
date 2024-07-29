@@ -36,6 +36,8 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 - **slice end:** Specify the ending slice number.
 
 ### 3. Select ROI
+
+![select ROI GUI example](images/select_roi_gui_example.png)
 ![ROI selection example](images/example_select_roi.gif)
 
 - **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
@@ -43,8 +45,8 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 ### 4. Filter Images
 Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
 
-![Filtered Image example](images/example_denoised.png)
 ![Filter GUI example](images/filter_gui_example.png)
+![Filtered Image example](images/example_denoised.png)
 
 - **Filter radius:** Enter the desired filter radius (pixels) value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
@@ -52,8 +54,8 @@ Synaptotagmin channel filtering, the next necessary step to isolate synapses of 
 ### 5. Binarize Images
 During binarization, we get a black and white image. One of the selected binarization methods allows you to define the brightness cutoff threshold. In the end, however, we only see the result inside the region of interest.
 
-![Binarized Image example](images/example_masks_roi_crop.png)
 ![Binarization GUI example](images/binar_gui_example.png)
+![Binarized Image example](images/example_masks_roi_crop.png)
 
 - **Binarization Method:** Choose the binarization method (e.g., otsu) from the dropdown menu.
 - **Min size of an object:** Specify the minimum size (pixels) of objects to be considered.
@@ -67,8 +69,8 @@ During binarization, we get a black and white image. One of the selected binariz
 ### 6. Combine Images
 After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
 
-![Combined Images example](images/example_combined.png)
 ![Results GUI example example](images/results_gui_example.png)
+![Combined Images example](images/example_combined.png)
 
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
@@ -76,8 +78,8 @@ After combining, we can simultaneously see three results at the same time. On th
 ### 7. Postprocess
 Postprocessing provides a table that contains all the computed information for each experiment.
 
-![Postprocessing Table example](images/postprocess_table_example.png)
 ![Results GUI example example](images/postprocess_gui_example.png)
+![Postprocessing Table example](images/postprocess_table_example.png)
 
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
