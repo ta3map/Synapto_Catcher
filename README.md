@@ -36,7 +36,7 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
 ![Filtered Image example](images/example_denoised.png)
 ![Filter GUI example](images/filter_gui_example.png)
-- **Filter radius:** Enter the desired filter radius value.
+- **Filter radius:** Enter the desired filter radius (pixels) value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
 
 ### 5. Binarize Images
@@ -44,8 +44,8 @@ During binarization, we get a black and white image. One of the selected binariz
 ![Binarized Image example](images/example_masks_roi_crop.png)
 ![Binarization GUI example](images/binar_gui_example.png)
 - **Binarization Method:** Choose the binarization method (e.g., otsu) from the dropdown menu.
-- **Min size of an object:** Specify the minimum size of objects to be considered.
-- **Max size of an object:** Specify the maximum size of objects to be considered.
+- **Min size of an object:** Specify the minimum size (pixels) of objects to be considered.
+- **Max size of an object:** Specify the maximum size (pixels) of objects to be considered.
 - **Binarize:** Click this button to binarize the images based on the chosen parameters.
 
 - **Remove bad spots:** Click this button to remove unwanted spots from the binarized images.
@@ -64,8 +64,8 @@ Postprocessing provides a table that contains all the computed information for e
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
 ## Console
-
-The console at the bottom of the interface provides real-time updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
+![Console GUI example](images/console_gui_example.png)
+The console at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
 
 ---
 
