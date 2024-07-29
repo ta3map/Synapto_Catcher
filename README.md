@@ -9,11 +9,13 @@ Synapto Catcher is designed to process and analyze images. The program interface
 ## Instructions
 
 ### 1. Select File
-
+To get started for the first time, you need to select a target file or a table with a list of files.
+![Select File example](images/select_file_example.png)
 - **Select File (protocol or .csz):** Click the browse button and navigate to the directory containing your image files. Select the desired **Excel spreadsheet based protocol** or **CSZ** picture file.
 
 #### Working with Excel table
 The protocol allows to process a large number of images at once.
+![Protocol Table example](images/protocol_table_example.png)
 Currently, the protocol must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
 - **Experiment_Number:** should contain the number of the experiment, e.g. 500.
@@ -21,7 +23,6 @@ Currently, the protocol must necessarily contain the columns: **filepath, commen
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 ### 2. Set Experiment Parameters
-
 - **Experiment Number (only if protocol is selected):** Enter the experiment number associated with the images.
 - **slice start:** Specify the starting slice number.
 - **slice end:** Specify the ending slice number.
@@ -31,11 +32,13 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 - **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
 
 ### 4. Filter Images
+Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
 ![Filtered Image example](images/example_denoised.png)
 - **Filter radius:** Enter the desired filter radius value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
 
 ### 5. Binarize Images
+During binarization, we get a black and white image. One of the selected binarization methods allows you to define the brightness cutoff threshold. In the end, however, we only see the result inside the region of interest.
 ![Binarized Image example](images/example_masks_roi_crop.png)
 - **Binarization Method:** Choose the binarization method (e.g., otsu) from the dropdown menu.
 - **Min size of an object:** Specify the minimum size of objects to be considered.
@@ -44,12 +47,14 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 - **Remove bad spots:** Click this button to remove unwanted spots from the binarized images.
 
 ### 6. Combine Images
+After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
 ![Combined Images example](images/example_combined.png)
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 7. Postprocess
-
+Postprocessing provides a table that contains all the computed information for each experiment.
+![Postprocessing Table example](images/postprocess_table_example.png)
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
 ## Console
