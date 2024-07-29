@@ -47,7 +47,9 @@ During binarization, we get a black and white image. One of the selected binariz
 - **Min size of an object:** Specify the minimum size of objects to be considered.
 - **Max size of an object:** Specify the maximum size of objects to be considered.
 - **Binarize:** Click this button to binarize the images based on the chosen parameters.
+
 - **Remove bad spots:** Click this button to remove unwanted spots from the binarized images.
+![ROI selection example](images/example_remove_bad_spot.gif)
 
 ### 6. Combine Images
 After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.

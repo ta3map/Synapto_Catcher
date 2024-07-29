@@ -20,7 +20,7 @@ import asyncio
 from threading import Thread
 
 
-# %matplotlib qt
+%matplotlib qt
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
