@@ -31,7 +31,8 @@ Currently, the table must necessarily contain the columns: **filepath, comment, 
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
-### Set Experiment Parameters
+### Stacking Parameters
+Specify the range of layers to be stacked.
 
 ![Select slice number example](images/select_slice_number_example.png)
 
@@ -88,10 +89,9 @@ Postprocessing provides a table that contains all the computed information for e
 
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
-## Console
-![Console GUI example](images/console_gui_example.png)
-
-The console at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
+## Log window
+The log window at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
+![Log window GUI example](images/console_gui_example.png)
 
 ---
 

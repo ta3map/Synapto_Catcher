@@ -85,7 +85,7 @@ class ROIAnalyzerApp:
         
         self.check_file_type()
         
-        self.add_hyperlink("Source: github.com/ta3map/Synapto_Catcher", "https://github.com/ta3map/Synapto_Catcher")
+        self.add_hyperlink("Help and source code", "https://github.com/ta3map/Synapto_Catcher/blob/main/README.md")
         
     def create_separator(self):
         separator = ttk.Separator(self.root, orient='horizontal')
