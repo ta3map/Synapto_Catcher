@@ -74,7 +74,7 @@ After combining, we can simultaneously see three results at the same time. First
 ![Combined Images example](images/example_combined.png)
 
 - **Output Directory:** Specify the output directory where the processed images will be saved.
-- **Combine images:** Click this button to combine the images as per the defined parameters.
+- **Combine images:** Click this button to combine the images.
 
 ### 5. Postprocess
 Postprocessing provides a table that contains all computed results. But this step makes no sense if you are not working with an excel table.
