@@ -72,13 +72,14 @@ After combining, we can simultaneously see three results at the same time. On th
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 5. Postprocess
-Postprocessing provides a table that contains all the computed information for each experiment.
+Postprocessing provides a table that contains all the computed results for each experiment.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
 
 ![Postprocessing Table example](images/postprocess_table_example.png)
 
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
+It will be saved in Excel format to the Output Directory specified earlier.
 
 ## Log window
 The log window at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
@@ -91,7 +92,7 @@ Follow these steps to efficiently process and analyze your images using Synapto 
 ---
 
 
-#### Working with Excel table
+# Working with Excel table
 The table allows to process a large number of images at once.
 
 ![Excel Table example](images/protocol_table_example.png)
