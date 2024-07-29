@@ -3,7 +3,7 @@
 Welcome to the Synapto Catcher program! This guide will help you navigate through the features and functionalities of the software.
 
 ## Overview
-
+![Synapto Catcher](images/synaptocatcher_logo.png)
 Synapto Catcher is designed to process and analyze images. The program interface is divided into several sections, each dedicated to a specific step in the image processing workflow. The console at the bottom displays the progress and results of each processing stage, with links to the output files.
 
 ## Instructions
@@ -22,7 +22,7 @@ The protocol allows to process a large number of images at once.
 
 Currently, the protocol must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
-- **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list of desired experiments or a range of desired experiments.
+- **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list or a range of desired experiments.
 
 ![Protocol Table example](images/select_experiment_number_example.png)
 

@@ -338,91 +338,87 @@ def remove_ccp(df, csv_file_path, rows_to_process, dpi=200):
         close(fig)
 
     error_files = []
-    with tqdm(total=len(rows_to_process), desc="Processing images") as pbar:
-        for row_number_to_process in rows_to_process:
-            try:
-                row = df.iloc[row_number_to_process]
-                if row['take_to_stat'] == 'no':
-                    print(f"Skipping row {row_number_to_process} because take_to_stat is 'no'")
-                    pbar.update(1)
-                    continue
-                
-                image_path = row['filepath']
-                base_name = splitext(basename(image_path))[0]
-                experiment_date = basename(dirname(image_path))
-                
-                denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised.png")
-                masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
-                full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
-                summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
-                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
+    for row_number_to_process in rows_to_process:
+        try:
+            row = df.iloc[row_number_to_process]
+            if row['take_to_stat'] == 'no':
+                print(f"Skipping row {row_number_to_process} because take_to_stat is 'no'")
+                continue
+            
+            image_path = row['filepath']
+            base_name = splitext(basename(image_path))[0]
+            experiment_date = basename(dirname(image_path))
+            
+            denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised.png")
+            masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
+            full_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_full_roi_result_table.xlsx")
+            summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
+            roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
 
-                image = Image.open(denoised_image_path).convert('L')
-                image_array = array(image)
-                
-                previous_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
-                roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
-                print('Removing bad spots in ' + roi_mask_image_path)
-                
-                # reading file into previous_masked_image variable from previous_masked_image_path
-                previous_masked_image = Image.open(previous_masked_image_path).convert('L')
-                previous_masked_array = np.array(previous_masked_image)
-                previous_masked_binary = (previous_masked_array > 0).astype(np.uint8)  # перевод в бинарный вид
-                
-                # read mask and convert to binary form
-                mask_image = Image.open(roi_mask_image_path).convert('L')
-                mask_array = np.array(mask_image)
-                previous_roi_mask = (mask_array > 0).astype(np.uint8)
-                
-                # displaying the image
-                fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
-                fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
-                
-                ax.imshow(previous_masked_image, cmap='gray')
-                
-                # draw a polygon
-                coords = []
-                props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
-                polygon_selector = PolygonSelector(ax, onselect, props=props)
-                show(block=True)
-                
-                # create a new mask from polygon coordinates
-                x, y = np.meshgrid(np.arange(previous_masked_array.shape[1]), np.arange(previous_masked_array.shape[0]))
-                x, y = x.flatten(), y.flatten()
-                points = np.vstack((x, y)).T
-                polygon = Polygon(coords)
-                new_roi_mask = polygon.contains_points(points).reshape(previous_masked_array.shape).astype(np.uint8)
-                
-                # applying error correction to the image
-                corrected_image = previous_masked_binary | new_roi_mask
-                
-                # applying error correction to the mask
-                corrected_mask = previous_roi_mask & ~new_roi_mask
-                
-                # saving a new mask
-                new_mask_image_pil = Image.fromarray((corrected_mask * 255).astype('uint8'))
-                new_mask_image_pil.save(roi_mask_image_path)
-                
-                # saving the image passed through the mask
-                new_masked_image_pil = Image.fromarray((corrected_image * 255).astype('uint8'))
-                new_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
-                new_masked_image_pil.save(new_masked_image_path)
-                
-                summary_data = read_excel(summary_result_path)
-                binarization_method = summary_data['Binarization method'].values[0]
-                
-                distances = extract_scaling_distances_from_czi(image_path)
-                pixel_to_micron_ratio = distances['X']*1_000_000
-                
-                # resave properties
-                process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
-                
-                pbar.update(1)
+            image = Image.open(denoised_image_path).convert('L')
+            image_array = array(image)
+            
+            previous_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
+            roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
+            print('Removing bad spots in ' + roi_mask_image_path)
+            
+            # reading file into previous_masked_image variable from previous_masked_image_path
+            previous_masked_image = Image.open(previous_masked_image_path).convert('L')
+            previous_masked_array = np.array(previous_masked_image)
+            previous_masked_binary = (previous_masked_array > 0).astype(np.uint8)  # перевод в бинарный вид
+            
+            # read mask and convert to binary form
+            mask_image = Image.open(roi_mask_image_path).convert('L')
+            mask_array = np.array(mask_image)
+            previous_roi_mask = (mask_array > 0).astype(np.uint8)
+            
+            # displaying the image
+            fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
+            fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
+            
+            ax.imshow(previous_masked_image, cmap='gray')
+            
+            # draw a polygon
+            coords = []
+            props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
+            polygon_selector = PolygonSelector(ax, onselect, props=props)
+            show(block=True)
+            
+            # create a new mask from polygon coordinates
+            x, y = np.meshgrid(np.arange(previous_masked_array.shape[1]), np.arange(previous_masked_array.shape[0]))
+            x, y = x.flatten(), y.flatten()
+            points = np.vstack((x, y)).T
+            polygon = Polygon(coords)
+            new_roi_mask = polygon.contains_points(points).reshape(previous_masked_array.shape).astype(np.uint8)
+            
+            # applying error correction to the image
+            corrected_image = previous_masked_binary | new_roi_mask
+            
+            # applying error correction to the mask
+            corrected_mask = previous_roi_mask & ~new_roi_mask
+            
+            # saving a new mask
+            new_mask_image_pil = Image.fromarray((corrected_mask * 255).astype('uint8'))
+            new_mask_image_pil.save(roi_mask_image_path)
+            
+            # saving the image passed through the mask
+            new_masked_image_pil = Image.fromarray((corrected_image * 255).astype('uint8'))
+            new_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
+            new_masked_image_pil.save(new_masked_image_path)
+            
+            summary_data = read_excel(summary_result_path)
+            binarization_method = summary_data['Binarization method'].values[0]
+            
+            distances = extract_scaling_distances_from_czi(image_path)
+            pixel_to_micron_ratio = distances['X']*1_000_000
+            
+            # resave properties
+            process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
 
-            except Exception as e:
-                print(f"Error processing row {row_number_to_process} for file {image_path}: {e}")
-                error_files.append(image_path)
-                pbar.update(1)
+
+        except Exception as e:
+            print(f"Error processing row {row_number_to_process} for file {image_path}: {e}")
+            error_files.append(image_path)
     
     if error_files:
         print("\nErrors occurred in the following files:")

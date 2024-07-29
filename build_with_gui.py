@@ -9,7 +9,7 @@ python_interpreter = os.path.expanduser('~\\anaconda3\\envs\\light_env\\python.e
 home_dir = os.path.expanduser('~')
 config_path = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'converter_settings.json')
 output_dir = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'output')
-script_path = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'roi_analyzer_app.py')
+script_path = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'syn_catch_GUI.py')
 
 # Determine the output file name based on the input script name
 script_name = os.path.splitext(os.path.basename(script_path))[0]

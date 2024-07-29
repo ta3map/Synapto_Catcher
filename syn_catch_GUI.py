@@ -19,8 +19,8 @@ from tkinter import PhotoImage
 import asyncio
 from threading import Thread
 
-
-%matplotlib qt
+import traceback
+# %matplotlib qt
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -271,9 +271,12 @@ class ROIAnalyzerApp:
             self.add_file_links_from_list(files_out)
         except Exception as e:
             print(f"An error occurred: {e}")
+            traceback.print_exc()
 
     def binarize_action(self):
         asyncio.run_coroutine_threadsafe(self.async_binarize_action(), self.loop)
+
+
 
     def remove_ccp_action(self):
         try:
@@ -284,6 +287,8 @@ class ROIAnalyzerApp:
             print("Binarization completed successfully.")
         except Exception as e:
             print(f"An error occurred: {e}")
+            traceback.print_exc()
+    
 
     async def async_combine_images_action(self):
         try:
@@ -300,6 +305,7 @@ class ROIAnalyzerApp:
             self.add_file_links_from_list(files_out)
         except Exception as e:
             print(f"An error occurred: {e}")
+            traceback.print_exc()
 
     def combine_images_action(self):
         asyncio.run_coroutine_threadsafe(self.async_combine_images_action(), self.loop)
