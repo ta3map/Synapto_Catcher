@@ -10,7 +10,7 @@ Synapto Catcher is designed to automatically find and select synaptonagmin on CS
 ## Getting Started
 
 ### Select File
-To get started for the first time, you need to select a CSZ image file or a table with a list of CSZ files in Excel table (see [Working with Excel table](#### Working with Excel table)
+To get started for the first time, you need to select a CSZ image file or a table with a list of CSZ files in Excel table (see [Working with Excel table](#working-with-excel-table)
 ).
 
 ![Select File example](images/select_file_gui_example.png)
