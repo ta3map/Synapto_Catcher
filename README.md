@@ -27,16 +27,16 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 - **slice end:** Specify the ending slice number.
 
 ### 3. Select ROI
-![Select ROI](images/select_roi.gif)
+![ROI selection example](images/example_select_roi.gif)
 - **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
 
 ### 4. Filter Images
-
+![Filtered Image example](images/example_denoised.png)
 - **Filter radius:** Enter the desired filter radius value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
 
 ### 5. Binarize Images
-
+![Binarized Image example](images/example_masks_roi_crop.png)
 - **Binarization Method:** Choose the binarization method (e.g., otsu) from the dropdown menu.
 - **Min size of an object:** Specify the minimum size of objects to be considered.
 - **Max size of an object:** Specify the maximum size of objects to be considered.
@@ -44,7 +44,7 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 - **Remove bad spots:** Click this button to remove unwanted spots from the binarized images.
 
 ### 6. Combine Images
-
+![Combined Images example](images/example_combined.png)
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
