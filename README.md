@@ -89,10 +89,6 @@ The log window at the bottom of the interface provides updates on the progress o
 
 ---
 
-Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please contact me [ta3map@gmail.com](mailto:ta3map@gmail.com?subject=SynaptoCatcher).
-
----
-
 
 # Working with Excel table
 The table allows to process a large number of images at once.
@@ -106,7 +102,7 @@ Currently, the table must necessarily contain the columns: **filepath, comment, 
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
-## Selecting an experiment when working with an Excel spreadsheet
+## Selecting an experiment when working with an Excel table
 
 You can write a list or range of desired experiments. See examples below. 
 - You can simply write **"all"** then all experiments in the table will be processed. 
@@ -114,3 +110,7 @@ You can write a list or range of desired experiments. See examples below.
 - You can write the range in start:stop format, for example if you write **"8:100"** then all experiments from 8 to 100 will be taken. 
 
 ![Excel Table example](images/select_experiment_number_example.png)
+
+---
+
+Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please contact me [ta3map@gmail.com](mailto:ta3map@gmail.com?subject=SynaptoCatcher).
