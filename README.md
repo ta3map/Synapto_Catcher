@@ -10,16 +10,22 @@ Synapto Catcher is designed to process and analyze images. The program interface
 
 ### 1. Select File
 To get started for the first time, you need to select a target file or a table with a list of files.
+
 ![Select File example](images/select_file_example.png)
+
 - **Select File (protocol or .csz):** Click the browse button and navigate to the directory containing your image files. Select the desired **Excel spreadsheet based protocol** or **CSZ** picture file.
 
 #### Working with Excel table
 The protocol allows to process a large number of images at once.
+
 ![Protocol Table example](images/protocol_table_example.png)
+
 Currently, the protocol must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
 - **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list of desired experiments or a range of desired experiments.
+
 ![Protocol Table example](images/select_experiment_number_example.png)
+
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
@@ -30,46 +36,57 @@ Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
 ### 3. Select ROI
 ![ROI selection example](images/example_select_roi.gif)
+
 - **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
 
 ### 4. Filter Images
 Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
+
 ![Filtered Image example](images/example_denoised.png)
 ![Filter GUI example](images/filter_gui_example.png)
+
 - **Filter radius:** Enter the desired filter radius (pixels) value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
 
 ### 5. Binarize Images
 During binarization, we get a black and white image. One of the selected binarization methods allows you to define the brightness cutoff threshold. In the end, however, we only see the result inside the region of interest.
+
 ![Binarized Image example](images/example_masks_roi_crop.png)
 ![Binarization GUI example](images/binar_gui_example.png)
+
 - **Binarization Method:** Choose the binarization method (e.g., otsu) from the dropdown menu.
 - **Min size of an object:** Specify the minimum size (pixels) of objects to be considered.
 - **Max size of an object:** Specify the maximum size (pixels) of objects to be considered.
 - **Binarize:** Click this button to binarize the images based on the chosen parameters.
 
 - **Remove bad spots:** Click this button to remove unwanted spots from the binarized images.
+
 ![ROI selection example](images/example_remove_bad_spot.gif)
 
 ### 6. Combine Images
 After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
+
 ![Combined Images example](images/example_combined.png)
 ![Results GUI example example](images/results_gui_example.png)
+
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 7. Postprocess
 Postprocessing provides a table that contains all the computed information for each experiment.
+
 ![Postprocessing Table example](images/postprocess_table_example.png)
+
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
 ## Console
 ![Console GUI example](images/console_gui_example.png)
+
 The console at the bottom of the interface provides updates on the progress of each processing stage. It displays messages indicating the successful completion of each step and provides links to the resulting files. You can click these links to open and view the results.
 
 ---
 
-Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please refer to the troubleshooting section or contact support.
+Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please contact me.
 
 ---
 
