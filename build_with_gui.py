@@ -1,16 +1,15 @@
 import subprocess
-import sys
 import os
 import shutil
 
-# Path to your Python interpreter
-python_interpreter = 'C:\\Users\\ta3ma\\anaconda3\\python.exe'
-python_interpreter = 'C:\\Users\\ta3ma\\anaconda3\\envs\\light_env\\python.exe'
+# Path to your Python interpreter (assuming Anaconda and a specific environment are used)
+python_interpreter = os.path.expanduser('~\\anaconda3\\envs\\light_env\\python.exe')
 
-# Paths to files and directories
-config_path = 'C:\\Users\\ta3ma\\Documents\\synapto_catcher\\converter_settings.json'
-output_dir = 'C:\\Users\\ta3ma\\Documents\\synapto_catcher\\output'
-script_path = 'C:\\Users\\ta3ma\\Documents\\synapto_catcher\\roi_analyzer_app.py'
+# Paths to files and directories (using home directory)
+home_dir = os.path.expanduser('~')
+config_path = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'converter_settings.json')
+output_dir = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'output')
+script_path = os.path.join(home_dir, 'Documents', 'synapto_catcher', 'roi_analyzer_app.py')
 
 # Determine the output file name based on the input script name
 script_name = os.path.splitext(os.path.basename(script_path))[0]
