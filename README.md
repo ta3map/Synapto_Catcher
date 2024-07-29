@@ -1,11 +1,11 @@
 # Synapto Catcher User Guide
 
-Welcome to the Synapto Catcher program! This guide will help you navigate through the features and functionalities of the software.
+Welcome to the Synapto Catcher! This guide will help you navigate through the features and functionalities of this image processing software.
 
 ## Overview
 ![Synapto Catcher](images/synaptocatcher_logo.png)
 
-Synapto Catcher is designed to process and analyze images. The program interface is divided into several sections, each dedicated to a specific step in the image processing workflow. The console at the bottom displays the progress and results of each processing stage, with links to the output files.
+Synapto Catcher is designed to automatically find and select synaptonagmin on CSZ format image. 
 
 ## Getting Started
 
