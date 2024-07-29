@@ -36,9 +36,9 @@ class RedirectText(object):
 
     def write(self, string):
         self.text_widget.insert(tk.END, string)
-        self.text_widget.see(tk.END)  # Автоматически прокручивает текстовое поле вниз
+        self.text_widget.see(tk.END)  # Automatically scrolls the text field down
 
-    def flush(self):  # Нужно для совместимости с sys.stdout
+    def flush(self):  # Need for compatibility with sys.stdout
         pass
     
 class ROIAnalyzerApp:
@@ -86,8 +86,9 @@ class ROIAnalyzerApp:
         
         self.check_file_type()
         
+        self.add_hyperlink("Source: github.com/ta3map/Synapto_Catcher", "https://github.com/ta3map/Synapto_Catcher")
+        
     def create_separator(self):
-        # Создаем разделитель
         separator = ttk.Separator(self.root, orient='horizontal')
         separator.pack(fill='x', padx=10, pady=10)
     
@@ -158,7 +159,6 @@ class ROIAnalyzerApp:
             self.toggle_entry("rows", True) 
         
     def flatten_list(self, nested_list):
-        # Используем itertools.chain.from_iterable для разворачивания вложенных списков
         flattened = list(itertools.chain.from_iterable(nested_list))
         return flattened
     
@@ -193,65 +193,6 @@ class ROIAnalyzerApp:
         files_out = self.flatten_list(files_out)
         for filepath in files_out:
             self.add_file_link(filepath, filepath)
-    
-    # def test_progress(self):
-    #     for i in range(101):
-    #         self.print_progress_bar(i)
-    #         time.sleep(0.001)  # Имитируем длительный процесс
-    
-    # def print_progress_bar(self, percentage, length=10):
-    #     # Вычисляем количество заполненных и пустых сегментов
-    #     filled_length = int(length * percentage // 100)
-    #     empty_length = length - filled_length
-    
-    #     # Создаем строки заполненных и пустых сегментов
-    #     filled_segment = '█' * filled_length
-    #     empty_segment = '_' * empty_length
-    
-    #     # Формируем окончательную строку прогресса
-    #     progress_bar = f"{filled_segment}{empty_segment}__{percentage}%"
-    #     self.text_area.insert(tk.END, progress_bar + "\n")
-    #     # print(progress_bar)
-    #     self.text_area.update_idletasks()  # Обновление интерфейса
-        
-    #     progress_length = length+7
-    #     if percentage != 100:
-    #         self.text_area.delete(f"end-{progress_length}c", tk.END)  # удаляем старую строку прогресса
-    #         self.text_area.insert(tk.END, '' + "\n")        
-    #     return progress_bar
-
-
-    # async def async_print_progress_bar(self, percentage, length=10):
-    #     # Вычисляем количество заполненных и пустых сегментов
-    #     filled_length = int(length * percentage // 100)
-    #     empty_length = length - filled_length
-    
-    #     # Создаем строки заполненных и пустых сегментов
-    #     filled_segment = '█' * filled_length
-    #     empty_segment = '_' * empty_length
-    
-    #     # Формируем окончательную строку прогресса
-    #     progress_bar = f"{filled_segment}{empty_segment}__{percentage}%"
-    #     self.text_area.insert(tk.END, progress_bar + "\n")
-    #     self.text_area.update_idletasks()  # Обновление интерфейса
-    
-    #     progress_length = length + 7
-    #     if percentage != 100:
-    #         self.text_area.delete(f"end-{progress_length}c", tk.END)  # удаляем старую строку прогресса
-    #         self.text_area.insert(tk.END, '' + "\n")
-        
-    #     await asyncio.sleep(0)  # Даем управление другим задачам
-    #     return progress_bar
-    
-    # def print_progress_bar(self, percentage, length=10):
-    #     asyncio.run_coroutine_threadsafe(self.async_print_progress_bar(percentage, length), self.loop)
-    
-    # def update_progress_bar(self, value, maximum):
-    #     percentage = round(100*(value/maximum))
-    #     if percentage != self.previous_percentage:  # Сравниваем с предыдущим значением
-    #         self.print_progress_bar(percentage)
-    #         self.previous_percentage = percentage  # Обновляем предыдущее значение
-
     def browse_protocol(self):
         protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.czi;*.csv;*.xlsx;*.xls")])
         if protocol_path:
@@ -279,43 +220,7 @@ class ROIAnalyzerApp:
             self.printed_symbols = 0
             print('', flush=False)
         if value == 0:
-            # print('_'*self.total_symbols, flush=False)
             print("0%------50%------100%")
-
-    # def extract_stt(self):
-    #     df, rows_to_process = self.prepare_data()
-    #     total = len(rows_to_process)
-    #     files_out = []
-    #     for idx, row_idx in enumerate(rows_to_process):
-    #         file_path = df.iloc[row_idx]['filepath']
-    #         location = df.iloc[row_idx]['location']
-    #         slice_start = int(self.slice_start_entry.get())
-    #         slice_end = int(self.slice_end_entry.get())   
-    #         _, _, _, synaptotag_file_path = extract_image_stock(file_path, location, slice_start, slice_end)
-    #         files_out.append([synaptotag_file_path])
-    #         # self.update_progress_bar(idx, total)
-    #         print(f'█', end='', flush=True)
-    #     print("Target channel extracted successfully.")
-    #     self.add_file_links_from_list(files_out)
-
-    # async def async_extract_stt(self):
-    #     df, rows_to_process = self.prepare_data()
-    #     total = len(rows_to_process)
-    #     files_out = []
-    #     for idx, row_idx in enumerate(rows_to_process):
-    #         file_path = df.iloc[row_idx]['filepath']
-    #         location = df.iloc[row_idx]['location']
-    #         slice_start = int(self.slice_start_entry.get())
-    #         slice_end = int(self.slice_end_entry.get())   
-    #         _, _, _, synaptotag_file_path = extract_image_stock(file_path, location, slice_start, slice_end)
-    #         files_out.append([synaptotag_file_path])
-    #         self.update_progress_bar(idx, total)
-    #         await asyncio.sleep(0)  # Даем управление другим задачам
-    #     print("Target channel extracted successfully.")
-    #     self.add_file_links_from_list(files_out)
-
-    # def extract_stt(self):
-    #     asyncio.run_coroutine_threadsafe(self.async_extract_stt(), self.loop)
 
     def select_roi(self):
         df, rows_to_process = self.prepare_data()
@@ -341,32 +246,12 @@ class ROIAnalyzerApp:
             location = df.iloc[row_idx]['location']   
             files_out.append(filter_after_roi_selection(filter_radius, file_path, location))
             self.update_progress_bar(idx, total)
-            await asyncio.sleep(0)  # Даем управление другим задачам
+            await asyncio.sleep(0)  # Let's give management another task
         print("Images filtered successfully.")
         self.add_file_links_from_list(files_out)
 
     def filter_action(self):
         asyncio.run_coroutine_threadsafe(self.async_filter_action(), self.loop)
-
-    # def binarize_action(self):
-    #     try:
-    #         df, rows_to_process = self.prepare_data()
-    #         total = len(rows_to_process)
-    #         files_out = []
-    #         for idx, row_idx in enumerate(rows_to_process):
-    #             file_path = df.iloc[row_idx]['filepath']
-    #             row = df.iloc[row_idx]
-    #             files_out.append(binarize_images(
-    #                 file_path, row,
-    #                 self.binarization_method.get(), int(self.min_size_entry.get()), 
-    #                 int(self.max_size_entry.get()),
-    #                 float(self.pixel_to_micron_ratio_entry.get())
-    #             ))
-    #             self.update_progress_bar(idx, total)
-    #         print("Binarization completed successfully.")
-    #         self.add_file_links_from_list(files_out)
-    #     except Exception as e:
-    #         print(f"An error occurred: {e}")
 
     async def async_binarize_action(self):
         try:
@@ -382,7 +267,7 @@ class ROIAnalyzerApp:
                     int(self.max_size_entry.get())
                 ))
                 self.update_progress_bar(idx, total)
-                await asyncio.sleep(0)  # Даем управление другим задачам
+                await asyncio.sleep(0)  # Let's give management another task
             print("Binarization completed successfully.")
             self.add_file_links_from_list(files_out)
         except Exception as e:
@@ -401,21 +286,6 @@ class ROIAnalyzerApp:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    # def combine_images_action(self):
-    #     try:
-    #         df, rows_to_process = self.prepare_data()
-    #         output_directory = self.selected_output_dir.get()
-    #         total = len(rows_to_process)
-    #         files_out = []
-    #         for idx, row_idx in enumerate(rows_to_process):
-    #             file_path = df.iloc[row_idx]['filepath']
-    #             files_out.append(combine_images(file_path, output_directory))
-    #             self.update_progress_bar(idx, total)
-    #         print("Images combined successfully.")
-    #         self.add_file_links_from_list(files_out)
-    #     except Exception as e:
-    #         print(f"An error occurred: {e}")
-
     async def async_combine_images_action(self):
         try:
             df, rows_to_process = self.prepare_data()
@@ -426,7 +296,7 @@ class ROIAnalyzerApp:
                 file_path = df.iloc[row_idx]['filepath']
                 files_out.append(combine_images(file_path, output_directory))
                 self.update_progress_bar(idx, total)
-                await asyncio.sleep(0)  # Даем управление другим задачам
+                await asyncio.sleep(0)  # Let's give management another task
             print("Images combined successfully.")
             self.add_file_links_from_list(files_out)
         except Exception as e:
@@ -434,39 +304,6 @@ class ROIAnalyzerApp:
 
     def combine_images_action(self):
         asyncio.run_coroutine_threadsafe(self.async_combine_images_action(), self.loop)
-
-    # def run_postprocess(self):
-    #     df, rows_to_process = self.prepare_data()
-    #     output_directory = self.selected_output_dir.get()
-    #     # Create output directory if it doesn't exist
-    #     os.makedirs(output_directory, exist_ok=True)
-    #     total = len(rows_to_process)
-    #     summary_data_list = []
-    
-    #     # Using tqdm to display the progress bar
-    #     files_out = []
-    #     for idx, row_idx in tqdm(enumerate(rows_to_process), total=total, desc="Processing"):
-    #         file_path = df.iloc[row_idx]['filepath']
-    #         row = df.iloc[row_idx]
-    #         summary_data, summary_result_path = pp_one(file_path, row, output_directory)
-    #         files_out.append([summary_result_path])
-    #         if summary_data is not None:
-    #             summary_data_list.append(summary_data)
-            
-    #         self.update_progress_bar(idx, total)
-            
-    #     # Create a DataFrame with collected data
-    #     summary_df = pd.concat(summary_data_list, ignore_index=True)
-    #     summary_df.drop(summary_df.columns[[0, -1]], axis=1, inplace=True)
-        
-    #     # Save the updated DataFrame to a new file
-    #     summary_output_path = join(output_directory, "collected_roi_summary_data.xlsx")
-    #     summary_df.to_excel(summary_output_path, index=False)
-        
-    #     print("Postprocessing completed successfully.")
-    #     self.add_file_links_from_list(files_out)
-    #     print("Final table:")
-    #     self.add_file_links_from_list([[summary_output_path]])
 
     async def async_run_postprocess(self):
         df, rows_to_process = self.prepare_data()
@@ -597,7 +434,7 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = ROIAnalyzerApp(root)
 
-    # Создаем новый цикл событий asyncio и запускаем его в отдельном потоке
+    # Create a new asyncio event loop and run it in a separate thread
     new_loop = asyncio.new_event_loop()
     t = Thread(target=start_event_loop, args=(new_loop,))
     t.start()
@@ -605,4 +442,4 @@ if __name__ == "__main__":
     app.set_loop(new_loop)
 
     root.mainloop()
-    new_loop.call_soon_threadsafe(new_loop.stop)  # Останавливаем цикл событий при закрытии окна
+    new_loop.call_soon_threadsafe(new_loop.stop)  # Stop the event loop when the window closes

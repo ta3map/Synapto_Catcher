@@ -21,19 +21,19 @@ import xml.etree.ElementTree as ET
 import time
 
 def extract_scaling_distances_from_czi(filename):
-    # Открываем .czi файл
+    # Open the .czi file
     czi = aicCzi(filename)
     
-    # Получаем метаданные
+    # Get the metadata
     metadata_xml = czi.meta
     metadata_str = ET.tostring(metadata_xml, encoding='utf-8', method='xml')
     
-    # Парсим строку метаданных
+    # Parsing the metadata string
     root = ET.fromstring(metadata_str)
     
     distances = {"X": None, "Y": None, "Z": None}
     
-    # Ищем Scaling - Items - Distance
+    # Looking for Scaling - Items - Distance
     for scaling in root.findall(".//Scaling/Items/Distance"):
         if 'Id' in scaling.attrib:
             id_value = scaling.attrib['Id']
@@ -107,11 +107,10 @@ def process_file(file_path, location, slice_start=2, slice_end=6):
     figsize = width / float(dpi), height / float(dpi)
     
     fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
-    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # Убираем отступы
+    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
     
     ax.imshow(combined_image)
     
-    # Добавление текста на изображение
     ax.text(0.5, 0.95, f"{file_path} - {location}", transform=ax.transAxes, fontsize=5, color='white', ha='center', va='top', bbox=dict(facecolor='black', alpha=0.5))
     ax.axis('off')
 
@@ -161,11 +160,11 @@ def filter_after_roi_selection(filter_radius, file_path, location):
     synaptotag_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_synaptotag.png")
     sample_slice_1 = read_image(synaptotag_file_path)
         
-    # Конвертация изображения в формат uint8
+    # Convert image to uint8 format
     if sample_slice_1.dtype != np.uint8:
         sample_slice_1 = (255 * (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1))).astype(np.uint8)
     
-    # Убедимся, что изображение двумерное
+    # Let's make sure the image is two-dimensional
     if len(sample_slice_1.shape) > 2:
         sample_slice_1 = cv2.cvtColor(sample_slice_1, cv2.COLOR_BGR2GRAY)
         
@@ -195,9 +194,6 @@ def max_entropy_threshold(image):
     threshold = bin_mids[argmax(entropy)]
     return threshold
 
-# def binarize_images(df, csv_file_path, rows_to_process, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.1):
-    # pixel_to_micron_ratio Коэффициент перевода из пикселей в микрометры
-    # df = read_csv(csv_file_path, delimiter=';')
 
 def get_threshold_value(image_array, binarization_method):
     if binarization_method == 'max_entropy':
@@ -295,7 +291,7 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
     for index, prop in enumerate(props, start=1):
         area_microns = prop.area * pixel_to_micron_ratio**2
         if area_microns > max_size:
-           continue  # Пропустить объекты, размер которых превышает max_size
+           continue  # Skip objects larger than max_size
         total_objects += 1
         total_area += area_microns
         total_mean_intensity += prop.mean_intensity * area_microns
@@ -368,46 +364,46 @@ def remove_ccp(df, csv_file_path, rows_to_process, dpi=200):
                 roi_mask_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_roi_mask.png")
                 print('Removing bad spots in ' + roi_mask_image_path)
                 
-                # чтение файла в переменную previous_masked_image из previous_masked_image_path
+                # reading file into previous_masked_image variable from previous_masked_image_path
                 previous_masked_image = Image.open(previous_masked_image_path).convert('L')
                 previous_masked_array = np.array(previous_masked_image)
                 previous_masked_binary = (previous_masked_array > 0).astype(np.uint8)  # перевод в бинарный вид
                 
-                # чтение маски и перевод в бинарный вид
+                # read mask and convert to binary form
                 mask_image = Image.open(roi_mask_image_path).convert('L')
                 mask_array = np.array(mask_image)
                 previous_roi_mask = (mask_array > 0).astype(np.uint8)
                 
-                # отображение изображения
+                # displaying the image
                 fig, ax = subplots(figsize=(5, 5), dpi=dpi * 0.8)
                 fig.subplots_adjust(left=0, right=1, top=1, bottom=0)  # убираем отступы
                 
                 ax.imshow(previous_masked_image, cmap='gray')
                 
-                # чертим полигон
+                # draw a polygon
                 coords = []
                 props = dict(color='#1DE720', linestyle='-', linewidth=2, alpha=0.7)
                 polygon_selector = PolygonSelector(ax, onselect, props=props)
                 show(block=True)
                 
-                # создание новой маски из координат полигона
+                # create a new mask from polygon coordinates
                 x, y = np.meshgrid(np.arange(previous_masked_array.shape[1]), np.arange(previous_masked_array.shape[0]))
                 x, y = x.flatten(), y.flatten()
                 points = np.vstack((x, y)).T
                 polygon = Polygon(coords)
                 new_roi_mask = polygon.contains_points(points).reshape(previous_masked_array.shape).astype(np.uint8)
                 
-                # применение устранения ошибок на изображение
+                # applying error correction to the image
                 corrected_image = previous_masked_binary | new_roi_mask
                 
-                # применение устранения ошибок на маску
+                # applying error correction to the mask
                 corrected_mask = previous_roi_mask & ~new_roi_mask
                 
-                # сохранение новой маски
+                # saving a new mask
                 new_mask_image_pil = Image.fromarray((corrected_mask * 255).astype('uint8'))
                 new_mask_image_pil.save(roi_mask_image_path)
                 
-                # сохранение пройденного через маску изображения
+                # saving the image passed through the mask
                 new_masked_image_pil = Image.fromarray((corrected_image * 255).astype('uint8'))
                 new_masked_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
                 new_masked_image_pil.save(new_masked_image_path)
@@ -418,7 +414,7 @@ def remove_ccp(df, csv_file_path, rows_to_process, dpi=200):
                 distances = extract_scaling_distances_from_czi(image_path)
                 pixel_to_micron_ratio = distances['X']*1_000_000
                 
-                # пересохранение свойств
+                # resave properties
                 process_properties(image_array, ~corrected_image, ~corrected_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
                 
                 pbar.update(1)
@@ -499,16 +495,13 @@ def pp_one(file_path, row, output_directory):
     
 def postprocess(df, csv_file_path, output_directory, rows_to_process):
     
-    # Создаем выходную директорию, если ее нет
+    # Create an output directory if there isn't one
     makedirs(output_directory, exist_ok=True)
-
-    # Загружаем данные из CSV
-    # df = pd.read_csv(csv_file_path, delimiter=';')
     
     # Collect data and combine images
     summary_data_list = []
     
-    # Добавляем прогресс-бар
+    # Add a progress bar
     with tqdm(total=len(rows_to_process), desc="Processing images") as pbar:
         for row_number_to_process in rows_to_process:
             try:
@@ -521,21 +514,7 @@ def postprocess(df, csv_file_path, output_directory, rows_to_process):
                 image_path = row['filepath']
                 base_name = splitext(basename(image_path))[0]
                 experiment_date = basename(dirname(image_path))
-                
-                # # Paths to the images
-                # denoised_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_denoised.png")
-                # masks_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_masks_roi_crop.png")
-                # roi_image_path = join(dirname(image_path), f"{experiment_date}_{base_name}_with_roi.png")
-            
-                # # Combine and save images
-                # combined_image_path = join(output_directory, f"{experiment_date}_{base_name}_combined.png")
-                # try:
-                #     combine_and_save_images(denoised_image_path, masks_image_path, roi_image_path, combined_image_path)
-                # except Exception as e:
-                #     print(f"Error combining images for {image_path}: {e}")
-                #     pbar.update(1)
-                #     continue
-                
+                                
                 # Path to the results file
                 summary_result_path = join(dirname(image_path), f"{experiment_date}_{base_name}_summary_roi_result_table.xlsx")
                 # Save the first row of the results table
