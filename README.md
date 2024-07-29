@@ -3,10 +3,10 @@
 Welcome to the Synapto Catcher! This guide will help you navigate through the features and functionalities of this image processing software.
 
 ## Overview
+Synapto Catcher is designed to automatically find and select synaptonagmin on CSZ format image. 
+
 ![Synapto Catcher](images/synaptocatcher_logo.png)
 ![Full example](images/demo.gif)
-
-Synapto Catcher is designed to automatically find and select synaptonagmin on CSZ format image. 
 
 ## Download
 [Download Installer for Windows](https://sourceforge.net/projects/synapto-catcher/files/synapto_catcher_setup.exe/download)
@@ -77,7 +77,7 @@ After combining, we can simultaneously see three results at the same time. First
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 5. Postprocess
-Postprocessing provides a table that contains all computed results.
+Postprocessing provides a table that contains all computed results. But this step makes no sense if you are not working with an excel table.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
 
@@ -102,7 +102,7 @@ The table allows to process a large number of images at once.
 Currently, the table must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
 - **Experiment_Number:** should contain the number of the experiment, e.g. 500. 
-- **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
+- **take_to_stat:** can be empty, but if there is the word 'no' in a line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
