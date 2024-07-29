@@ -20,7 +20,7 @@ import asyncio
 from threading import Thread
 
 
-%matplotlib qt
+# %matplotlib qt
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,7 +45,7 @@ class ROIAnalyzerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Synapto Catcher")
-        self.root.iconbitmap(r"C:\Users\ta3ma\Documents\Synapto_Catcher\synaptocatcher.ico")
+        self.root.iconbitmap(current_dir + "\\synaptocatcher.ico")
         
         # Load previous parameters if they exist
         self.params = self.load_params()                
@@ -55,12 +55,14 @@ class ROIAnalyzerApp:
         self.create_label_and_entry("slice start:", default_value='2', attr_name="slice_start")
         self.create_label_and_entry("slice end:", default_value='6', attr_name="slice_end")
         
-        # self.create_button("1. Extract channel", self.extract_stt)
-        
+        self.create_separator()        
         self.create_button("1. Select ROI", self.select_roi)
+        
+        self.create_separator()
         self.create_label_and_entry("Filter radius:", default_value=17, attr_name="filter_radius")
         self.create_button("2. Filter", self.filter_action)
         
+        self.create_separator()
         self.create_label_and_option_menu("Binarization Method:", ['otsu', 'max_entropy', 'yen', 'li', 'isodata', 'mean', 'minimum'], default_value='otsu', attr_name="binarization")
         self.create_label_and_entry("Min size of an object:", default_value=20, attr_name="min_size")
         self.create_label_and_entry("Max size of an object:", default_value=200, attr_name="max_size")
@@ -69,6 +71,7 @@ class ROIAnalyzerApp:
         self.create_button("Remove bad spots", self.remove_ccp_action)
         
         # Elements for postprocess
+        self.create_separator()
         self.create_label_and_entry("Output Directory:", self.browse_output_dir, attr_name="output_dir")        
         self.create_button("4. Combine images", self.combine_images_action)
         self.create_button("5. Postprocess (Result table)", self.run_postprocess)
@@ -83,6 +86,11 @@ class ROIAnalyzerApp:
         
         self.check_file_type()
         
+    def create_separator(self):
+        # Создаем разделитель
+        separator = ttk.Separator(self.root, orient='horizontal')
+        separator.pack(fill='x', padx=10, pady=10)
+    
     def create_text_area_with_redirect(self):
         self.text_area = scrolledtext.ScrolledText(self.root, wrap=tk.WORD, width=50, height=15)
         self.text_area.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)    
@@ -103,8 +111,7 @@ class ROIAnalyzerApp:
         entry.pack(side=tk.LEFT, padx=5)
         entry_var.trace_add("write", lambda *args: self.save_params(attr_name, entry_var.get()))
 
-        if command:
-            icon = PhotoImage(file=r"C:\Users\ta3ma\Documents\Synapto_Catcher\open-file.png")            
+        if command:         
             button = Button(frame, text="...", command=command)
             button.pack(side=tk.LEFT, padx=5)
         
@@ -291,24 +298,24 @@ class ROIAnalyzerApp:
     #     print("Target channel extracted successfully.")
     #     self.add_file_links_from_list(files_out)
 
-    async def async_extract_stt(self):
-        df, rows_to_process = self.prepare_data()
-        total = len(rows_to_process)
-        files_out = []
-        for idx, row_idx in enumerate(rows_to_process):
-            file_path = df.iloc[row_idx]['filepath']
-            location = df.iloc[row_idx]['location']
-            slice_start = int(self.slice_start_entry.get())
-            slice_end = int(self.slice_end_entry.get())   
-            _, _, _, synaptotag_file_path = extract_image_stock(file_path, location, slice_start, slice_end)
-            files_out.append([synaptotag_file_path])
-            self.update_progress_bar(idx, total)
-            await asyncio.sleep(0)  # Даем управление другим задачам
-        print("Target channel extracted successfully.")
-        self.add_file_links_from_list(files_out)
+    # async def async_extract_stt(self):
+    #     df, rows_to_process = self.prepare_data()
+    #     total = len(rows_to_process)
+    #     files_out = []
+    #     for idx, row_idx in enumerate(rows_to_process):
+    #         file_path = df.iloc[row_idx]['filepath']
+    #         location = df.iloc[row_idx]['location']
+    #         slice_start = int(self.slice_start_entry.get())
+    #         slice_end = int(self.slice_end_entry.get())   
+    #         _, _, _, synaptotag_file_path = extract_image_stock(file_path, location, slice_start, slice_end)
+    #         files_out.append([synaptotag_file_path])
+    #         self.update_progress_bar(idx, total)
+    #         await asyncio.sleep(0)  # Даем управление другим задачам
+    #     print("Target channel extracted successfully.")
+    #     self.add_file_links_from_list(files_out)
 
-    def extract_stt(self):
-        asyncio.run_coroutine_threadsafe(self.async_extract_stt(), self.loop)
+    # def extract_stt(self):
+    #     asyncio.run_coroutine_threadsafe(self.async_extract_stt(), self.loop)
 
     def select_roi(self):
         df, rows_to_process = self.prepare_data()

@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from czifile import CziFile
 from aicspylibczi import CziFile as aicCzi
+import cv2
 import xml.etree.ElementTree as ET
 import time
 
@@ -64,23 +65,23 @@ def extract_image_stock(file_path, location, slice_start, slice_end):
         pixel_to_micron_ratio = distances['X']*1_000_000
         
         target_ch = 0  # synaptotagmin channel
-        channel_3 = 3  # cell-label channel
+        dapi_ch = 3  # cell-label channel
         
         # print("Image shape:", image_data.shape)
         # print('synaptotagmin channel:', target_ch)
-        # print('cell-label channel:', channel_3)
+        # print('cell-label channel:', dapi_ch)
         # print('slice start:', slice_start)
         # print('slice end:', slice_end)
         # print('pixel to micron ratio:', pixel_to_micron_ratio)
         
         if image_data.shape[2] == 3:
-            channel_3 = 2
+            dapi_ch = 2
             # print("3 channels instead of 4")
         
         slide = list(range(slice_start-1, slice_end))
         
         sample_slice_1 = np_max(image_data[0, 0, target_ch, slide, :, :, 0], axis=0)
-        sample_slice_3 = np_max(image_data[0, 0, channel_3, slide, :, :, 0], axis=0)
+        sample_slice_3 = np_max(image_data[0, 0, dapi_ch, slide, :, :, 0], axis=0)
 
         combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
         sample_slice_1_normalized = (sample_slice_1 - np_min(sample_slice_1)) / (np_max(sample_slice_1) - np_min(sample_slice_1)) * 255
@@ -151,8 +152,6 @@ def process_file(file_path, location, slice_start=2, slice_end=6):
     
     return [roi_coords_path, image_file_path]
 
-
-import cv2
 
     
 def filter_after_roi_selection(filter_radius, file_path, location):
