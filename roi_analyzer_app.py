@@ -44,7 +44,7 @@ class ROIAnalyzerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Synapto Catcher")
-        self.root.iconbitmap(current_dir + "\\synaptocatcher.ico")
+        self.root.iconbitmap(current_dir + "\\images\\synaptocatcher.ico")
         
         # Load previous parameters if they exist
         self.params = self.load_params()                
