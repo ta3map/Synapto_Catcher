@@ -83,9 +83,10 @@ class ROIAnalyzerApp:
         self.total_symbols = 20
         self.printed_symbols = 0
         
-        self.check_file_type()
+        print('Welcome to Synapto Catcher!')
+        self.add_hyperlink("README", "https://github.com/ta3map/Synapto_Catcher/tree/main?tab=readme-ov-file#synapto-catcher-user-guide")
         
-        self.add_hyperlink("Help and source code", "https://github.com/ta3map/Synapto_Catcher/blob/main/README.md")
+        self.check_file_type()
         
     def create_separator(self):
         separator = ttk.Separator(self.root, orient='horizontal')

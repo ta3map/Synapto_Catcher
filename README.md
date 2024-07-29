@@ -28,12 +28,12 @@ Specify the range of layers to be stacked.
 ## Image Analysis
 
 ### 1. Select ROI
+Click **Select ROI:**  button to choose the Region of Interest (ROI) for the current image.
+The ROI and the image with superimposed region will be saved in the folder with the CSZ image that is being processed.
 
 ![select ROI GUI example](images/select_roi_gui_example.png)
 
 ![ROI selection example](images/example_select_roi.gif)
-
-- **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
 
 ### 2. Filter Images
 Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
@@ -62,7 +62,7 @@ During binarization, we get a black and white image. One of the selected binariz
 ![ROI selection example](images/example_remove_bad_spot.gif)
 
 ### 4. Combine Images
-After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
+After combining, we can simultaneously see three results at the same time. First is the original image with region of interest, second image is the filtered version from synaptotagmin channel, and on the third image is the result of binarization inside the region og interest.
 
 ![Results GUI example example](images/results_gui_example.png)
 
@@ -72,7 +72,7 @@ After combining, we can simultaneously see three results at the same time. On th
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
 ### 5. Postprocess
-Postprocessing provides a table that contains all the computed results for each experiment.
+Postprocessing provides a table that contains all computed results. In case if you work with Excel Table, it does this for each experiment selected in the **Experiment Number** box.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
 
