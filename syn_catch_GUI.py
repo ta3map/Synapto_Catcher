@@ -49,7 +49,7 @@ class ROIAnalyzerApp:
         # Load previous parameters if they exist
         self.params = self.load_params()                
         
-        self.create_label_and_entry("Select File (protocol or .csz):", self.browse_protocol, readonly=True, attr_name="protocol")
+        self.create_label_and_entry("Select File (CSZ or Excel table):", self.browse_protocol, readonly=True, attr_name="protocol")
         self.create_label_and_entry("Experiment Number:", default_value='all', attr_name="rows")
         self.create_label_and_entry("slice start:", default_value='2', attr_name="slice_start")
         self.create_label_and_entry("slice end:", default_value='6', attr_name="slice_end")
@@ -193,7 +193,7 @@ class ROIAnalyzerApp:
         for filepath in files_out:
             self.add_file_link(filepath, filepath)
     def browse_protocol(self):
-        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.czi;*.csv;*.xlsx;*.xls")])
+        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.czi;*.xlsx")])
         if protocol_path:
             self.selected_protocol.set(protocol_path)
             self.save_params('protocol', protocol_path)

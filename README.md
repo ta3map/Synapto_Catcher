@@ -4,33 +4,34 @@ Welcome to the Synapto Catcher program! This guide will help you navigate throug
 
 ## Overview
 ![Synapto Catcher](images/synaptocatcher_logo.png)
+
 Synapto Catcher is designed to process and analyze images. The program interface is divided into several sections, each dedicated to a specific step in the image processing workflow. The console at the bottom displays the progress and results of each processing stage, with links to the output files.
 
 ## Instructions
 
 ### 1. Select File
-To get started for the first time, you need to select a target file or a table with a list of files.
+To get started for the first time, you need to select a CSZ image file or a table with a list of CSZ files in Excel table.
 
-![Select File example](images/select_file_example.png)
+![Select File example](images/select_file_gui_example.png)
 
-- **Select File (protocol or .csz):** Click the browse button and navigate to the directory containing your image files. Select the desired **Excel spreadsheet based protocol** or **CSZ** picture file.
+- **Select File:** Click the browse button and navigate to the directory containing your image files. Select the desired **Excel spreadsheet based protocol** or **CSZ** picture file.
 
 #### Working with Excel table
-The protocol allows to process a large number of images at once.
+The table allows to process a large number of images at once.
 
-![Protocol Table example](images/protocol_table_example.png)
+![Excel Table example](images/protocol_table_example.png)
 
-Currently, the protocol must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
+Currently, the table must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
 - **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list or a range of desired experiments.
 
-![Protocol Table example](images/select_experiment_number_example.png)
+![Excel Table example](images/select_experiment_number_example.png)
 
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 ### 2. Set Experiment Parameters
-- **Experiment Number (only if protocol is selected):** Enter the experiment number associated with the images.
+- **Experiment Number (only if Excel table is selected):** Enter the experiment number associated with the images.
 - **slice start:** Specify the starting slice number.
 - **slice end:** Specify the ending slice number.
 
@@ -76,6 +77,7 @@ After combining, we can simultaneously see three results at the same time. On th
 Postprocessing provides a table that contains all the computed information for each experiment.
 
 ![Postprocessing Table example](images/postprocess_table_example.png)
+![Results GUI example example](images/postprocess_gui_example.png)
 
 - **Postprocess (Result table):** Click this button to generate the result table from the processed images.
 
