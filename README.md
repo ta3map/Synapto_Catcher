@@ -106,7 +106,7 @@ Currently, the table must necessarily contain the columns: **filepath, comment, 
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
 
-## Selecting an experiment when working with an Excel table
+## Selecting experiments when working with an Excel table
 
 You can write a list or range of desired experiments. See examples below. 
 - You can simply write **"all"** then all experiments in the table will be processed. 
