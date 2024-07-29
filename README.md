@@ -7,9 +7,9 @@ Welcome to the Synapto Catcher program! This guide will help you navigate throug
 
 Synapto Catcher is designed to process and analyze images. The program interface is divided into several sections, each dedicated to a specific step in the image processing workflow. The console at the bottom displays the progress and results of each processing stage, with links to the output files.
 
-## Instructions
+## Getting Started
 
-### 1. Select File
+### Select File
 To get started for the first time, you need to select a CSZ image file or a table with a list of CSZ files in Excel table.
 
 ![Select File example](images/select_file_gui_example.png)
@@ -30,19 +30,21 @@ Currently, the table must necessarily contain the columns: **filepath, comment, 
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
-### 2. Set Experiment Parameters
+### Set Experiment Parameters
 - **Experiment Number (only if Excel table is selected):** Enter the experiment number associated with the images.
 - **slice start:** Specify the starting slice number.
 - **slice end:** Specify the ending slice number.
 
-### 3. Select ROI
+## Image Analysis
+
+### 1. Select ROI
 
 ![select ROI GUI example](images/select_roi_gui_example.png)
 ![ROI selection example](images/example_select_roi.gif)
 
 - **Select ROI:** Click this button to select the Region of Interest (ROI) for your images.
 
-### 4. Filter Images
+### 2. Filter Images
 Synaptotagmin channel filtering, the next necessary step to isolate synapses of a specific size. The filtering radius can be adjusted to remove noise and to set the desired size of synapses.
 
 ![Filter GUI example](images/filter_gui_example.png)
@@ -51,7 +53,7 @@ Synaptotagmin channel filtering, the next necessary step to isolate synapses of 
 - **Filter radius:** Enter the desired filter radius (pixels) value.
 - **Filter:** Click this button to apply the filter to the images based on the specified radius.
 
-### 5. Binarize Images
+### 3. Binarize Images
 During binarization, we get a black and white image. One of the selected binarization methods allows you to define the brightness cutoff threshold. In the end, however, we only see the result inside the region of interest.
 
 ![Binarization GUI example](images/binar_gui_example.png)
@@ -66,7 +68,7 @@ During binarization, we get a black and white image. One of the selected binariz
 
 ![ROI selection example](images/example_remove_bad_spot.gif)
 
-### 6. Combine Images
+### 4. Combine Images
 After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
 
 ![Results GUI example example](images/results_gui_example.png)
@@ -75,7 +77,7 @@ After combining, we can simultaneously see three results at the same time. On th
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
-### 7. Postprocess
+### 5. Postprocess
 Postprocessing provides a table that contains all the computed information for each experiment.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
@@ -90,7 +92,7 @@ The console at the bottom of the interface provides updates on the progress of e
 
 ---
 
-Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please contact me.
+Follow these steps to efficiently process and analyze your images using Synapto Catcher. If you encounter any issues or have questions, please contact me [ta3map@gmail.com](mailto:ta3map@gmail.com?subject=SynaptoCatcher).
 
 ---
 
