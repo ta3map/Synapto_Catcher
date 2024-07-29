@@ -18,7 +18,8 @@ The protocol allows to process a large number of images at once.
 ![Protocol Table example](images/protocol_table_example.png)
 Currently, the protocol must necessarily contain the columns: **filepath, comment, location, Experiment_Number, take_to_stat, Postnatal_Age**. 
 - **filepath:** must contain direct paths to the CZI file. For example “C:\data\Experiment-500.czi”.
-- **Experiment_Number:** should contain the number of the experiment, e.g. 500.
+- **Experiment_Number:** should contain the number of the experiment, e.g. 500. You can write a list of desired experiments or a range of desired experiments.
+![Protocol Table example](images/select_experiment_number_example.png)
 - **take_to_stat:** can be empty, but if there is the word 'no' in any line, the experiment on that line will be excluded from processing.
 
 Columns **comment**, **location**, **Postnatal_Age** can be left empty.
@@ -51,6 +52,7 @@ During binarization, we get a black and white image. One of the selected binariz
 ### 6. Combine Images
 After combining, we can simultaneously see three results at the same time. On the first photo is the original image with region of interest, on the second photo is the filtered version, and on the third photo is the result of binarization.
 ![Combined Images example](images/example_combined.png)
+![Results GUI example example](images/results_gui_example.png)
 - **Output Directory:** Specify the output directory where the processed images will be saved.
 - **Combine images:** Click this button to combine the images as per the defined parameters.
 
