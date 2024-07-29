@@ -8,6 +8,9 @@ Welcome to the Synapto Catcher! This guide will help you navigate through the fe
 
 Synapto Catcher is designed to automatically find and select synaptonagmin on CSZ format image. 
 
+## Download
+[Download Installer for Windows](https://sourceforge.net/projects/synapto-catcher/files/synapto_catcher_setup.exe/download)
+
 ## Getting Started
 
 ### Select File
@@ -16,7 +19,7 @@ To get started for the first time, you need to select a CSZ image file or a tabl
 
 ![Select File example](images/select_file_gui_example.png)
 
-- **Select File:** Click the browse button and navigate to the directory containing your image files. Select the desired **Excel spreadsheet based protocol** or **CSZ** picture file.
+- **Select File:** Click the browse button and navigate to the directory containing your image files. Select the desired **CSZ** picture file or **Excel table**.
 
 ### Stacking Parameters
 Specify the range of layers to be stacked.
