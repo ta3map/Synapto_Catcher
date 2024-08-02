@@ -2860,3 +2860,50 @@ Average_Structure_overlap = np.mean([SP_SR, SO_SP])
 print(f'Radiatum-Oriens overlap {SO_SP}')
 print(f'Pyramidale-Rradiatum overlap {SP_SR}')
 print(f'Average Structure overlap {Average_Structure_overlap}')
+#%% lif file
+from readlif.reader import LifFile
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Путь к файлу .lif
+file_path = r"C:\Users\ta3ma\Downloads\wetransfer_test_emx1-cre_full-shcdh13_p13_2024-08-02_1204\Test_Emx1-Cre_Full-shCdh13_P13\Mouse#1_Female.lif"
+
+target_ch = 0
+dapi_ch = 3
+
+lif = LifFile(file_path)
+
+img_list = [i for i in lif.get_iter_image()]
+
+for image in img_list:
+    
+    slice_start=2
+    slice_end=6
+    
+    slide = list(range(slice_start-1, slice_end))
+    
+    frames_1 = []
+    frames_2 = []
+    for z in slide:
+        frames_1.append(np.array(image.get_frame(z=z, t=0, c=target_ch)))        
+        frames_2.append(np.array(image.get_frame(z=z, t=0, c=dapi_ch)))
+    
+    frames_1 = np.array(frames_1)
+    frames_2 = np.array(frames_2)
+    
+    sample_slice_1 = np.max(frames_1, axis=0)
+    sample_slice_3 = np.max(frames_2, axis=0)
+    
+    combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
+    sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
+    sample_slice_3_normalized = (sample_slice_3 - np.min(sample_slice_3)) / (np.max(sample_slice_3) - np.min(sample_slice_3)) * 255
+
+    combined_image[:, :, 0] = sample_slice_1_normalized  # synaptotagmin channel
+    combined_image[:, :, 2] = sample_slice_3_normalized  # cell-label dapi channel
+    
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 1, 1)
+    plt.imshow(combined_image)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()

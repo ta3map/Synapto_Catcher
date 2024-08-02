@@ -25,8 +25,8 @@ import traceback
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(current_dir)
-from roi_processor import process_file, binarize_images, remove_ccp, postprocess
-from roi_processor import filter_after_roi_selection, extract_image_stock, combine_images, pp_one
+from image_processor import process_file, binarize_images, remove_ccp
+from image_processor import filter_after_roi_selection, extract_image_stock, combine_images, pp_one
 
 TEMP_FILE = os.path.join(tempfile.gettempdir(), 'synapto_catch_params.json')
 
@@ -49,10 +49,15 @@ class ROIAnalyzerApp:
         # Load previous parameters if they exist
         self.params = self.load_params()                
         
-        self.create_label_and_entry("Select File (CSZ or Excel table):", self.browse_protocol, readonly=True, attr_name="protocol")
+        self.create_label_and_entry("Select File (CSZ, LIF or Excel table):", self.browse_protocol, readonly=True, attr_name="protocol")
         self.create_label_and_entry("Experiment Number:", default_value='all', attr_name="rows")
         self.create_label_and_entry("slice start:", default_value='2', attr_name="slice_start")
         self.create_label_and_entry("slice end:", default_value='6', attr_name="slice_end")
+        self.create_label_and_entry("target_ch:", default_value='1', attr_name="target_ch")
+        self.create_label_and_entry("second_ch:", default_value='4', attr_name="second_ch")
+        self.create_label_and_entry("pixel_to_micron_ratio:", default_value='0.12', attr_name="pixel_to_micron_ratio")
+        
+        self.pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get())
         
         self.create_separator()        
         self.create_button("1. Select ROI", self.select_roi)
@@ -153,7 +158,7 @@ class ROIAnalyzerApp:
         protocol_path = self.params.get(attr_name, '')
         print('Main File:')
         print(protocol_path)
-        if protocol_path.endswith('.czi'):
+        if protocol_path.endswith('.czi') or protocol_path.endswith('.lif'):
             self.toggle_entry("rows", False)
         else:
             self.toggle_entry("rows", True) 
@@ -194,7 +199,7 @@ class ROIAnalyzerApp:
         for filepath in files_out:
             self.add_file_link(filepath, filepath)
     def browse_protocol(self):
-        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.czi;*.xlsx")])
+        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.lif;*.czi;*.xlsx")])
         if protocol_path:
             self.selected_protocol.set(protocol_path)
             self.save_params('protocol', protocol_path)
@@ -230,8 +235,10 @@ class ROIAnalyzerApp:
             file_path = df.iloc[row_idx]['filepath']
             location = df.iloc[row_idx]['location']
             slice_start = int(self.slice_start_entry.get())
-            slice_end = int(self.slice_end_entry.get())            
-            files_out.append(process_file(file_path, location, slice_start, slice_end))
+            slice_end = int(self.slice_end_entry.get()) 
+            target_ch = int(self.target_ch_entry.get())-1 
+            second_ch = int(self.second_ch_entry.get())-1 
+            files_out.append(process_file(file_path, location, slice_start, slice_end, target_ch, second_ch))
             self.update_progress_bar(idx, total)
         print("all ROI extracted successfully.")
         self.add_file_links_from_list(files_out)
@@ -264,7 +271,7 @@ class ROIAnalyzerApp:
                 files_out.append(binarize_images(
                     file_path, row,
                     self.binarization_method.get(), int(self.min_size_entry.get()), 
-                    int(self.max_size_entry.get())
+                    int(self.max_size_entry.get()), self.pixel_to_micron_ratio
                 ))
                 self.update_progress_bar(idx, total)
                 await asyncio.sleep(0)  # Let's give management another task
@@ -284,7 +291,7 @@ class ROIAnalyzerApp:
             df, rows_to_process = self.prepare_data()
             csv_file_path = self.selected_protocol.get()
             # pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get())
-            remove_ccp(df, csv_file_path, rows_to_process)
+            remove_ccp(df, csv_file_path, rows_to_process, 200, self.pixel_to_micron_ratio)
             print("Binarization completed successfully.")
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -317,16 +324,16 @@ class ROIAnalyzerApp:
         # Create output directory if it doesn't exist
         os.makedirs(output_directory, exist_ok=True)
         total = len(rows_to_process)
-        summary_data_list = []
-    
+        
+        summary_data_list = []    
         files_out = []
         for idx, row_idx in enumerate(rows_to_process):
             file_path = df.iloc[row_idx]['filepath']
             row = df.iloc[row_idx]
-            summary_data, summary_result_path = pp_one(file_path, row, output_directory)
-            files_out.append([summary_result_path])
-            if summary_data is not None:
-                summary_data_list.append(summary_data)
+            summary_data_s, summary_result_path_s = pp_one(file_path, row, output_directory)
+            
+            files_out.append(summary_result_path_s)            
+            summary_data_list.extend(summary_data_s)
             
             self.update_progress_bar(idx, total)
             await asyncio.sleep(0)  # Let's give management another task
@@ -351,7 +358,7 @@ class ROIAnalyzerApp:
         protocol_path = self.selected_protocol.get()
         required_columns = ['filepath', 'comment', 'location', 'Experiment_Number', 'take_to_stat', 'Postnatal_Age']    
         # Check if the protocol_path ends with .czi
-        if protocol_path.endswith('.czi'):
+        if protocol_path.endswith('.czi') or protocol_path.endswith('.lif'):
             # Create a DataFrame with the specified columns and values
             df = pd.DataFrame({
                 'filepath': [protocol_path],

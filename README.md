@@ -14,7 +14,7 @@ Synapto Catcher is designed to automatically find and select synaptonagmin on CS
 ## Getting Started
 
 ### Select File
-To get started for the first time, you need to select a CSZ image file or a table with a list of CSZ files in Excel table (see [Working with Excel table](#working-with-excel-table)
+To get started for the first time, you need to select an image file (CSZ or LIF) or a table with a list of CSZ files in Excel table (see [Working with Excel table](#working-with-excel-table)
 ).
 
 ![Select File example](images/select_file_gui_example.png)
@@ -26,8 +26,11 @@ Specify the range of layers to be stacked.
 
 ![Select slice number example](images/select_slice_number_example.png)
 
-- **slice start:** Specify the starting slice number.
-- **slice end:** Specify the ending slice number.
+- **slice start:** the first slice number.
+- **slice end:** the last slice number.
+- **target_ch:** synaptotagmin channel.
+- **second_ch:** DAPI or other channel (without analysis).
+- **pixel_to_micron_ratio:** the pixel to micron ratio.
 
 ## Image Analysis
 All steps described below are necessary to obtain statistics on synaptotagmin in the CSZ image.
@@ -77,7 +80,7 @@ After combining, we can simultaneously see three results at the same time. First
 - **Combine images:** Click this button to combine the images.
 
 ### 5. Postprocess
-Postprocessing provides a table that contains all computed results. But this step makes no sense if you are not working with an excel table.
+Postprocessing provides a table that contains all computed results.
 
 ![Results GUI example example](images/postprocess_gui_example.png)
 

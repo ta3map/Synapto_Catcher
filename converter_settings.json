@@ -7,7 +7,7 @@
   },
   {
    "optionDest": "filenames",
-   "value": "C:\\Users\\ta3ma\\Documents\\synapto_catcher\\roi_analyzer_app.py"
+   "value": "C:\\Users\\ta3ma\\Documents\\synapto_catcher\\syn_catch_GUI.py"
   },
   {
    "optionDest": "onefile",
@@ -63,7 +63,7 @@
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/ta3ma/Documents/synapto_catcher/roi_processor.py;."
+   "value": "C:/Users/ta3ma/Documents/synapto_catcher/image_processor.py;."
   },
   {
    "optionDest": "datas",
