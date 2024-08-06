@@ -2868,31 +2868,54 @@ import matplotlib.pyplot as plt
 # Путь к файлу .lif
 file_path = r"C:\Users\ta3ma\Downloads\wetransfer_test_emx1-cre_full-shcdh13_p13_2024-08-02_1204\Test_Emx1-Cre_Full-shCdh13_P13\Mouse#1_Female.lif"
 
-target_ch = 0
-dapi_ch = 3
+target_ch = 2
+dapi_ch = 0
 
+slice_start=2
+slice_end=6
+    
 lif = LifFile(file_path)
 
 img_list = [i for i in lif.get_iter_image()]
 
-for image in img_list:
+def collect_all_frames(im_in, ch):
     
-    slice_start=2
-    slice_end=6
+    z_list = [i for i in im_in.get_iter_z(t=0, c=0)]
+    z_n = len(z_list)
+        
+    channel_list = [i for i in im_in.get_iter_c(t=0, z=0)]
+    ch_n = len(channel_list)
+    
+    def remove_shift(lst, ch):
+        shift = ((ch_n-1) * ch - 1) % len(lst)
+        reverse_shift = len(lst) - shift
+        return lst[reverse_shift:] + lst[:reverse_shift]
+    
+    ch = (ch_n - ch)
+    
+    frames_out = []
+    for z_real in list(range(z_n)):    
+        z=(z_real*ch_n)%z_n       
+        c=(z%ch_n+ch)%ch_n    
+        frames_out.append(np.array(im_in.get_frame(z = z, c = c)))
+    frames_out = np.array(remove_shift(frames_out, ch))
+    
+    return frames_out
+
+for image in img_list:
+    scale_factor = (16 - image.bit_depth[0]) ** 2  
+    
     
     slide = list(range(slice_start-1, slice_end))
-    
-    frames_1 = []
-    frames_2 = []
-    for z in slide:
-        frames_1.append(np.array(image.get_frame(z=z, t=0, c=target_ch)))        
-        frames_2.append(np.array(image.get_frame(z=z, t=0, c=dapi_ch)))
-    
-    frames_1 = np.array(frames_1)
-    frames_2 = np.array(frames_2)
-    
-    sample_slice_1 = np.max(frames_1, axis=0)
-    sample_slice_3 = np.max(frames_2, axis=0)
+    # slide = [0, 4, 8]
+    channel_list = [i for i in image.get_iter_c(t=0, z=0)]
+    ch_n = len(channel_list)
+        
+    frames_1 = collect_all_frames(image, target_ch)
+    frames_2 = collect_all_frames(image, dapi_ch)
+        
+    sample_slice_1 = np.max(frames_1[slide,:,:], axis=0)
+    sample_slice_3 = np.max(frames_2[slide,:,:], axis=0)
     
     combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
     sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
@@ -2904,6 +2927,20 @@ for image in img_list:
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 1, 1)
     plt.imshow(combined_image)
+    plt.axis('off')
+    plt.tight_layout()
+    plt.show()
+#%%
+
+
+
+target_ch = 3
+frames_out = collect_all_frames(image, target_ch)
+
+for test_image in frames_out:
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 1, 1)
+    plt.imshow(test_image)
     plt.axis('off')
     plt.tight_layout()
     plt.show()

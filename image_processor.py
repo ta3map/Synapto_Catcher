@@ -57,15 +57,69 @@ def filetype_checking(file_path):
         lif = LifFile(file_path)        
         img_list = [i for i in lif.get_iter_image()]    
         n_of_images = len(img_list)
+    elif file_extension == '.tif':  
+        n_of_images = 1
     return n_of_images
+
+def read_tiff_channels(file_path, num_channels, num_layers):
+    # Открываем TIFF файл
+    tiff_image = Image.open(file_path)
+
+    # Проверяем количество кадров (изображений) в файле
+    n_frames = tiff_image.n_frames
+    if n_frames != num_channels * num_layers:
+        raise ValueError(f"Количество кадров в файле ({n_frames}) не соответствует заданным каналам ({num_channels}) и слоям ({num_layers})")
+
+    # Инициализируем списки для каждого канала
+    channels = [[] for _ in range(num_channels)]
+
+    # Считываем все изображения и распределяем по каналам
+    for i in range(n_frames):
+        tiff_image.seek(i)
+        frame = np.array(tiff_image.copy())
+        channel_index = i % num_channels
+        channels[channel_index].append(frame)
+
+    # Преобразуем списки в numpy массивы для удобства работы
+    channels = [np.array(channel) for channel in channels]
+
+    # Закрываем файл
+    tiff_image.close()
+
+    return channels
+
+def collect_all_frames(im_in, ch):
+    
+    z_list = [i for i in im_in.get_iter_z(t=0, c=0)]
+    z_n = len(z_list)
+        
+    channel_list = [i for i in im_in.get_iter_c(t=0, z=0)]
+    ch_n = len(channel_list)
+    
+    def remove_shift(lst, ch):
+        shift = ((ch_n-1) * ch - 1) % len(lst)
+        reverse_shift = len(lst) - shift
+        return lst[reverse_shift:] + lst[:reverse_shift]
+    
+    ch = (ch_n - ch)
+    
+    frames_out = []
+    for z_real in list(range(z_n)):    
+        z=(z_real*ch_n)%z_n       
+        c=(z%ch_n+ch)%ch_n    
+        frames_out.append(np.array(im_in.get_frame(z = z, c = c)))
+    frames_out = np.array(remove_shift(frames_out, ch))
+    
+    return frames_out
 
 def extract_image_stock(file_path, location, slice_start, slice_end, target_ch, dapi_ch):    
     base_name = splitext(basename(file_path))[0]
     experiment_date = basename(dirname(file_path))    
     file_extension = splitext(file_path)[1].lower()    
     if file_extension == '.czi':
-        im_index = 0
+        # for the accumulation standard
         combined_image_s = []
+        im_index = 0
         
         with CziFile(file_path) as czi:
             image_data = czi.asarray()                                
@@ -80,28 +134,26 @@ def extract_image_stock(file_path, location, slice_start, slice_end, target_ch, 
             combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
             sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
             sample_slice_3_normalized = (sample_slice_3 - np.min(sample_slice_3)) / (np.max(sample_slice_3) - np.min(sample_slice_3)) * 255        
-            combined_image[:, :, 0] = sample_slice_1_normalized  # synaptotagmin channel
-            combined_image[:, :, 2] = sample_slice_3_normalized  # cell-label dapi channel
+            combined_image[:, :, 0] = sample_slice_1_normalized  # RED synaptotagmin channel
+            combined_image[:, :, 2] = sample_slice_3_normalized  # BLUE cell-label DAPI channel
             
             combined_image_s.append(combined_image)
         
     elif file_extension == '.lif':        
         lif = LifFile(file_path)        
-        img_list = [i for i in lif.get_iter_image()]        
+        img_list = [i for i in lif.get_iter_image()]
         
         combined_image_s = []
         for im_index, image in enumerate(img_list):    
-            slide = list(range(slice_start-1, slice_end))            
-            frames_1 = []
-            frames_2 = []
-            for z in slide:
-                frames_1.append(np.array(image.get_frame(z=z, t=0, c=target_ch)))        
-                frames_2.append(np.array(image.get_frame(z=z, t=0, c=dapi_ch)))            
-            frames_1 = np.array(frames_1)
-            frames_2 = np.array(frames_2)            
+            slide = list(range(slice_start-1, slice_end))    
+            
+            frames_1 = collect_all_frames(image, target_ch)
+            frames_2 = collect_all_frames(image, dapi_ch)
+                        
             sample_slice_1 = np.max(frames_1, axis=0)
             sample_slice_3 = np.max(frames_2, axis=0)  
             
+            # lif_name = lif.image_list[im_index]['name']
             synaptotag_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_{im_index}_synaptotag.png")
             save_image(sample_slice_1, synaptotag_file_path)    
             combined_image = zeros((*sample_slice_1.shape, 3), dtype='uint8')
@@ -111,7 +163,39 @@ def extract_image_stock(file_path, location, slice_start, slice_end, target_ch, 
             combined_image[:, :, 2] = sample_slice_3_normalized  # cell-label dapi channel
     
             combined_image_s.append(combined_image)
-    
+    elif file_extension == '.tif':
+        # for the accumulation standard
+        combined_image_s = []
+        im_index = 0
+        
+        # Number of channels and depths
+        num_channels = 4
+        num_layers = 11
+        
+        # Read channels from a TIFF file
+        channels = read_tiff_channels(file_path, num_channels, num_layers)
+        # Get arrays frames_1 and frames_2
+        frames_1 = channels[target_ch]
+        frames_2 = channels[dapi_ch]
+        
+        # z-stack
+        sample_slice_1 = np.max(frames_1, axis=0)
+        sample_slice_3 = np.max(frames_2, axis=0)
+        
+        synaptotag_file_path = join(dirname(file_path), f"{experiment_date}_{base_name}_{im_index}_synaptotag.png")
+        save_image(sample_slice_1, synaptotag_file_path)  
+        
+        # Normalizing images
+        sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
+        sample_slice_3_normalized = (sample_slice_3 - np.min(sample_slice_3)) / (np.max(sample_slice_3) - np.min(sample_slice_3)) * 255
+        
+        # Creating a composite image
+        combined_image = np.zeros((*sample_slice_1.shape, 3), dtype='uint8')
+        combined_image[:, :, 0] = sample_slice_1_normalized.astype('uint8')  # synaptotagmin channel
+        combined_image[:, :, 2] = sample_slice_3_normalized.astype('uint8')  # cell-label dapi channel
+        
+        combined_image_s.append(combined_image)
+        
     return combined_image_s
 
 def process_file(file_path, location, slice_start, slice_end, target_ch, dapi_ch):

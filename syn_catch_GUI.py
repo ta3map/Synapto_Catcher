@@ -49,12 +49,12 @@ class ROIAnalyzerApp:
         # Load previous parameters if they exist
         self.params = self.load_params()                
         
-        self.create_label_and_entry("Select File (CSZ, LIF or Excel table):", self.browse_protocol, readonly=True, attr_name="protocol")
+        self.create_label_and_entry("Select File (CSZ, LIF, TIF or Excel table):", self.browse_protocol, readonly=True, attr_name="protocol")
         self.create_label_and_entry("Experiment Number:", default_value='all', attr_name="rows")
         self.create_label_and_entry("slice start:", default_value='2', attr_name="slice_start")
         self.create_label_and_entry("slice end:", default_value='6', attr_name="slice_end")
-        self.create_label_and_entry("target_ch:", default_value='1', attr_name="target_ch")
-        self.create_label_and_entry("second_ch:", default_value='4', attr_name="second_ch")
+        self.create_label_and_entry("target_ch (RED):", default_value='1', attr_name="target_ch")
+        self.create_label_and_entry("second_ch (BLUE):", default_value='4', attr_name="second_ch")
         self.create_label_and_entry("pixel_to_micron_ratio:", default_value='0.12', attr_name="pixel_to_micron_ratio")
         
         self.pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get())
@@ -158,10 +158,13 @@ class ROIAnalyzerApp:
         protocol_path = self.params.get(attr_name, '')
         print('Main File:')
         print(protocol_path)
-        if protocol_path.endswith('.czi') or protocol_path.endswith('.lif'):
+        
+        available_extensions = ['.czi', '.lif', '.tif']        
+        # Checking for available file types
+        if any(protocol_path.endswith(ext) for ext in available_extensions):
             self.toggle_entry("rows", False)
         else:
-            self.toggle_entry("rows", True) 
+            self.toggle_entry("rows", True)
         
     def flatten_list(self, nested_list):
         flattened = list(itertools.chain.from_iterable(nested_list))
@@ -199,7 +202,7 @@ class ROIAnalyzerApp:
         for filepath in files_out:
             self.add_file_link(filepath, filepath)
     def browse_protocol(self):
-        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.lif;*.czi;*.xlsx")])
+        protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.lif;*.tif;*.czi;*.xlsx")])
         if protocol_path:
             self.selected_protocol.set(protocol_path)
             self.save_params('protocol', protocol_path)
@@ -358,7 +361,9 @@ class ROIAnalyzerApp:
         protocol_path = self.selected_protocol.get()
         required_columns = ['filepath', 'comment', 'location', 'Experiment_Number', 'take_to_stat', 'Postnatal_Age']    
         # Check if the protocol_path ends with .czi
-        if protocol_path.endswith('.czi') or protocol_path.endswith('.lif'):
+        available_extensions = ['.czi', '.lif', '.tif']
+        # Checking for available file types
+        if any(protocol_path.endswith(ext) for ext in available_extensions):
             # Create a DataFrame with the specified columns and values
             df = pd.DataFrame({
                 'filepath': [protocol_path],
