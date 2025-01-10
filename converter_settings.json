@@ -1,0 +1,93 @@
+{
+	"version" : "auto-py-to-exe-configuration_v1",
+	"pyinstallerOptions" : [
+		{
+			"optionDest" : "noconfirm",
+			"value" : true
+		},
+		{
+			"optionDest" : "filenames",
+			"value" : "C:\\Users\\ta3ma\\Documents\\Synapto_Catcher\\syn_catch_GUI.py"
+		},
+		{
+			"optionDest" : "onefile",
+			"value" : false
+		},
+		{
+			"optionDest" : "console",
+			"value" : false
+		},
+		{
+			"optionDest" : "icon_file",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/images/synaptocatcher.ico"
+		},
+		{
+			"optionDest" : "name",
+			"value" : "Synapto Catcher"
+		},
+		{
+			"optionDest" : "clean_build",
+			"value" : true
+		},
+		{
+			"optionDest" : "splash",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/images/synaptocatcher_splash.png"
+		},
+		{
+			"optionDest" : "strip",
+			"value" : false
+		},
+		{
+			"optionDest" : "noupx",
+			"value" : false
+		},
+		{
+			"optionDest" : "disable_windowed_traceback",
+			"value" : false
+		},
+		{
+			"optionDest" : "uac_admin",
+			"value" : false
+		},
+		{
+			"optionDest" : "uac_uiaccess",
+			"value" : false
+		},
+		{
+			"optionDest" : "argv_emulation",
+			"value" : false
+		},
+		{
+			"optionDest" : "bootloader_ignore_signals",
+			"value" : false
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/image_processor.py;."
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/images/synaptocatcher.ico;."
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/images/synaptocatcher_splash.png;."
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/images;images/"
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/statistics_processor.py;."
+		},
+		{
+			"optionDest" : "datas",
+			"value" : "C:/Users/ta3ma/Documents/Synapto_Catcher/graphical_processor.py;."
+		}
+	],
+	"nonPyinstallerOptions" : {
+		"increaseRecursionLimit" : true,
+		"manualArguments" : ""
+	}
+}

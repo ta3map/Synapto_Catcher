@@ -1,0 +1,8 @@
+*.asv
+*.exe
+*.pyc
+/__pycache__
+/.vscode
+/output
+/setup
+/data_examples
