@@ -903,9 +903,8 @@ def binarize_images(file_path, binarization_method='max_entropy', min_size=64, m
                 
                 masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_masks_roi_crop.png")
                 roi_mask_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_roi_mask.png")
-                full_result_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_full_roi_result_table.xlsx")
-                summary_result_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_summary_roi_result_table.xlsx")
-
+                result_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_result_table.xlsx")
+                
                 save_params({'selected_location': location_name})
                 
                 # Save ROI mask as PNG image
@@ -917,51 +916,59 @@ def binarize_images(file_path, binarization_method='max_entropy', min_size=64, m
                 binary_image_pil = ImageOps.invert(binary_image_pil)                
                 save_image(binary_image_pil, masks_image_path, Step = "Binarization", priority_keys=binary_image_priority_keys)               
                 
-                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
+                process_properties(location_name, 
+                                   image_array, 
+                                   binary_image_roi, 
+                                   roi_mask, 
+                                   pixel_to_micron_ratio, 
+                                   binarization_method, 
+                                   masks_image_path, 
+                                   result_path)
                 
                 masks_image_path_s.append(masks_image_path)
         
     return masks_image_path_s
 
-def remove_large_objects(ar, max_size):
-    # Label connected components
-    labeled = label(ar)
-    for region in regionprops(labeled):
-        if region.area > max_size:
-            ar[labeled == region.label] = 0
-    return ar
 
-def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path):
+from openpyxl import load_workbook
 
+def process_properties(location_name, 
+                       image_array, 
+                       binary_image_roi, 
+                       roi_mask, 
+                       pixel_to_micron_ratio, 
+                       binarization_method, 
+                       masks_image_path, 
+                       result_path):
+    metadata = load_metadata()
     labeled_image = label(binary_image_roi)
     props = regionprops(labeled_image, intensity_image=image_array)
-                
     max_size = 500
-    
     results = []
     total_objects = 0
     total_area = 0
     total_mean_intensity = 0
     roi_area = roi_mask.sum() * pixel_to_micron_ratio**2
-
+    
     for index, prop in enumerate(props, start=1):
         area_microns = prop.area * pixel_to_micron_ratio**2
         if area_microns > max_size:
-           continue  # Skip objects larger than max_size
+            continue
         total_objects += 1
         total_area += area_microns
         total_mean_intensity += prop.mean_intensity * area_microns
-        results.append({
+        
+        result_dict = {
             "": index,
             "Area": f"{area_microns:.3f}",
             "Mean": f"{prop.mean_intensity:.3f}",
             "Min": int(prop.min_intensity),
             "Max": int(prop.max_intensity)
-        })
+        }
+        result_dict.update(metadata)
+        results.append(result_dict)
 
     results_df = DataFrame(results)
-    
-    
 
     if total_objects > 0:
         average_size = total_area / total_objects
@@ -971,7 +978,6 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         average_mean_intensity = 0
 
     summary_result = {
-        "": 1,
         "Slice": basename(masks_image_path),
         "Count": total_objects,
         "Total Area": f"{total_area:.3f}",
@@ -980,18 +986,45 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         "Mean": f"{average_mean_intensity:.3f}",
         "Binarization method": binarization_method
     }
-    
-    metadata = load_metadata()
+
     hashes = generate_hashes_from_metadata(metadata, priority_keys)
     summary_result.update(metadata)
-    
-    summary_df = DataFrame([summary_result])
-    
-    full_result_path = hash_convert_path(full_result_path, hashes)
-    summary_result_path = hash_convert_path(summary_result_path, hashes)
-    
-    results_df.to_excel(full_result_path, index=False)
-    summary_df.to_excel(summary_result_path, index=False)
+    new_summary_df = DataFrame([summary_result])
+
+    if not os.path.exists(result_path):
+        with pd.ExcelWriter(result_path, engine='openpyxl') as writer:
+            new_summary_df.to_excel(writer, sheet_name="Summary", index=False)
+            results_df.to_excel(writer, sheet_name=location_name, index=False)
+    else:
+        wb = load_workbook(result_path)
+        all_sheets = {}
+
+        for sh in wb.sheetnames:
+            old_df = pd.read_excel(result_path, sheet_name=sh)
+            all_sheets[sh] = old_df
+
+        if "Summary" in all_sheets:
+            all_sheets["Summary"] = pd.concat([all_sheets["Summary"], new_summary_df], ignore_index=True)
+        else:
+            all_sheets["Summary"] = new_summary_df
+
+        if location_name in all_sheets:
+            all_sheets[location_name] = pd.concat([all_sheets[location_name], results_df], ignore_index=True)
+        else:
+            all_sheets[location_name] = results_df
+
+        with pd.ExcelWriter(result_path, engine='openpyxl', mode='w') as writer:
+            if "Summary" in all_sheets:
+                all_sheets["Summary"].to_excel(writer, sheet_name="Summary", index=False)
+                del all_sheets["Summary"]
+            if location_name in all_sheets:
+                all_sheets[location_name].to_excel(writer, sheet_name=location_name, index=False)
+                del all_sheets[location_name]
+            for sheet_name, df_ in all_sheets.items():
+                df_.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+
   
 def gather_summary_files(file_path):
     base_name = splitext(basename(file_path))[0]
@@ -1023,6 +1056,14 @@ def gather_summary_files(file_path):
         
     # Возвращаем собранные данные (или пустой список, если ничего не было собрано)
     return summary_data_s
+
+def remove_large_objects(ar, max_size):
+    # Label connected components
+    labeled = label(ar)
+    for region in regionprops(labeled):
+        if region.area > max_size:
+            ar[labeled == region.label] = 0
+    return ar
 
 # Function for single file post-processing
 def pp_one(file_path, row, output_directory):
