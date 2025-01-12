@@ -1016,7 +1016,7 @@ class ROIAnalyzerApp:
             #print(f"second_ch: {second_ch}")
             files_out.append(define_hist(file_path, location, slice_start, slice_end, target_ch, second_ch, self.root))
             self.update_progress_bar(idx, total)
-        print("all Histograms defined successfully.")
+        print("Histogram selection is over")
 
     # Асинхронная функция для выполнения постобработки
     async def async_run_postprocess(self):

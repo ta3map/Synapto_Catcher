@@ -1219,9 +1219,220 @@ class PolygonModifier:
 # polygon_points = drawer.run()
 # print("Coordinates of the polygon:", polygon_points)
 
+import cv2
+import numpy as np
+import math
+import keyboard
 
+# Предполагается, что классы ColorCycler, guiButton, функции draw_polygons_on_image, simplify_contour
+# и т.д. уже импортированы или определены в вашем проекте
 
 class ParallelogramEditor:
+    def __init__(self, image, scale_factor=1.0, coords_df=None):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
+        self.scale_factor = scale_factor
+        self.coords_df = coords_df
+        
+        color_cycler = ColorCycler(num_colors=10)
+        self.image = draw_polygons_on_image(self.coords_df, self.scale_factor, color_cycler, self.image, simplify_contour)
+        
+        self.original_image = self.image.copy()
+        self.drawing = False
+        self.start_point = None
+        self.points = []
+        self.rotated_points = []
+        self.finished_drawing = False
+        self.moving_point = None
+        self.rotating = False
+        self.center_point = None
+        self.initial_angle = 0
+        self.dragging = False
+        self.user_cancelled = False
+        
+        self.tool_selected = False
+        self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
+        self.cancel_button = guiButton(10, 70, 100, 50, 'Cancel', self.cancel_parallelogram)
+        self.apply_button = guiButton(10, 130, 100, 50, 'Apply', self.apply_parallelogram)
+        self.start_button.visible = True
+        self.cancel_button.visible = True
+        self.apply_button.visible = False
+        
+        cv2.namedWindow('Image')
+        cv2.setMouseCallback('Image', self.draw_parallelogram)
+
+    def start_drawing(self):
+        self.tool_selected = True
+        self.start_button.visible = False
+        self.apply_button.visible = False
+
+    def cancel_parallelogram(self):
+        cv2.destroyWindow('Image')
+        self.points = []
+        self.finished_drawing = False
+        self.user_cancelled = True
+
+    def apply_parallelogram(self):
+        coords = self.get_coordinates()
+        cv2.destroyWindow('Image')
+        return coords
+
+    def rotate_point(self, point, center, angle):
+        a = math.radians(angle)
+        x_new = int(center[0] + math.cos(a)*(point[0] - center[0]) - math.sin(a)*(point[1] - center[1]))
+        y_new = int(center[1] + math.sin(a)*(point[0] - center[0]) + math.cos(a)*(point[1] - center[1]))
+        return (x_new, y_new)
+
+    def draw_polygon(self, img, pts):
+        pts = np.array(pts, np.int32).reshape((-1, 1, 2))
+        cv2.polylines(img, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
+
+    def draw_grid(self, img, points, step_fraction=0.1):
+        v_u = np.array(points[1]) - np.array(points[0])
+        v_v = np.array(points[3]) - np.array(points[0])
+        n_x = n_y = int(1 / step_fraction)
+        for i in range(1, n_x):
+            su = v_u * (i * step_fraction)
+            s = np.array(points[0]) + su
+            e = np.array(points[3]) + su
+            cv2.line(img, tuple(s.astype(int)), tuple(e.astype(int)), (255, 0, 0), 1)
+        for j in range(1, n_y):
+            sv = v_v * (j * step_fraction)
+            s = np.array(points[0]) + sv
+            e = np.array(points[1]) + sv
+            cv2.line(img, tuple(s.astype(int)), tuple(e.astype(int)), (255, 0, 0), 1)
+
+    def draw_parallelogram(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if self.start_button.is_clicked(x, y):
+                return
+            if self.cancel_button.is_clicked(x, y):
+                return
+            if self.apply_button.is_clicked(x, y):
+                return
+        
+        if not self.tool_selected:
+            return
+
+        if not self.finished_drawing:
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.drawing = True
+                self.start_point = (x, y)
+                self.points = [self.start_point]
+            elif event == cv2.EVENT_MOUSEMOVE and self.drawing:
+                self.image = self.original_image.copy()
+                cv2.rectangle(self.image, self.start_point, (x, y), (0, 255, 0), 2)
+            elif event == cv2.EVENT_LBUTTONUP and self.drawing:
+                self.drawing = False
+                end_point = (x, y)
+                self.points = [self.start_point,
+                               (end_point[0], self.start_point[1]),
+                               end_point,
+                               (self.start_point[0], end_point[1])]
+                self.finished_drawing = True
+                self.center_point = ((self.points[0][0] + self.points[2][0]) // 2,
+                                     (self.points[0][1] + self.points[2][1]) // 2)
+                self.draw_polygon(self.image, self.points)
+                self.draw_grid(self.image, self.points)
+                self.apply_button.visible = True
+        else:
+            if event == cv2.EVENT_RBUTTONDOWN:
+                self.rotating = True
+                self.initial_angle = math.degrees(math.atan2(y - self.center_point[1], x - self.center_point[0]))
+            elif event == cv2.EVENT_RBUTTONUP:
+                if self.rotating:
+                    self.rotating = False
+                    self.points = self.rotated_points
+            elif event == cv2.EVENT_LBUTTONDOWN:
+                for i, p in enumerate(self.points):
+                    if abs(x - p[0]) < 10 and abs(y - p[1]) < 10:
+                        self.moving_point = i
+                        break
+                else:
+                    if self.is_point_inside_polygon((x, y), self.points):
+                        self.dragging = True
+                        self.drag_start = (x, y)
+                        self.original_points = self.points.copy()
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.moving_point is not None:
+                    self.image = self.original_image.copy()
+                    self.points[self.moving_point] = (x, y)
+                    if self.moving_point in [0, 1, 3]:
+                        v01 = np.array(self.points[1]) - np.array(self.points[0])
+                        v03 = np.array(self.points[3]) - np.array(self.points[0])
+                        self.points[2] = tuple(np.array(self.points[0]) + v01 + v03)
+                    cv2.line(self.image, self.points[0], self.points[1], (0, 255, 255), 2)
+                    cv2.line(self.image, self.points[0], self.points[3], (0, 255, 255), 2)
+                    self.draw_grid(self.image, self.points)
+                elif self.dragging:
+                    dx = x - self.drag_start[0]
+                    dy = y - self.drag_start[1]
+                    self.points = [(px + dx, py + dy) for px, py in self.original_points]
+                    self.image = self.original_image.copy()
+                    self.draw_polygon(self.image, self.points)
+                    self.draw_grid(self.image, self.points)
+                elif self.rotating:
+                    current_angle = math.degrees(math.atan2(y - self.center_point[1], x - self.center_point[0]))
+                    angle_diff = current_angle - self.initial_angle
+                    self.rotated_points = [self.rotate_point(pt, self.center_point, angle_diff) for pt in self.points]
+                    self.image = self.original_image.copy()
+                    self.draw_polygon(self.image, self.rotated_points)
+                    self.draw_grid(self.image, self.rotated_points)
+            elif event == cv2.EVENT_LBUTTONUP:
+                if self.moving_point is not None:
+                    self.moving_point = None
+                if self.dragging:
+                    self.dragging = False
+
+        if keyboard.is_pressed('ctrl') and self.finished_drawing:
+            self.image = self.original_image.copy()
+            cv2.line(self.image, self.points[0], self.points[1], (0, 255, 255), 2)
+            cv2.line(self.image, self.points[0], self.points[3], (0, 255, 255), 2)
+            self.draw_grid(self.image, self.points)
+
+    def is_point_inside_polygon(self, point, polygon):
+        x, y = point
+        n = len(polygon)
+        inside = False
+        p1x, p1y = polygon[0]
+        for i in range(n+1):
+            p2x, p2y = polygon[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y)*(p2x - p1x)/(p2y - p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
+    def get_coordinates(self):
+        if not self.finished_drawing:
+            return None
+        current = self.rotated_points if self.rotating else self.points
+        return [(int(px/self.scale_factor), int(py/self.scale_factor)) for px, py in current]
+
+    def run(self):
+        while True:
+            img_copy = self.image.copy()
+            self.start_button.draw(img_copy)
+            self.cancel_button.draw(img_copy)
+            self.apply_button.draw(img_copy)
+            cv2.imshow('Image', img_copy)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                break
+            if cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
+                break
+        cv2.destroyAllWindows()
+        if self.user_cancelled:
+            return None
+        else:
+            return self.get_coordinates()
+
+
+class ParallelogramEditorOld:
     def __init__(self, image, scale_factor=1.0, coords_df=None):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         self.image = image

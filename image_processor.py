@@ -1250,66 +1250,56 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
     
     return fig, histograms_data
 
-def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch, root):    
+def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch, root):
     base_name = splitext(basename(file_path))[0]
-    experiment_date = basename(dirname(file_path))    
+    experiment_date = basename(dirname(file_path))
     hist_image_path_s = []
     n_of_images = filetype_checking(file_path)
-    #print(f"target_ch: {target_ch}")
-    #print(f"dapi_ch: {dapi_ch}")
-    
-    # Extract the combined image stack
+
     combined_image_s = extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch)
 
-        # Сохранение данных в файл
-    #with open('combined_image_1.pkl', 'wb') as file:
-    #    pickle.dump(combined_image_s, file)
-            
-    for im_index, combined_image in enumerate(combined_image_s):          
-        
+    for im_index, combined_image in enumerate(combined_image_s):
         excel_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_locations.xlsx")
-        
         if isfile(excel_path):
             coords_df = load_coordinates_from_excel(excel_path, root)
             if coords_df is not None:
                 coords_df.columns = rename_column_names(coords_df.columns)
         else:
             coords_df = None
-        
-        editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
-        editor.run()
-        parallelogram_points = editor.get_coordinates()
 
-        # Read processed image
+        editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
+
+        # NEW: editor.run() сам вернет либо координаты, либо None, если была отмена
+        parallelogram_points = editor.run()  
+        if parallelogram_points is None:      # Если пользователь отменил
+            continue                         # Пропускаем текущий im_index
+
         print("Read processed image")
-        masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")        
+        masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")
         image = read_image(masks_image_path, priority_keys=full_binary_priority_keys)
 
-        # Transform processed image
         print("Transform processed image")
-        transformed_image_rectangle, rectangle_size, transformed_masks = transform_parallelogram_to_rectangle(image, parallelogram_points, coords_df)
+        transformed_image_rectangle, rectangle_size, transformed_masks = transform_parallelogram_to_rectangle(
+            image, parallelogram_points, coords_df
+        )
 
-        # Calculate histogram
         print("Calculate histogram")
-        fig, histograms_data = plot_gray_histograms(transformed_image_rectangle, rectangle_size, bin_size=10, invert=True, transformed_masks=transformed_masks)
+        fig, histograms_data = plot_gray_histograms(
+            transformed_image_rectangle, rectangle_size, bin_size=10, invert=True, transformed_masks=transformed_masks
+        )
 
-        # Save Histogram Figure
         hist_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_hist.png")
-        save_image(fig, hist_image_path, Step = 'Histogram', priority_keys = full_binary_priority_keys)
+        save_image(fig, hist_image_path, Step='Histogram', priority_keys=full_binary_priority_keys)
         hist_image_path_s.append(hist_image_path)
 
-        # Prepare to save histogram data for each region (location)
         hist_table_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_histograms.xlsx")
-
         with pd.ExcelWriter(hist_table_path, engine='openpyxl') as writer:
-            # Save data for each location
             for location_name, hist_data in histograms_data.items():
                 hist_df = pd.DataFrame({
                     'Pixel Position (X)': pd.Series(hist_data['hist_x']),
                     'Pixel Position (Y)': pd.Series(hist_data['hist_y']),
                     'Parallelogram coords (X,Y)': pd.Series(parallelogram_points)
                 })
-                # Write each location's histogram data to a new sheet in the Excel file
                 hist_df.to_excel(writer, sheet_name=location_name, index=False)
 
     return hist_image_path_s
