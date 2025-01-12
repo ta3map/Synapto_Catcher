@@ -34,10 +34,10 @@ import os
 import tempfile
 import os
 import pandas as pd
-from tkinter import messagebox, Toplevel, simpledialog, messagebox, ttk
+from tkinter import messagebox, Toplevel, simpledialog, messagebox, ttk, StringVar
 from os.path import splitext, basename, dirname, join
 from matplotlib.pyplot import Figure
-from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Frame, Progressbar 
+from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Frame, Progressbar, Combobox
 
 
 # Adding current directory to sys.path
@@ -627,50 +627,42 @@ def filter_files_by_metadata(folder_path, key, value):
                     pass
     return matching_files
 
-def get_location_name(root, location_names, allow_new_name=True):
+def get_location_name(root, location_names):
     """
     Функция отображает диалог для выбора или ввода имени региона.
     """
-    dialog = initialize_window(root, "Select region", 300, 150, icon_path = icon_path)    
+    # Рисуем окно
+    dialog = initialize_window(root, "Select region", 350, 200, icon_path=icon_path)
     # Применяем тему через ThemeManager
     theme_manager = ThemeManager()
     theme_manager.apply_theme(dialog)
-        
+
     selected_location = [None]  # Для хранения выбранного значения
 
     def on_select():
-        # Проверяем, если новое имя запрещено, то оно должно быть выбрано из списка
-        #if not allow_new_name and entry.get() not in location_names:
-        #    messagebox.showerror("Error", "You must select an existing region!", parent=dialog)
-        #    return
         selected_location[0] = entry.get()
         dialog.destroy()  # Закрыть окно после выбора
+
+    def on_option_select(option):
+        entry.delete(0, "end")  # Очистить текущее значение в поле ввода
+        entry.insert(0, option)  # Установить выбранное значение из списка
 
     # Метка
     label = Label(dialog, text="Select a region:")
     label.pack(pady=10)
 
-    # Combobox для выбора из существующих локаций
-    #if location_names:
-    #    combobox = ttk.Combobox(dialog, values=location_names)
-    #    combobox.pack(pady=5)
-    #
-    #    # Заполнение поля ввода при выборе из выпадающего списка
-    #    def on_combobox_select(event):
-    #        entry.delete(0, 'end')
-    #        entry.insert(0, combobox.get())
-    #
-    #    combobox.bind("<<ComboboxSelected>>", on_combobox_select)
+    # Выпадающий список (OptionMenu)        
+    if location_names:
+        # Дублируем первый элемент массива location_names в начало
+        location_names = [location_names[0]] + location_names
+        selected_option = StringVar(dialog)
+        selected_option.set('')  # Устанавливаем пустой элемент как начальное значение
+        option_menu = OptionMenu(dialog, selected_option, *location_names, command=on_option_select)
+        option_menu.pack(pady=5)
 
-    # Поле для ввода текста, если разрешен ввод нового имени
+    # Поле для ввода текста
     entry = Entry(dialog)
-    if allow_new_name:
-        entry.insert(0, "region")  # Устанавливаем начальное значение "region"
-    #else:
-    #    # Если ввод нового имени запрещен, поле для ввода становится неактивным
-    #    entry.insert(0, combobox.get())
-    #    entry.config(state="readonly")  # Поле только для чтения
-
+    entry.insert(0, "region")  # Устанавливаем начальное значение "region"
     entry.pack(pady=5)
 
     # Кнопка подтверждения
@@ -681,6 +673,8 @@ def get_location_name(root, location_names, allow_new_name=True):
     dialog.wait_window(dialog)
 
     return selected_location[0]
+
+
 
 def get_unique_location_name(location_names, selected_location):
     # Сначала проверяем, существует ли такая локация
@@ -696,16 +690,11 @@ def get_unique_location_name(location_names, selected_location):
     
     return selected_location
 
+location_names = []
+
 def select_location(file_path, root, initial_location = ''):
     scale_factor=0.8
-    
-    if not initial_location:# если локация пустая
-        location_names = local_params.get('location_names', [])  # Получаем список сохраненных имен локаций
-        do_selection = True
-    else:
-        selected_location = initial_location
-        do_selection = False
-        
+           
     n_of_images = filetype_checking(file_path)  # Check number of images
     base_name = splitext(basename(file_path))[0]
 
@@ -716,13 +705,12 @@ def select_location(file_path, root, initial_location = ''):
         image_in = read_image(image_file_path, as_pil = True, priority_keys=priority_keys).convert('RGB')
         image_np = np.array(image_in)
 
-        if do_selection:
-            selected_location = get_location_name(root, location_names)
-            if not selected_location:
-                messagebox.showerror("Error", "Region name cannot be empty!", parent=root)
-                return pd.DataFrame(), initial_location  # Return an empty DataFrame
-            # Сохраняем уникальное имя локации в локальных параметрах
-            local_params['location_names'].append(selected_location)
+        selected_location = get_location_name(root, location_names)
+        if not selected_location:
+            print('Marking stopped')
+            return pd.DataFrame(), initial_location  # Return an empty DataFrame
+        # Сохраняем уникальное имя локации в локальных параметрах
+        location_names.append(selected_location)
             
         coords_df = load_coordinates_from_excel(excel_path, root)
         
@@ -731,7 +719,7 @@ def select_location(file_path, root, initial_location = ''):
         coords = drawer.run()  # Wait for drawing to complete
 
         if not coords:  # If the coordinates are empty
-            messagebox.showwarning("Warning", "No coordinates were drawn. Nothing will be saved.", parent=root)
+            print("No coordinates were drawn")
             return pd.DataFrame(), initial_location  # Return an empty DataFrame
         
         # сохраняем последний регион в глобальных параметрах

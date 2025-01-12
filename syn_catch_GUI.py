@@ -181,8 +181,8 @@ class ROIAnalyzerApp:
                            icon_path=self.icons_path["mark_area"], side='left', attr_name = "mark_area")
         self.create_button(self.inner_canvas1,"2. Filter and Binarize", self.binarize_action,
                            icon_path=self.icons_path["binarize"], side='left', attr_name = "binarize")
-        #self.create_button(self.inner_canvas1,"3. Histogram analysis", self.define_hist_action,
-        #                   icon_path=self.icons_path["histogram"], side='left', attr_name = "histogram")
+        self.create_button(self.inner_canvas1,"3. Histogram analysis", self.define_hist_action,
+                           icon_path=self.icons_path["histogram"], side='left', attr_name = "histogram")
         self.create_button(self.inner_canvas1,"4. General analysis", self.run_postprocess,
                            icon_path=self.icons_path["final_analysis"], side='left', attr_name = "final_analysis")
 
