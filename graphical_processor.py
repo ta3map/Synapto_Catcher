@@ -55,7 +55,7 @@ class ThumbnailViewer:
 
         self.cancel_loading = False
 
-        # Переменные для постраничной навигации
+        # Variables for pagination
         self.current_page = 0
         if self.max_per_page is None:
             self.max_per_page = len(self.images)
@@ -64,13 +64,13 @@ class ThumbnailViewer:
         if not os.path.exists(self.TEMP_FILE):
             os.makedirs(self.TEMP_FILE)
 
-        # Переменные для перетаскивания и клика
+        # Variables for drag and click
         self.start_x = 0
         self.start_y = 0
         self.canvas_offset_x = 0
         self.canvas_offset_y = 0
-        self.last_clicked_thumbnail = None  # Для хранения последней нажатой миниатюры
-        self.selected_images = set()  # Набор путей выбранных изображений
+        self.last_clicked_thumbnail = None  # To store the last thumbnail clicked
+        self.selected_images = set()  # Set of paths of selected images
 
         self._setup_ui()
         self._load_page_images(0)
@@ -78,49 +78,49 @@ class ThumbnailViewer:
     def display_selected_ids(self):
         """Отображаем выделенные ID в текстовом поле в порядке следования изображений."""
         if self.image_ids is None:
-            self.selected_ids_label.pack_forget()  # Скрываем текстовое поле, если ID не переданы
+            self.selected_ids_label.pack_forget()  # Hide the text field if IDs are not passed
             return
 
         if not self.selected_images:
-            self.selected_ids_label.pack_forget()  # Скрываем текстовое поле, если нет выделений
+            self.selected_ids_label.pack_forget()  # Hide the text field if there are no selections
             return
 
-        # Создаем словарь для быстрого поиска ID по изображению
+        # Create a dictionary to quickly search for IDs by image
         image_to_id = {img: img_id for img, img_id in zip(self.images, self.image_ids)}
 
-        # Собираем список ID для выделенных изображений
+        # Collect a list of IDs for the selected images
         selected_ids_num = [image_to_id[img] for img in self.selected_images if img in image_to_id]
         selected_ids_num.sort(key=lambda x: list(self.image_ids).index(x))
 
 
-        # Преобразуем все ID в строки
+        # Convert all IDs to strings
         selected_ids = [str(id) for id in selected_ids_num]
 
-        # Формируем сокращенный вывод
-        max_displayed_ids = 30  # Разрешенное количество для отображения
+        # Generate shortened output
+        max_displayed_ids = 30  # Allowed quantity to display
 
         if len(selected_ids) > max_displayed_ids:
-            # Количество чисел, которые будут показываться с начала и с конца
-            start_count = (max_displayed_ids // 2)  # Числа с начала
-            end_count = (max_displayed_ids // 2)    # Числа с конца
+            # Number of numbers to be shown from the beginning and from the end
+            start_count = (max_displayed_ids // 2)  # Numbers from the beginning
+            end_count = (max_displayed_ids // 2)    # Numbers from the end
 
-            # Формирование списка с началом, троеточиями и концом
+            # Forming a list with a beginning, ellipses and an end
             displayed_ids = ", ".join(selected_ids[:start_count]) + " ... " + ", ".join(selected_ids[-end_count:])
         else:
             displayed_ids = ", ".join(selected_ids)
 
-        # Обновляем текстовое поле
+        # Update the text field
         self.selected_ids_label.config(text=f"Selected IDs: {displayed_ids}")
-        self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X)  # Отображаем текстовое поле
+        self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X)  # Display the text field
         self.on_selection_change(selected_ids_num)
 
 
     def _setup_ui(self):
-        # Создаем фрейм для миниатюр
+        # Create a frame for the thumbnails
         self.thumbnail_frame = Frame(self.parent)
         self.thumbnail_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Создаем canvas для размещения миниатюр и scrollbar
+        # Create a canvas to hold the thumbnails and scrollbar
         self.canvas = Canvas(self.thumbnail_frame, width=self.width, height=self.height, highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.thumbnail_frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
         self.canvas.config(xscrollcommand=self.scrollbar.set)
@@ -134,178 +134,178 @@ class ThumbnailViewer:
 
         self.images = [image for image in self.images if os.path.exists(image)]
         
-        # Если комментарии переданы, проверяем их длину
+        # If comments are sent, check their length
         if self.comments is None:
-            self.comments = ['' for _ in self.images]  # Если комментариев нет, заполняем пустыми строками
+            self.comments = ['' for _ in self.images]  # If there are no comments, fill them with empty lines
             self.empty_comments = True
         else:
             if len(self.comments) != len(self.images):
-                raise ValueError("Количество комментариев должно соответствовать количеству изображений.")
+                raise ValueError("The number of comments should correspond to the number of images.")
 
-        # Кнопки навигации
+        # Navigation buttons
         self.prev_button = Button(self.thumbnail_frame, text="🡸", command=self.show_previous_page)
         self.next_button = Button(self.thumbnail_frame, text="🡺", command=self.show_next_page)
 
         self.prev_button.pack(side=tk.LEFT, padx=5)
         self.next_button.pack(side=tk.RIGHT, padx=5)
 
-        # Добавим поле для отображения выбранных ID
+        # Add a field to display the selected IDs
         self.selected_ids_label = Label(self.thumbnail_frame, text="")
         self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=5)
 
-        # Добавляем кнопку для выделения всех изображений
+        # Add a button to select all images
         self.select_all_button = Button(self.thumbnail_frame, text="Select all", command=self.select_all_images)
         self.select_all_button.pack(side=tk.LEFT, padx=5)
     
-        # Получаем корневое окно (Toplevel), содержащее этот виджет
+        # Get the root window (Toplevel) containing this widget
         self.root = self.parent.winfo_toplevel()
 
-        # Связываем события клавиш с этим окном
+        # Associate key events with this window
         self.root.bind("<Control-a>", self.on_ctrl_a)
         self.root.bind("<Control-A>", self.on_ctrl_a)
         self.root.bind("<Control-Shift-a>", self.on_ctrl_shift_a)
         self.root.bind("<Control-Shift-A>", self.on_ctrl_shift_a)
 
     def get_thumbnail_filename(self, image_path):
-        # Получаем время модификации файла в виде целого числа
+        # Get the file modification time as an integer
         modification_time = int(os.path.getmtime(image_path))
-        # Генерируем хэш от пути
+        # Generate a hash from the path
         base_hash = hashlib.md5(image_path.encode()).hexdigest()
-        # Склеиваем хэш и время модификации, чтобы получить уникальное имя
+        # Concatenate the hash and modification time to get a unique name
         file_name = f"{base_hash}_{modification_time}.png"
         return os.path.join(self.TEMP_FILE, file_name)
 
     def clear_thumbnails(self):
         try:
-            if self.thumbnail_inner_frame.winfo_exists():  # Проверяем, существует ли фрейм
+            if self.thumbnail_inner_frame.winfo_exists():  # Check if the frame exists
                 for widget in self.thumbnail_inner_frame.winfo_children():
-                    widget.destroy()  # Удаляем все дочерние виджеты
+                    widget.destroy()  # Remove all child widgets
         except tk.TclError as e:
             print(f"Error during clearing thumbnails: {e}")
 
     def add_comment_to_image(self, image, comment):
-        """Наносим комментарий поверх изображения с черным фоном, жирным шрифтом и размером 14."""
-        # Копируем изображение, чтобы не изменять оригинал
+        """Put a comment on top of an image with a black background, bold font and size 14."""
+        # Copy the image so as not to change the original
         
-            # Преобразуем изображение в RGB, если оно в другом формате
+            # Convert the image to RGB if it is in a different format
         if image.mode != 'RGB':
             image = image.convert('RGB')
             
         img_copy = image.copy()
         draw = ImageDraw.Draw(img_copy)
 
-        # Определяем шрифт, пытаемся загрузить Arial с размером 14 и жирным шрифтом
+        # Determine the font, try to load Arial with size 14 and bold
         try:
-            font = ImageFont.truetype("arialbd.ttf", 14)  # Используем жирный Arial
+            font = ImageFont.truetype("arialbd.ttf", 14)  # Use bold Arial
         except IOError:
             font = ImageFont.load_default()
 
-        # Используем font.getbbox() для расчета размера текста
+        # Use font.getbbox() to calculate text size
         text_bbox = draw.textbbox((0, 0), comment, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
 
-        # Определяем координаты и размер черного фона (немного больше текста)
+        # Define the coordinates and size of the black background (a little more text)
         padding = 5
-        text_x, text_y = 10, 10  # Положение текста
+        text_x, text_y = 10, 10  # Text position
         background_x1 = text_x - padding
         background_y1 = text_y - padding
         background_x2 = text_x + text_width + padding
         background_y2 = text_y + text_height + padding
         
-        # Рисуем черный прямоугольник под текстом
+        # Draw a black rectangle under the text
         draw.rectangle([background_x1, background_y1, background_x2, background_y2], fill=(0, 0, 0))
 
-        # Цвет текста - белый
+        # Text color - white
         text_color = (255, 255, 255)
         
-        # Наносим текст поверх черного фона
+        # Apply text over a black background
         draw.text((text_x, text_y), comment, font=font, fill=text_color)
 
         return img_copy
 
     def on_mouse_wheel(self, event):
         if event.delta > 0:
-            self.canvas.xview_scroll(-1, "units")  # Прокрутка влево
+            self.canvas.xview_scroll(-1, "units")  # Scroll left
         else:
-            self.canvas.xview_scroll(1, "units")   # Прокрутка вправо
+            self.canvas.xview_scroll(1, "units")   # Scroll right
 
     def on_mouse_press(self, event):        
-        """Запоминаем начальную позицию мыши при нажатии."""
+        """Remember the initial position of the mouse when clicked."""
         self.start_x = event.x
         self.start_y = event.y
         self.canvas_offset_x = self.canvas.canvasx(0)
         self.canvas_offset_y = self.canvas.canvasy(0)
 
     def on_mouse_drag(self, event):
-        """Изменяем положение видимой области холста по движению мыши."""
+        """Change the position of the visible area of ​​the canvas based on mouse movement."""
         delta_x = self.start_x - event.x
         self.canvas.xview_moveto((self.canvas_offset_x + delta_x) / self.canvas.bbox("all")[2])
 
     def on_mouse_release(self, event, img_path, thumbnail_label):
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
         
-        """Определяем, было ли это кликом или перетаскиванием."""
+        """Detecting whether it was a click or a drag."""
         delta_x = event.x - self.start_x
         delta_y = event.y - self.start_y
         movement = (delta_x**2 + delta_y**2)**0.5
 
-        if movement < 5:  # Порог для определения клика
-            # Проверяем, зажата ли клавиша Ctrl
-            if event.state & 0x0004:  # Проверяем, зажата ли клавиша Ctrl
-                # Множественное выделение
+        if movement < 5:  # Threshold for detecting a click
+            # Check if the Ctrl key is held down
+            if event.state & 0x0004:  # Check if the Ctrl key is held down
+                # Multiple selection
                 if img_path in self.selected_images:
-                    # Если изображение уже выбрано, снимаем выделение
+                    # If the image is already selected, deselect it
                     self.selected_images.remove(img_path)
                     thumbnail_label.config(borderwidth=0, relief="flat")
                 else:
-                    # Добавляем изображение в выбранные
+                    # Add an image to the selected
                     self.selected_images.add(img_path)
                     thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)                
             else:
-                # Одиночное выделение
-                # Сбрасываем выделение предыдущих изображений
+                # Single selection
+                # Reset selection of previous images
                 for widget in self.thumbnail_inner_frame.winfo_children():
                     lbl = widget.children.get('!label')
                     if lbl:
                         lbl.config(borderwidth=0, relief="flat")
                 self.selected_images.clear()
 
-                # Выделяем текущую миниатюру
+                # Select the current thumbnail
                 self.selected_images.add(img_path)
                 thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)
                 self.last_clicked_thumbnail = thumbnail_label
                 
             self.display_selected_ids()
 
-            # Вызываем функцию on_single_click
+            # Call the function on_single_click
             self.on_single_click(img_path)
         else:
-            # Это перетаскивание, ничего не делаем
+            # This is drag and drop, we don't do anything
             pass
 
     def on_ctrl_a(self, event):
-        """Обрабатываем нажатие Ctrl+A для выделения всех видимых изображений."""
+        """Process the Ctrl+A press to select all visible images."""
         focus_widget = self.root.focus_get()
         if focus_widget and str(focus_widget).startswith(str(self.root)):
             self.select_all_visible()
-        return "break"  # Останавливаем дальнейшую обработку события
+        return "break"  # Stop further processing of the event
 
     def on_ctrl_shift_a(self, event):
-        """Обрабатываем нажатие Ctrl+Shift+A для выделения всех изображений."""
+        """Processing pressing Ctrl+Shift+A to select all images."""
         focus_widget = self.root.focus_get()
         if focus_widget and str(focus_widget).startswith(str(self.root)):
             self.select_all_images()
-        return "break"  # Останавливаем дальнейшую обработку события
+        return "break"  # Stop further processing of the event
 
 
     def select_all_visible(self):
-        """Выделяем все видимые изображения на текущей странице с использованием цвета подсветки из темы."""
-        # Получаем цвет подсветки через ThemeManager
+        """Select all visible images on the current page using the highlight color from the theme."""
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
 
         for widget in self.thumbnail_inner_frame.winfo_children():
             thumbnail_label = widget.children.get('!label')
@@ -316,17 +316,17 @@ class ThumbnailViewer:
                 self.display_selected_ids()
 
     def select_all_images(self):
-        """Выделяем все изображения на всех страницах."""
-        self.selected_images = set(self.images)  # Выбираем все изображения
+        """Select all images on all pages."""
+        self.selected_images = set(self.images)  # Select all images
         self.select_all_visible()
         self.display_selected_ids()
-        #self.update_thumbnails_selection()  # Обновляем отображение на текущей странице
+        #self.update_thumbnails_selection() # Update the display on the current page
 
     def update_thumbnails_selection(self):        
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
-        """Обновляем отображение выделения на текущей странице."""
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
+        """Updating the display of the selection on the current page."""
         for widget in self.thumbnail_inner_frame.winfo_children():
             thumbnail_label = widget.children.get('!label')
             if thumbnail_label:
@@ -369,13 +369,13 @@ class ThumbnailViewer:
         self.cancel_loading = False
         self.clear_thumbnails()
         
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
         
-        # Устанавливаем количество изображений для текущей страницы
+        # Set the number of images for the current page
         end_index = min(start_index + self.max_per_page, len(self.images))
-        page_image_count = end_index - start_index  # Количество изображений на текущей странице
+        page_image_count = end_index - start_index  # Number of images on current page
 
         self.create_progress_window(page_image_count)
 
@@ -383,7 +383,7 @@ class ThumbnailViewer:
             if self.cancel_loading:
                 break
 
-            # Проверяем, существует ли thumbnail_inner_frame перед созданием виджетов
+            # Check if thumbnail_inner_frame exists before creating widgets
             if not self.thumbnail_inner_frame.winfo_exists():
                 break
 
@@ -395,7 +395,7 @@ class ThumbnailViewer:
                 img.thumbnail((150, 150))
                 img.save(thumbnail_path, format='PNG')
 
-            # Добавляем комментарий к изображению
+            # Add a comment to the image
             if not self.empty_comments:
                 img = self.add_comment_to_image(img, self.comments[idx_in_page])
 
@@ -404,17 +404,17 @@ class ThumbnailViewer:
             thumbnail_container = Frame(self.thumbnail_inner_frame)
             thumbnail_label = Label(thumbnail_container, image=img_tk)
             thumbnail_label.image = img_tk
-            thumbnail_label.img_path = img_path  # Сохраняем путь в атрибуте
+            thumbnail_label.img_path = img_path  # Save the path in an attribute
             thumbnail_label.pack(side=tk.TOP, padx=5, pady=5)
 
-            # Проверяем, выбрано ли изображение
+            # Check if the image is selected
             if img_path in self.selected_images:
                 thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)            
             else:
                 thumbnail_label.config(borderwidth=0, relief="flat")
             self.display_selected_ids()
 
-            if not self.replaced_image_names: # заменяем названия файлов
+            if not self.replaced_image_names: # replace file names
                 file_name = os.path.basename(img_path)
             else:
                 file_name = self.replaced_image_names[start_index+idx_in_page]
@@ -424,7 +424,7 @@ class ThumbnailViewer:
 
             thumbnail_container.pack(side=tk.LEFT, padx=5, pady=5)
 
-            # Привязываем события перетаскивания и клика к миниатюрам
+            # Bind drag and click events to thumbnails
             thumbnail_label.bind("<ButtonPress-1>", self.on_mouse_press)
             thumbnail_label.bind("<B1-Motion>", self.on_mouse_drag)
             thumbnail_label.bind("<ButtonRelease-1>", partial(self.on_mouse_release, img_path=img_path, thumbnail_label=thumbnail_label))
@@ -434,15 +434,15 @@ class ThumbnailViewer:
             thumbnail_label.bind("<MouseWheel>", self.on_mouse_wheel)
             file_label.bind("<MouseWheel>", self.on_mouse_wheel)
 
-            # Обновляем прогресс-бар
+            # Update the progress bar
             if self.progress_bar:
-                self.progress_bar["value"] = idx_in_page - start_index + 1  # Обновляем прогресс для изображений на текущей странице
+                self.progress_bar["value"] = idx_in_page - start_index + 1  # Update progress for images on the current page
                 self.progress_label.config(text=f"Loading image {idx_in_page - start_index + 1} of {page_image_count}")
-                self.parent.update_idletasks()  # Обновляем интерфейс
+                self.parent.update_idletasks()  # Updating the interface
 
         self.close_progress_window()
 
-        # Проверяем, существует ли canvas перед вызовом bbox
+        # Check if canvas exists before calling bbox
         if self.canvas.winfo_exists():
             self.canvas.config(scrollregion=self.canvas.bbox("all"))
             
@@ -457,8 +457,8 @@ class ThumbnailViewer:
 
             self._load_page_images(self.current_page * self.max_per_page)
 
-            # Перемещаем слайдер в начало, чтобы показывать новые миниатюры с начала страницы
-            self.canvas.xview_moveto(0)  # Перемещаем слайдер в начало
+            # Move the slider to the beginning to show new thumbnails from the beginning of the page
+            self.canvas.xview_moveto(0)  # Move the slider to the beginning
 
     def show_previous_page(self):
         if self.current_page > 0:
@@ -466,11 +466,11 @@ class ThumbnailViewer:
 
             self._load_page_images(self.current_page * self.max_per_page)
 
-            # Перемещаем слайдер в конец, чтобы показывать конец предыдущей страницы
-            self.canvas.xview_moveto(1)  # Перемещаем слайдер в конец
+            # Move the slider to the end to show the end of the previous page
+            self.canvas.xview_moveto(1)  # Move the slider to the end
 
     def update_buttons(self):
-        # Проверяем существование кнопки перед обновлением ее состояния
+        # Check the existence of the button before updating its state
         if self.prev_button.winfo_exists():
             if self.current_page == 0:
                 self.prev_button.config(state=tk.DISABLED)
@@ -490,14 +490,14 @@ class ThumbnailViewer:
                 self.next_button.config(state=tk.DISABLED)
 
     def destroy(self):
-        """Метод для очистки виджетов и отвязки обработчиков событий."""
-        # Отвязываем обработчики событий
+        """Method for clearing widgets and unbinding event handlers."""
+        # Unbind event handlers
         self.root.unbind("<Control-a>")
         self.root.unbind("<Control-A>")
         self.root.unbind("<Control-Shift-a>")
         self.root.unbind("<Control-Shift-A>")
 
-        # Уничтожаем все виджеты
+        # Destroy all widgets
         self.thumbnail_frame.destroy()
 
 

@@ -307,7 +307,7 @@ def read_tiff_channels(file_path, num_channels, num_layers):
     # Check the number of frames (images) in the file
     n_frames = tiff_image.n_frames
     if n_frames != num_channels * num_layers:
-        raise ValueError(f"The number of frames in the file ({n_frames}) does not correspond to the specified channels ({num_channels}) and layers ({num_layers})")
+        raise ValueError(f"Количество кадров в файле ({n_frames}) не соответствует заданным каналам ({num_channels}) и слоям ({num_layers})")
 
     # Initialize lists for each channel
     channels = [[] for _ in range(num_channels)]

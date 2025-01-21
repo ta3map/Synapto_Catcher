@@ -7,7 +7,7 @@ from scipy.stats import kruskal
 from scipy.stats import mannwhitneyu
 from itertools import combinations
 
-# Функция для конвертации p-значений в звездочки
+# Function to convert p-values ​​to stars
 def rankstars(p):
     if not np.isnan(p):
         if p > 0.05:
@@ -46,13 +46,13 @@ def plot_pairwise_pvalues(local_param_data, groups, local_p_values, groups_x_pos
 
                         
 def analyze_and_plot_many_graphs(file_path, output_folder, groups, locations, numerical_parameters):
-    # Чтение данных из Excel-файла
+    # Reading data from an Excel file
     data = pd.read_excel(file_path)
 
-    # Фильтрация данных по возрастным группам и локациям
+    # Filtering data by age groups and locations
     filtered_data = data[(data['Group'].isin(groups)) & (data['selected_location'].isin(locations))]
 
-    # Функция для вычисления p-значений по Крускала-Уоллису для каждой локации
+    # Function to calculate Kruskal-Wallis p-values ​​for each location
     def calculate_kruskal_pvalues(data, parameter, groups, group_col='Group', location_col='selected_location'):
         results = {}
         for location in data[location_col].unique():
@@ -64,7 +64,7 @@ def analyze_and_plot_many_graphs(file_path, output_folder, groups, locations, nu
                 results[location] = np.nan
         return results
 
-    # Функция для проведения попарных сравнений с использованием теста Данна
+    # Function for performing pairwise comparisons using Dunn's test
     def calculate_dunn_pvalues(data, parameter, groups, group_col='Group', location_col='selected_location'):
         pairwise_results = {}
         for location in data[location_col].unique():
@@ -74,7 +74,7 @@ def analyze_and_plot_many_graphs(file_path, output_folder, groups, locations, nu
         return pairwise_results
 
 
-    # Функция для построения скрипок и добавления p-значений
+    # Function to plot violins and add p-values
     def plot_violin_with_pvalues(data, parameter, category, hue, dunn_pvalues):
         locations = data[hue].unique()
         palette = sns.color_palette("deep", len(locations))
@@ -104,26 +104,26 @@ def analyze_and_plot_many_graphs(file_path, output_folder, groups, locations, nu
             groups_x_pos = list(range(np.size(valid_groups)))
             plot_pairwise_pvalues(local_param_data, valid_groups, local_p_values, groups_x_pos)      
             
-            # Убираем рамку вокруг графика
+            # Remove the frame around the graph
             sns.despine()
             plt.show()
 
-    # Вычисление p-значений Крускала-Уоллиса для каждого параметра и каждой локации
+    # Calculate Kruskal-Wallis p-values ​​for each parameter and each location
     kruskal_p_values = {}
     for parameter in numerical_parameters:
         kruskal_p_values[parameter] = calculate_kruskal_pvalues(filtered_data, parameter, groups)
 
-    # Вычисление p-значений теста Данна для каждого параметра и каждой локации
+    # Calculate Dunn's test p-values ​​for each parameter and each location
     dunn_p_values = {}
     for parameter in numerical_parameters:
         dunn_p_values[parameter] = calculate_dunn_pvalues(filtered_data, parameter, groups)
 
-    # Построение графиков для числовых параметров с p-значениями теста Крускала-Уоллиса и теста Данна
+    # Plotting graphs for numerical parameters with p-values ​​of the Kruskal-Wallis test and Dunn test
     for parameter in numerical_parameters:
         dunn_pvalues = dunn_p_values[parameter]
         plot_violin_with_pvalues(filtered_data, parameter, 'Group', 'selected_location', dunn_pvalues)
 
-    # Вывод p-значений Крускала-Уоллиса и теста Данна для каждой локации
+    # Output Kruskal-Wallis p-values ​​and Dunn's test for each location
     for parameter, location_results in kruskal_p_values.items():
         print(f"Kruskal-Wallis p-values for {parameter}:")
         for location, p_value in location_results.items():
@@ -135,7 +135,7 @@ def analyze_and_plot_one_graph(file_path, output_folder, groups, locations, nume
     # Load the data
     data = pd.read_excel(file_path)
 
-    # Фильтрация данных по возрастным группам и локациям 
+    # Filtering data by age groups and locations 
     filtered_data = data[(data['Group'].isin(groups)) & (data['selected_location'].isin(locations))]
 
     # Function to calculate group positions for plotting

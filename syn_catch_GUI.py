@@ -60,13 +60,13 @@ class ROIAnalyzerApp:
             "clear_area": current_dir + "\\images\\buttons\\clear_area_32.png"
         }
 
-        self._update_in_progress = False  # Флаг для предотвращения повторных вызовов
+        self._update_in_progress = False  # Flag to prevent repeated calls
         
-        # Создаем два Canvas
+        # Create two Canvas
         self.canvas1 = Canvas(root, width=500, height=750, highlightthickness=0)
         self.canvas2 = Canvas(root, width=500, height=750, highlightthickness=0)
 
-        # Размещаем Canvas рядом друг с другом
+        # Place Canvas next to each other
         self.canvas2.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
         self.canvas1.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(5, 0))
 
@@ -84,7 +84,7 @@ class ROIAnalyzerApp:
         # Create the "View" menu
         self.view_menu = Menu(self.menu_bar, tearoff=0)
 
-        # Переменные состояния для галочек, загружаем их значения из файла
+        # State variables for checkboxes, load their values ​​from a file
         self.canvas1_visible = tk.BooleanVar(value=self.params.get('canvas1_visible', True))
         self.inner_canvas3_visible = tk.BooleanVar(value=self.params.get('inner_canvas3_visible', True))
 
@@ -204,17 +204,17 @@ class ROIAnalyzerApp:
         self.add_hyperlink("README", "https://github.com/ta3map/Synapto_Catcher/tree/main?tab=readme-ov-file#synapto-catcher-user-guide")
         print('Parameters will be saved in ' + TEMP_FILE)
         
-        self.save_all_params()# после успешного считывания и/или заполнения params сохраняется
+        self.save_all_params()# after successful reading and/or filling params is saved
         self.check_file_type()
         self.update_thumbnail_action()
 
-        # Показываем или скрываем канвасы в зависимости от загруженных параметров
+        # Show or hide canvases depending on the loaded parameters
         self.update_canvas_visibility([
             (self.canvas1, 'canvas1_visible'),
             (self.inner_canvas3, 'inner_canvas3_visible')
         ])
         
-        # Проверяем скрытие настроек каналов
+        # Check hiding channel settings
         self.on_all_slices_selected_change()
 
     def update_canvas_visibility(self, canvas_list):
@@ -223,20 +223,20 @@ class ROIAnalyzerApp:
         canvas_list: список кортежей (канвас, ключ состояния).
         """
         for canvas, key in canvas_list:
-            # Проверяем состояние видимости из параметров
+            # Check the visibility state from the parameters
             if self.params.get(key, True):
                 canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
             else:
                 canvas.pack_forget()
 
     def toggle_canvas(self, parent, state_var, param_key):
-        # Показываем или скрываем Canvas в зависимости от состояния переменной
-        if state_var.get():  # Если переменная True - показать
+        # Show or hide Canvas depending on the state of the variable
+        if state_var.get():  # If the variable is True - show
             parent.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 5))
-        else:  # Иначе скрыть
+        else:  # Otherwise hide
             parent.pack_forget()
 
-        # Сохраняем текущее состояние канваса
+        # Save the current state of the canvas
         self.save_params(param_key, state_var.get())
 
     def age_group_analysis_window(self):
@@ -454,7 +454,7 @@ class ROIAnalyzerApp:
         entry = Entry(frame, textvariable=entry_var, width=20, state='readonly' if readonly else 'normal')
         entry.pack(side=tk.LEFT, padx=5)
 
-        # Добавляем trace с вызовом save_params и пользовательской функции
+        # Add a trace with a call to save_params and a custom function
         entry_var.trace_add("write", lambda *args: self.on_entry_change(attr_name, entry_var.get(), on_change))
 
         if command:
@@ -473,10 +473,10 @@ class ROIAnalyzerApp:
         label = Label(frame, text=label_text, width=30)
         label.pack(side=tk.LEFT)
 
-        # Создаем переменную для состояния галочки с возможностью задать значение по умолчанию
+        # Create a variable for the checkbox state with the ability to set a default value
         check_var = tk.BooleanVar(value=self.params.setdefault(attr_name, default_value))
         
-        # Создаем галочку
+        # Create a checkmark
         checkbutton = Checkbutton(frame, variable=check_var, command=lambda: self.on_entry_change(attr_name, check_var.get(), on_change))
         checkbutton.pack(side=tk.LEFT, padx=5)
 
@@ -488,25 +488,25 @@ class ROIAnalyzerApp:
             
     def on_entry_change(self, key, value, on_change=None, delay=1000):
         self.root.after(300, lambda: self.save_params(key, value))
-        # Проверка на то, идет ли уже обновление
+        # Checking to see if an update is already in progress
         if not self._update_in_progress:
             self._update_in_progress = True
-            # Откладываем выполнение save_params и on_change
+            # Delay execution of save_params and on_change
             self.root.after(delay, lambda: self._complete_change(key, value, on_change))
 
     def _complete_change(self, key, value, on_change):
-        # Вызываем on_change, если оно передано
+        # Call on_change if it is passed
         if on_change:
             on_change()
 
-        # Сбрасываем флаг
+        # Reset the flag
         self._update_in_progress = False
 
     def on_all_slices_selected_change(self):
-        # Получаем значение галочки
+        # Get the value of the checkmark
         all_slices_selected = self.selected_all_slices_selected.get()
         
-        # Скрываем или показываем slice_start и slice_end в зависимости от состояния галочки
+        # Hide or show slice_start and slice_end depending on the checkbox state
         self.toggle_entry('slice_start', not all_slices_selected)
         self.toggle_entry('slice_end', not all_slices_selected)
         
@@ -519,29 +519,29 @@ class ROIAnalyzerApp:
         else:
             icon = None
 
-        # Создаем кнопку с иконкой или без
+        # Create a button with or without an icon
         if icon:
             button = Button(parent, text=text, command=command, image=icon, compound="left")
-            button.image = icon  # Сохранение иконки для предотвращения удаления сборщиком мусора
+            button.image = icon  # Saving the icon to prevent removal by the garbage collector
         else:
             button = Button(parent, text=text, command=command, width=20)
 
         button.pack(side=side, padx=5, pady=5)
 
-        # Если передан attr_name, сохраняем кнопку и её параметры
+        # If attr_name is passed, save the button and its parameters
         if attr_name:
-            setattr(self, f"{attr_name}_button", button)  # Сохраняем ссылку на кнопку
-            setattr(self, f"{attr_name}_button_side", side)  # Сохраняем информацию о side
+            setattr(self, f"{attr_name}_button", button) # Save the link to the button
+            setattr(self, f"{attr_name}_button_side", side) # Save information about side
 
     def toggle_button(self, attr_name, enabled):
         button = getattr(self, f"{attr_name}_button", None)
-        side = getattr(self, f"{attr_name}_button_side", None)  # Получаем сохраненный side
+        side = getattr(self, f"{attr_name}_button_side", None)  # Get the saved side
 
         if button and side:
             if enabled:
-                button.pack(side=side)  # Показываем кнопку с сохраненным side
+                button.pack(side=side)  # Show the button with the saved side
             else:
-                button.pack_forget()  # Скрываем кнопку
+                button.pack_forget()  # Hide the button
                 
     def toggle_entry(self, attr_name, enabled):
         entry = getattr(self, f"{attr_name}_entry", None)
@@ -808,20 +808,20 @@ class ROIAnalyzerApp:
                 #print("update_thumbnail_action")
                 images = df.loc[rows_to_process, 'filepath'].tolist()
 
-                # Получаем ID и комментарии
+                # Get ID and comments
                 ids = df.loc[rows_to_process, 'ID']
                 comments = df.loc[rows_to_process, 'comment']
 
-                # Формируем список ID с комментариями
+                # Form a list of IDs with comments
                 IDs = [
                     f"ID: {str(id_val)}" + (f" | {str(comment)}" if pd.notna(comment) and str(comment).strip() else "")
                     for id_val, comment in zip(ids, comments)
                 ]
 
                 if hasattr(self, 'thumbnail_viewer'):
-                    self.thumbnail_viewer.destroy()  # Уничтожаем предыдущий экземпляр
+                    self.thumbnail_viewer.destroy()  # Destroy the previous instance
 
-                # Создаем новый экземпляр ThumbnailViewer
+                # Create a new ThumbnailViewer instance
                 self.thumbnail_viewer = ThumbnailViewer(
                     parent=self.inner_frame2,
                     images=images,
@@ -832,7 +832,7 @@ class ROIAnalyzerApp:
                     max_per_page=10
                 )
 
-                # Устанавливаем фокус                
+                # Set focus              
                 self.thumbnail_viewer.thumbnail_inner_frame.focus_set()
                 
             except Exception as e:
@@ -849,19 +849,19 @@ class ROIAnalyzerApp:
         
 
     def explore_results_action(self):
-        # Подготовка данных
+        # Data preparation
         df, rows_to_process = self.prepare_data()
 
-        # Если в rows_to_process более одного эксперимента, предложим пользователю выбрать один
+        # If there is more than one experiment in rows_to_process, prompt the user to select one
         if len(rows_to_process) > 1:
-            # Получаем список доступных экспериментов для выбора
+            # Get a list of available experiments to choose from
             experiments_choice = df.iloc[rows_to_process]['ID'].tolist()
 
-            # Создаем маленькое окно для выбора эксперимента
+            # Create a small window for selecting an experiment
             selection_window = tk.Tk()
             selection_window.title("Choose ID")
 
-            # Создаем метку и выпадающий список для выбора эксперимента
+            # Create a label and a drop-down list for selecting an experiment
             label = Label(selection_window, text="Select ID:")
             label.pack(pady=5)
 
@@ -870,56 +870,56 @@ class ROIAnalyzerApp:
             dropdown['values'] = experiments_choice
             dropdown.pack(pady=5)
 
-            # Устанавливаем первый элемент как выбранный по умолчанию
+            # Set the first element as the default selected
             experiment_var.set(experiments_choice[0])
             dropdown.current(0)
 
-            # Привязываем событие выбора из списка к переменной experiment_var
+            # Bind the selection event from the list to the experiment_var variable
             def on_select(event):
-                selected_experiment = dropdown.get()  # Получаем выбранное значение
-                experiment_var.set(selected_experiment)  # Устанавливаем выбранное значение
+                selected_experiment = dropdown.get()  # Get the selected value
+                experiment_var.set(selected_experiment)  # Set the selected value
 
-            dropdown.bind("<<ComboboxSelected>>", on_select)  # Привязка события
+            dropdown.bind("<<ComboboxSelected>>", on_select) # Event binding
 
-            # Функция для обработки выбора эксперимента
+            # Function to handle experiment selection
             def on_experiment_select():
-                selected_experiment = int(experiment_var.get())  # Получаем выбранный номер эксперимента
-                selected_idx = df[df['ID'] == selected_experiment].index[0]  # Находим индекс выбранного эксперимента
+                selected_experiment = int(experiment_var.get())  # Get the selected experiment number
+                selected_idx = df[df['ID'] == selected_experiment].index[0]  # Find the index of the selected experiment
 
-                # Получаем путь к файлу
+                # Get the path to the file
                 file_path = df.iloc[selected_idx]['filepath']
 
-                # Сбор комментария: берем все колонки, кроме 'ID' и 'filepath'
+                # Collecting comments: take all columns except 'ID' and 'filepath'
                 comment_data = df.iloc[selected_idx].drop(['ID', 'filepath']).fillna('')
                 comment = "\n".join([f"{col}: {val}" for col, val in comment_data.items()])
 
-                # Закрываем окно выбора
+                # Close the selection window
                 selection_window.destroy()
 
-                # Открываем окно для выбранного эксперимента и передаем комментарий
+                # Open a window for the selected experiment and send a comment
                 ExperimentWindow(file_path, comment=comment)
 
-            # Кнопка для подтверждения выбора
+            # Button to confirm selection
             select_button = tk.Button(selection_window, text="Open ID", command=on_experiment_select)
             select_button.pack(pady=10)
 
-            # Запуск окна выбора
+            # Launch the selection window
             selection_window.mainloop()
 
-        # Если эксперимент только один, сразу его обрабатываем
+        # If there is only one experiment, we process it immediately
         elif len(rows_to_process) == 1:
             row_idx = rows_to_process[0]
             file_path = df.iloc[row_idx]['filepath']
 
-            # Сбор комментария: берем все колонки, кроме 'ID' и 'filepath'
+            # Collecting comments: take all columns except 'ID' and 'filepath'
             comment_data = df.iloc[row_idx].drop(['ID', 'filepath']).fillna('')
             comment = "\n".join([f"{col}: {val}" for col, val in comment_data.items()])
 
-            # Открываем окно для выбранного эксперимента с комментарием
+            # Open a window for the selected experiment with a comment
             ExperimentWindow(file_path, comment=comment)
 
     def parse_entry(self, entry):
-        # Если entry - число, уменьшаем его на 1, иначе оставляем как есть
+        # If entry is a number, decrease it by 1, otherwise leave it as is
         if entry.isdigit():
             entry = int(entry) - 1
         return entry
@@ -1017,7 +1017,7 @@ class ROIAnalyzerApp:
             self.update_progress_bar(idx, total)
         print("Histogram selection is over")
 
-    # Асинхронная функция для выполнения постобработки
+    # Asynchronous function to perform post-processing
     async def async_run_postprocess(self):
         df, rows_to_process = self.prepare_data()
         output_directory = self.selected_output_dir.get()
@@ -1029,18 +1029,18 @@ class ROIAnalyzerApp:
             file_path = df.iloc[row_idx]['filepath']
             row = df.iloc[row_idx]           
 
-            # Обрабатываем один файл
+            # Process one file
             summary_data_s = pp_one(file_path, row, output_directory)
             
-            # Добавляем данные в общий список
-            if summary_data_s:  # Добавляем только если данные есть                
+            # Add data to the general list
+            if summary_data_s:  # Add only if data is available                
                 summary_data_list.extend(summary_data_s)
             
-            # Обновляем прогресс
+            # Update progress
             self.update_progress_bar(idx, total)
-            await asyncio.sleep(0)  # Отдаем управление другим задачам
+            await asyncio.sleep(0)  # Give control to other tasks
 
-        # Если удалось собрать данные, сохраняем их
+        # If we were able to collect the data, save it
         if summary_data_list:
             summary_df = pd.concat(summary_data_list, ignore_index=True)
             summary_df.drop(summary_df.columns[[0]], axis=1, inplace=True)
@@ -1103,10 +1103,10 @@ class ROIAnalyzerApp:
             # Reset the indices of the DataFrame
             df.reset_index(drop=True, inplace=True)
 
-            # Определяем максимальный ID из доступных данных
+            # Determine the maximum ID from the available data
             max_id = df['ID'].max()
 
-            # Получаем список экспериментов для обработки
+            # Get a list of experiments to process
             IDs = self.get_exps_to_process(max_id)
 
             # Find rows with the specified experiment numbers
@@ -1145,7 +1145,7 @@ class ROIAnalyzerApp:
                 start, end = exps_input.split(':')
                 start = int(start)
 
-                # Обработка случая с end
+                # Handle the case with end
                 if end == 'end':
                     end = max_id
                 else:
@@ -1183,11 +1183,11 @@ class ROIAnalyzerApp:
         return {}
 
     def clear_param(self, key):
-        # Проверяем, существует ли параметр с данным ключом
+        # Check if a parameter with a given key exists
         if key in self.params:
-            # Удаляем параметр
+            # Remove the parameter
             del self.params[key]
-            # Сохраняем обновлённые параметры
+            # Save the updated parameters
             with open(TEMP_FILE, 'w') as f:
                 json.dump(self.params, f)
 
@@ -1206,39 +1206,39 @@ except:
     pass
 
 
-# Функция для применения всех параметров темы
+# Function to apply all theme options
 def apply_theme(root, style):
-    # Получаем цвет фона и шрифт из текущей темы
+    # Get the background color and font from the current theme
     theme_background = style.lookup('TFrame', 'background')
     theme_font = style.lookup('TLabel', 'font')
     theme_foreground = style.lookup('TLabel', 'foreground')
 
-    # Устанавливаем фон для главного окна
+    # Set the background for the main window
     root.configure(bg=theme_background)
 
-    # Рекурсивная функция для применения фона, шрифта и цвета текста ко всем виджетам
+    # Recursive function to apply background, font and text color to all widgets
     def update_widget_appearance(widget):
         try:
             widget.configure(bg=theme_background)
         except tk.TclError:
-            pass  # Игнорируем виджеты, которые не поддерживают изменение фона
+            pass  # Ignore widgets that do not support changing the background
 
         try:
             widget.configure(font=theme_font, fg=theme_foreground)
         except (tk.TclError, AttributeError):
-            pass  # Игнорируем виджеты, которые не поддерживают изменение шрифта или цвета текста
+            pass  # Ignore widgets that do not support changing the font or text color
 
         for child in widget.winfo_children():
             update_widget_appearance(child)
 
-    # Применяем изменения ко всем виджетам
+    # Apply changes to all widgets
     update_widget_appearance(root)
 
-    # Попробуем изменить цвет заголовка окна (шапки)
+    # Let's try to change the color of the window title (header)
     try:
         root.wm_attributes("-titlepath", theme_background)
     except tk.TclError:
-        pass  # Изменение цвета заголовка не поддерживается на всех системах
+        pass  # Changing title color is not supported on all systems
     
 if __name__ == "__main__":
     #root = tk.Tk()
@@ -1247,13 +1247,13 @@ if __name__ == "__main__":
     
     app = ROIAnalyzerApp(root)
 
-    # Создаем объект стиля для работы с темой
+    # Create a style object to work with the theme
     style = Style()
     
-    # Настраиваем синглтон с темой
+    # Setting up a singleton with a theme
     theme_manager = ThemeManager()
     theme_manager.set_style(style)
-    # Применяем тему к виджетам главного окна
+    # Apply a theme to the main window widgets
     root.after(100, lambda: theme_manager.apply_theme(root))
     
     # Determine the screen dimensions
