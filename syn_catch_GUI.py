@@ -938,7 +938,6 @@ class ROIAnalyzerApp:
             target_ch = int(self.target_ch_entry.get())-1
             dapi_ch = int(self.second_ch_entry.get())-1
 
-            # Передаем значения в stack_image
             stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch)
             
             coords_df, selected_location = select_location(file_path, self.root, initial_location=selected_location)

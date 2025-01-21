@@ -189,15 +189,15 @@ def save_image(image, path, Step = None, priority_keys=None, overwrite_similar=F
     if priority_keys:
         selected_metadata = {key: metadata[key] for key in priority_keys if key in metadata}
         
-        # Извлекаем 'selected_location' и переименовываем его в 'region' - кастыль
-        region_value = selected_metadata.get('selected_location', None)  # Получаем значение или None, если ключ отсутствует
+        # Extract 'selected_location' and rename it to 'region' - trick
+        region_value = selected_metadata.get('selected_location', None)  # Get the value or None if the key is missing
         selected_metadata.pop('selected_location', None)
         
-        # Создаем новый словарь с добавлением 'Step' и 'region' в начале
+        # Create a new dictionary with 'Step' and 'region' added at the beginning
         selected_metadata = {
             'Step': Step,
-            'region': region_value,  # Переименованный ключ
-            **selected_metadata  # Добавляем оставшиеся ключи
+            'region': region_value, # Renamed key
+            **selected_metadata  # Add the remaining keys
         }
         
         write_data_to_file(full_path, selected_metadata)
@@ -485,25 +485,25 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
         
         max_slice = img.n_frames
         slide = handle_slide_indexing(slice_start, slice_end, max_slice)       
-        # Проходим по каждому слою в многослойном изображении
+        # Go through each layer in a multi-layered image
         for i in slide:
             img.seek(i)
             
-            # Преобразуем слой в массив и нормализуем в 8-битный диапазон
+            # Convert the layer to an array and normalize to 8-bit range
             layer = np.array(img, dtype=np.uint16)
             layer_max = layer.max()
             
-            # Проверка на максимальное значение, чтобы избежать деления на ноль
+            # Check for maximum value to avoid division by zero
             if layer_max > 0:
                 layer_normalized = (layer * (255.0 / layer_max)).astype(np.uint8)
             else:
-                layer_normalized = layer.astype(np.uint8)  # Если max=0, просто переводим в uint8
+                layer_normalized = layer.astype(np.uint8)# If max=0, just convert to uint8
                 
             # Дублируем слой по трем каналам для RGB
             rgb_layer = np.stack([layer_normalized] * 3, axis=-1)
             img_stack.append(rgb_layer)
         
-        # Объединяем все слои в одно RGB-изображение, используя максимумы по каждому каналу
+        # Combine all layers into one RGB image, using the maximums for each channel
         combined_image = np.max(np.stack(img_stack), axis=0)
         
         # Output directory for results
@@ -558,7 +558,7 @@ def stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch):
         combined_image = cv2.cvtColor(combined_image, cv2.COLOR_BGR2RGB)
         save_image(combined_image, image_file_path, Step = "Stack", priority_keys=stack_priority_keys)
 
-# Загрузка параметров из временного файла
+# Loading parameters from a temporary file
 def load_params():
     if os.path.exists(TEMP_FILE):
         try:
@@ -568,47 +568,47 @@ def load_params():
             os.remove(TEMP_FILE)
     return {}
 
-# Функция загрузки параметров из временного файла
+# Function for loading parameters from a temporary file
 def load_metadata():
-    # Загружаем полный набор параметров
+    # Load the full set of parameters
     params = load_params()
-    # Ключи, которые нам нужны в metadata
+    # Keys we need in metadata
     keys_to_extract = ['protocol', 'target_ch', 'selected_location', 'second_ch', 
                        'slice_start', 'slice_end', 'filter_radius', 'pixel_to_micron_ratio']
-    # Создаем новый словарь с нужными ключами в порядке, в котором они указаны
+    # Create a new dictionary with the necessary keys in the order in which they are specified
     metadata = {key: params.get(key) for key in keys_to_extract}
 
     return metadata
 
-# Накапливаем значения параметра и обновляем во временный файл
+# Accumulate parameter values ​​and update them to a temporary file
 def collect_params(params, key, value):
     if key not in params:
         params[key] = []
-    if value not in params[key]:  # Сохраняем только уникальные значения
+    if value not in params[key]:# Store only unique values
         params[key].append(value)
     with open(TEMP_FILE, 'w') as f:
         json.dump(params, f)
 
-# Сохранение параметров во временный файл
+# Saving parameters to a temporary file
 def save_params(params_dict):
-    # Проверка, что передан именно словарь
+    # Check that the dictionary is being transferred
     if not isinstance(params_dict, dict):
         raise ValueError("The argument passed must be a dictionary.")
     
     params = load_params()
     
-    # Обновляем параметры новым словарем
+    # Update parameters with new dictionary
     params.update(params_dict)
     
     with open(TEMP_FILE, 'w') as f:
         json.dump(params, f)
 
-# Функция для записи данных в файл через ADS
+import subprocess
+# Function for writing data to a file via ADS
 def write_data_to_file(file_path, data):
-    # Укажите путь к потоку данных как отдельную команду
     ads_path = f"{file_path}:syn_catch_metadata"
-    # Используйте системные команды
-    os.system(f'echo {json.dumps(data)} > "{ads_path}"')
+    with open(ads_path, 'w') as ads_file:
+        json.dump(data, ads_file)
 
 def filter_files_by_metadata(folder_path, key, value):
     matching_files = []
@@ -623,7 +623,7 @@ def filter_files_by_metadata(folder_path, key, value):
                         if key in metadata and metadata[key] == value:
                             matching_files.append(file_path)
                 except (json.JSONDecodeError, UnicodeDecodeError):
-                    # Игнорируем файлы с некорректными метаданными
+                    # Ignore files with incorrect metadata
                     pass
     return matching_files
 
@@ -631,64 +631,51 @@ def get_location_name(root, location_names):
     """
     Функция отображает диалог для выбора или ввода имени региона.
     """
-    # Рисуем окно
+    # Draw a window
     dialog = initialize_window(root, "Select region", 350, 200, icon_path=icon_path)
-    # Применяем тему через ThemeManager
+    # Apply the theme via ThemeManager
     theme_manager = ThemeManager()
     theme_manager.apply_theme(dialog)
+    dialog.attributes("-topmost", True)
 
-    selected_location = [None]  # Для хранения выбранного значения
+    selected_location = [None]# To store the selected value
 
     def on_select():
         selected_location[0] = entry.get()
-        dialog.destroy()  # Закрыть окно после выбора
+        dialog.destroy()  # Close window after selection
 
     def on_option_select(option):
-        entry.delete(0, "end")  # Очистить текущее значение в поле ввода
-        entry.insert(0, option)  # Установить выбранное значение из списка
+        entry.delete(0, "end")  # Clear the current value in the input field
+        entry.insert(0, option)  # Set selected value from list
 
-    # Метка
+    # Label
     label = Label(dialog, text="Select a region:")
     label.pack(pady=10)
 
-    # Выпадающий список (OptionMenu)        
+    # Dropdown list (OptionMenu)      
     if location_names:
-        # Дублируем первый элемент массива location_names в начало
+        # Duplicate the first element of the location_names array to the beginning
         location_names = [location_names[0]] + location_names
         selected_option = StringVar(dialog)
-        selected_option.set('')  # Устанавливаем пустой элемент как начальное значение
+        selected_option.set('')  # Set an empty element as the initial value
         option_menu = OptionMenu(dialog, selected_option, *location_names, command=on_option_select)
         option_menu.pack(pady=5)
 
-    # Поле для ввода текста
+    # Text input field
     entry = Entry(dialog)
-    entry.insert(0, "region")  # Устанавливаем начальное значение "region"
+    entry.insert(0, "region")# Set the initial value "region"
     entry.pack(pady=5)
 
-    # Кнопка подтверждения
+    # Confirm button
     confirm_button = Button(dialog, text="OK", command=on_select)
     confirm_button.pack(pady=10)
 
-    # Ожидание закрытия окна
+    # Waiting for window to close
     dialog.wait_window(dialog)
 
     return selected_location[0]
 
 
-
-def get_unique_location_name(location_names, selected_location):
-    # Сначала проверяем, существует ли такая локация
-    if selected_location not in location_names:
-        return selected_location
-    
-    # Если локация существует, ищем максимальный индекс в скобках для повторяющихся локаций
-    count = 1
-    base_name = selected_location
-    while selected_location in location_names:
-        count += 1
-        selected_location = f"{base_name}({count})"
-    
-    return selected_location
 
 location_names = []
 
@@ -709,7 +696,7 @@ def select_location(file_path, root, initial_location = ''):
         if not selected_location:
             print('Marking stopped')
             return pd.DataFrame(), initial_location  # Return an empty DataFrame
-        # Сохраняем уникальное имя локации в локальных параметрах
+        # Save the unique location name in local parameters
         location_names.append(selected_location)
             
         coords_df = load_coordinates_from_excel(excel_path, root)
@@ -722,12 +709,12 @@ def select_location(file_path, root, initial_location = ''):
             print("No coordinates were drawn")
             return pd.DataFrame(), initial_location  # Return an empty DataFrame
         
-        # сохраняем последний регион в глобальных параметрах
+        # save the last region in global parameters
         save_params({'selected_location': selected_location})
         # Преобразуем координаты в DataFrame
         coords_df_new = pd.DataFrame(coords, columns=[f'{selected_location}_x', f'{selected_location}_y'])
 
-        # Инициализируем ColorCycler
+        # Initialize ColorCycler
         color_cycler = ColorCycler(num_colors=10)
         #rgb_image = cv2.resize(image_np, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
         #bgr_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_RGB2BGR)
@@ -751,7 +738,7 @@ def select_location(file_path, root, initial_location = ''):
     print(f"Coordinates for {selected_location} successfully saved.")
     return coords_df_new, selected_location
 
-# Второй шаг - фильтрация
+# Second step - filtering
 def filter_after_roi_selection(filter_radius, file_path, location=''):
     
     base_name = splitext(basename(file_path))[0]
@@ -785,23 +772,23 @@ def filter_after_roi_selection(filter_radius, file_path, location=''):
         
     return denoised_image_path_s
 
-# Функция для переименования колонок, которые содержат суффиксы вида .1, .2
+# Function for renaming columns that contain suffixes like .1, .2
 def rename_column_names(columns):
     new_columns = []
     
     for col in columns:
-        if '.' in col:  # Если есть точка и номер
-            # Разделяем название колонки на части
+        if '.' in col:  # If there is a dot and a number
+            # Divide the column name into parts
             base_name, suffix = col.split('.')
-            # Переносим номер (suffix) перед '_x' или '_y'
+            # Move the number (suffix) before '_x' or '_y'
             if '_x' in base_name:
                 new_col = base_name.replace('_x', f'_{suffix}_x')
             elif '_y' in base_name:
                 new_col = base_name.replace('_y', f'_{suffix}_y')
             else:
-                new_col = base_name  # На случай, если нет "_x" или "_y"
+                new_col = base_name  # In case there is no "_x" or "_y"
         else:
-            new_col = col  # Оставляем без изменений, если нет точки
+            new_col = col  # Leave unchanged if there is no dot
         
         new_columns.append(new_col)
     
@@ -837,7 +824,7 @@ def get_threshold_value(image_array, binarization_method):
     
     return threshold_value
 
-# Третий шаг - бинаризация
+# Third step - binarization
 def binarize_images(file_path, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.12):    
     base_name = splitext(basename(file_path))[0]
     # distances = extract_scaling_distances_from_czi(file_path)
@@ -1019,10 +1006,10 @@ def gather_summary_files(file_path):
     results_folder = join(dirname(file_path), f"{base_name}_results")
     
     try:
-        # Проверяем, существует ли папка с результатами
+        # Check if the results folder exists
         summary_files = [f for f in os.listdir(results_folder) if '_summary_roi_result_table' in f and f.endswith('.xlsx')]
     except FileNotFoundError:
-        # Сообщаем, что папка не найдена, и продолжаем выполнение
+        # We inform that the folder was not found and continue execution
         print(f"Results folder not found for {file_path}. Skipping.")
         return []
     
@@ -1032,17 +1019,17 @@ def gather_summary_files(file_path):
             summary_file_path = join(results_folder, summary_file)
             try:
                 summary_data = pd.read_excel(summary_file_path)
-                # Добавляем колонку с именем файла-источника
+                # Add a column with the name of the source file
                 summary_data['source_file'] = summary_file
                 summary_data_s.append(summary_data)
             except Exception as e:
                 print(f"Error reading file {summary_file_path}: {e}")
                 continue
     else:
-        # Сообщаем, что файлы не найдены, но продолжаем выполнение
+        # We report that the files were not found, but continue execution
         print(f"No summary data found for {file_path}. Skipping.")
         
-    # Возвращаем собранные данные (или пустой список, если ничего не было собрано)
+    # Return the collected data (or an empty list if nothing was collected)
     return summary_data_s
 
 def remove_large_objects(ar, max_size):
@@ -1058,10 +1045,10 @@ def pp_one(file_path, row, output_directory):
     
     experiment_date = basename(dirname(file_path))
     
-    # Собираем данные из файлов с результатами
+    # Collect data from results files
     summary_data_s = gather_summary_files(file_path)
     
-    # Если данные есть, добавляем идентификаторы
+    # If there is data, add identifiers
     if summary_data_s:
         combined_summary_data = pd.concat(summary_data_s, ignore_index=True)
         combined_summary_data['ID'] = row['ID']
@@ -1070,7 +1057,7 @@ def pp_one(file_path, row, output_directory):
 
         return [combined_summary_data]
     
-    # Если данных нет, возвращаем пустой список
+    # If there is no data, return an empty list
     return []
 
 def transform_parallelogram_to_rectangle(image, parallelogram_points, coords_df=None):
@@ -1165,7 +1152,7 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
     
     # Initialize a dictionary to store histogram data
     histograms_data = {}
-    colors_used = {}  # Словарь для хранения цветов, использованных для каждой локации
+    colors_used = {}  # A dictionary to store the colors used for each location
 
     # Normalize the image proportions
     norm_width = width / max(width, height)
@@ -1176,14 +1163,14 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
     gs = gridspec.GridSpec(2, 2, width_ratios=[1, 1], height_ratios=[1, 1])
     
     legends = []
-    cmap = plt.cm.get_cmap('tab10')  # Используем стандартную цветовую карту
+    cmap = plt.cm.get_cmap('tab10')  # Use standard color map
 
-    # Если нет масок, строим маску для всей области
+    # If there are no masks, build a mask for the entire area
     if transformed_masks is None or len(transformed_masks) == 0:
         transformed_masks = {'selected area': np.ones(image.shape[:2], dtype=np.uint8)}  # Маска для всей области
 
-    # Цикл по каждой локации и её маске для построения гистограмм
-    axes = ['x', 'y']  # Оси для построения гистограмм
+    # Loop through each location and its mask to build histograms
+    axes = ['x', 'y']  # Axes for plotting histograms
     subplot_mapping = {'x': (gs[1, 1], 'X', width), 'y': (gs[0, 0], 'Y', height)}
     hist_axes = {}
 
@@ -1192,16 +1179,16 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
         hist_axes[axis] = ax
 
         for idx, (location_name, mask) in enumerate(transformed_masks.items()):
-            # Проверяем, есть ли ненулевые элементы в маске
+            # Check if there are non-zero elements in the mask
             if np.any(mask):
                 legends.append(location_name)
 
-                # Расчет гистограммы для конкретной оси и локации
+                # Calculate histogram for a specific axis and location
                 hist_region = calculate_histogram_for_gray(image, axis=(0 if axis == 'x' else 1), 
                                                            bin_size=bin_size, invert=invert, mask=mask)
 
-                # Построение гистограммы
-                color = cmap(idx % 10)  # Получаем цвет из цветовой карты
+                # Constructing a histogram
+                color = cmap(idx % 10)  # Get the color from the color map
                 if axis == 'x':
                     ax.bar(np.arange(0, len(hist_region) * bin_size, bin_size), hist_region, 
                            width=bin_size, alpha=0.5, color=color)
@@ -1209,13 +1196,13 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
                     ax.barh(np.arange(0, len(hist_region) * bin_size, bin_size), hist_region, 
                             height=bin_size, alpha=0.5, color=color)
 
-                # Сохраняем данные гистограммы и цвет для локации
+                # Save histogram data and color for location
                 if location_name not in histograms_data:
                     histograms_data[location_name] = {'hist_x': None, 'hist_y': None}
-                    colors_used[location_name] = color  # Сохраняем цвет для локации
+                    colors_used[location_name] = color  # Save the color for the location
                 histograms_data[location_name][f'hist_{axis}'] = hist_region
 
-        # Установка заголовков для осей
+        # Set titles for axes
         ax.set_title(f'Histogram along {subplot_mapping[axis][1]}-axis')
         if axis == 'x':
             ax.set_xlabel('Pixel position along X-axis')
@@ -1224,24 +1211,24 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
         else:
             ax.set_ylabel('Pixel position along Y-axis')
             ax.set_xlabel('Normalized Mean Brightness')
-            ax.set_ylim([height, 0])  # Переворот оси Y
+            ax.set_ylim([height, 0])  # Flip Y axis
 
-    # Отображение изображения с наложением локаций
+    # Display an image with overlaying locations
     ax_image = fig.add_subplot(gs[0, 1])
     ax_image.imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB), aspect='auto')
     ax_image.set_title("Transformed Rectangle Image")
 
-    # Нанесение полигонов (локаций) на изображение с использованием накопленных цветов
+    # Applying polygons (locations) to an image using accumulated colors
     for location_name, mask in transformed_masks.items():
         if np.any(mask):
-            color = to_rgba(colors_used[location_name], alpha=0.4)  # Используем сохраненный цвет для прозрачности
+            color = to_rgba(colors_used[location_name], alpha=0.4)  # Use the saved color for transparency
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
             for contour in contours:
-                # Преобразуем контуры в полигон для нанесения на изображение
+                # Convert the contours into a polygon for drawing on the image
                 polygon = patches.Polygon(contour.reshape(-1, 2), closed=True, edgecolor=color, facecolor=color)
                 ax_image.add_patch(polygon)
 
-    # Добавление легенды
+    # Adding a legend
     if legends:
         hist_axes['x'].legend(legends, loc='upper right')
     
@@ -1269,10 +1256,10 @@ def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch,
 
         editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
 
-        # NEW: editor.run() сам вернет либо координаты, либо None, если была отмена
+        # NEW: editor.run() itself will return either the coordinates or None if there was a cancellation
         parallelogram_points = editor.run()  
-        if parallelogram_points is None:      # Если пользователь отменил
-            continue                         # Пропускаем текущий im_index
+        if parallelogram_points is None:      # If the user cancels
+            continue                         # Skip the current im_index
 
         print("Read processed image")
         masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")
@@ -1308,7 +1295,7 @@ def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch,
 TEMP_FILE = os.path.join(tempfile.gettempdir(), 'synapto_catch_params.json')
 local_params = {'location_names': []}
 
-# Ключи для установления иерархии сохранения
+# Keys for establishing the save hierarchy
 priority_keys = ['protocol', 'target_ch', 'slice_start', 'slice_end']
 target_priority_keys = ['protocol', 'target_ch', 'slice_start', 'slice_end']
 stack_priority_keys = priority_keys + ['second_ch']

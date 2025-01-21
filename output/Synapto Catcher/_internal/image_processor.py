@@ -34,10 +34,10 @@ import os
 import tempfile
 import os
 import pandas as pd
-from tkinter import messagebox, Toplevel, simpledialog, messagebox, ttk
+from tkinter import messagebox, Toplevel, simpledialog, messagebox, ttk, StringVar
 from os.path import splitext, basename, dirname, join
 from matplotlib.pyplot import Figure
-from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Frame, Progressbar 
+from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Frame, Progressbar, Combobox
 
 
 # Adding current directory to sys.path
@@ -128,7 +128,7 @@ def hash_convert_path(path, hashes):
     converted_path = os.path.join(directory, filename)
     return converted_path
 
-def save_image(image, path, priority_keys=None, overwrite_similar=False, **kwargs):
+def save_image(image, path, Step = None, priority_keys=None, overwrite_similar=False, **kwargs):
     """
     Saves an image with a filename that includes hashes of priority metadata keys.
 
@@ -188,7 +188,21 @@ def save_image(image, path, priority_keys=None, overwrite_similar=False, **kwarg
     # Write metadata to file if available
     if priority_keys:
         selected_metadata = {key: metadata[key] for key in priority_keys if key in metadata}
+        
+        # Извлекаем 'selected_location' и переименовываем его в 'region' - кастыль
+        region_value = selected_metadata.get('selected_location', None)  # Получаем значение или None, если ключ отсутствует
+        selected_metadata.pop('selected_location', None)
+        
+        # Создаем новый словарь с добавлением 'Step' и 'region' в начале
+        selected_metadata = {
+            'Step': Step,
+            'region': region_value,  # Переименованный ключ
+            **selected_metadata  # Добавляем оставшиеся ключи
+        }
+        
         write_data_to_file(full_path, selected_metadata)
+
+
 
 def read_image(path, priority_keys=None, as_pil=False, **kwargs):
     """
@@ -389,7 +403,7 @@ def extract_czi_image_stack(file_path, slice_start, slice_end, target_ch, dapi_c
         # Prepare target channel slice
         sample_slice_1 = np.max(image_data[0, 0, target_ch, slide, :, :, 0], axis=0)
         synaptotag_file_path = join(output_path, f"{base_name}_{im_index}_synaptotag.png")
-        save_image(sample_slice_1, synaptotag_file_path, priority_keys=priority_keys)
+        save_image(sample_slice_1, synaptotag_file_path, Step = "Target data", priority_keys=priority_keys)
 
         combined_image = np.zeros((*sample_slice_1.shape, 3), dtype='uint8')
         sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
@@ -427,7 +441,7 @@ def extract_lif_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
             # Prepare target channel slice
             sample_slice_1 = np.max(frames_1[slide, :], axis=0)
             synaptotag_file_path = join(output_path, f"{base_name}_{im_index}_synaptotag.png")
-            save_image(sample_slice_1, synaptotag_file_path, priority_keys=priority_keys)
+            save_image(sample_slice_1, synaptotag_file_path, Step = "Target data", priority_keys=priority_keys)
             
             combined_image = np.zeros((*sample_slice_1.shape, 3), dtype='uint8')            
             sample_slice_1_normalized = (sample_slice_1 - np.min(sample_slice_1)) / (np.max(sample_slice_1) - np.min(sample_slice_1)) * 255
@@ -498,7 +512,7 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
         
         # Save target channel slice
         synaptotag_file_path = join(output_path, f"{base_name}_{im_index}_synaptotag.png")
-        save_image(combined_image, synaptotag_file_path, priority_keys=priority_keys)
+        save_image(combined_image, synaptotag_file_path, Step = "Target data", priority_keys=priority_keys)
             
         combined_image_s.append(combined_image)
         
@@ -542,7 +556,7 @@ def stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch):
         image_file_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_stack.png")
         # save RGB image
         combined_image = cv2.cvtColor(combined_image, cv2.COLOR_BGR2RGB)
-        save_image(combined_image, image_file_path, priority_keys=priority_keys)
+        save_image(combined_image, image_file_path, Step = "Stack", priority_keys=stack_priority_keys)
 
 # Загрузка параметров из временного файла
 def load_params():
@@ -558,11 +572,9 @@ def load_params():
 def load_metadata():
     # Загружаем полный набор параметров
     params = load_params()
-
     # Ключи, которые нам нужны в metadata
     keys_to_extract = ['protocol', 'target_ch', 'selected_location', 'second_ch', 
                        'slice_start', 'slice_end', 'filter_radius', 'pixel_to_micron_ratio']
-
     # Создаем новый словарь с нужными ключами в порядке, в котором они указаны
     metadata = {key: params.get(key) for key in keys_to_extract}
 
@@ -615,50 +627,43 @@ def filter_files_by_metadata(folder_path, key, value):
                     pass
     return matching_files
 
-def get_location_name(root, location_names, allow_new_name=True):
+def get_location_name(root, location_names):
     """
     Функция отображает диалог для выбора или ввода имени региона.
     """
-    dialog = initialize_window(root, "Select region", 300, 150, icon_path = icon_path)    
+    # Рисуем окно
+    dialog = initialize_window(root, "Select region", 350, 200, icon_path=icon_path)
     # Применяем тему через ThemeManager
     theme_manager = ThemeManager()
     theme_manager.apply_theme(dialog)
-        
+    dialog.attributes("-topmost", True)
+
     selected_location = [None]  # Для хранения выбранного значения
 
     def on_select():
-        # Проверяем, если новое имя запрещено, то оно должно быть выбрано из списка
-        #if not allow_new_name and entry.get() not in location_names:
-        #    messagebox.showerror("Error", "You must select an existing region!", parent=dialog)
-        #    return
         selected_location[0] = entry.get()
         dialog.destroy()  # Закрыть окно после выбора
+
+    def on_option_select(option):
+        entry.delete(0, "end")  # Очистить текущее значение в поле ввода
+        entry.insert(0, option)  # Установить выбранное значение из списка
 
     # Метка
     label = Label(dialog, text="Select a region:")
     label.pack(pady=10)
 
-    # Combobox для выбора из существующих локаций
-    #if location_names:
-    #    combobox = ttk.Combobox(dialog, values=location_names)
-    #    combobox.pack(pady=5)
-    #
-    #    # Заполнение поля ввода при выборе из выпадающего списка
-    #    def on_combobox_select(event):
-    #        entry.delete(0, 'end')
-    #        entry.insert(0, combobox.get())
-    #
-    #    combobox.bind("<<ComboboxSelected>>", on_combobox_select)
+    # Выпадающий список (OptionMenu)        
+    if location_names:
+        # Дублируем первый элемент массива location_names в начало
+        location_names = [location_names[0]] + location_names
+        selected_option = StringVar(dialog)
+        selected_option.set('')  # Устанавливаем пустой элемент как начальное значение
+        option_menu = OptionMenu(dialog, selected_option, *location_names, command=on_option_select)
+        option_menu.pack(pady=5)
 
-    # Поле для ввода текста, если разрешен ввод нового имени
+    # Поле для ввода текста
     entry = Entry(dialog)
-    if allow_new_name:
-        entry.insert(0, "region")  # Устанавливаем начальное значение "region"
-    #else:
-    #    # Если ввод нового имени запрещен, поле для ввода становится неактивным
-    #    entry.insert(0, combobox.get())
-    #    entry.config(state="readonly")  # Поле только для чтения
-
+    entry.insert(0, "region")  # Устанавливаем начальное значение "region"
     entry.pack(pady=5)
 
     # Кнопка подтверждения
@@ -670,30 +675,13 @@ def get_location_name(root, location_names, allow_new_name=True):
 
     return selected_location[0]
 
-def get_unique_location_name(location_names, selected_location):
-    # Сначала проверяем, существует ли такая локация
-    if selected_location not in location_names:
-        return selected_location
-    
-    # Если локация существует, ищем максимальный индекс в скобках для повторяющихся локаций
-    count = 1
-    base_name = selected_location
-    while selected_location in location_names:
-        count += 1
-        selected_location = f"{base_name}({count})"
-    
-    return selected_location
+
+
+location_names = []
 
 def select_location(file_path, root, initial_location = ''):
     scale_factor=0.8
-    
-    if not initial_location:# если локация пустая
-        location_names = local_params.get('location_names', [])  # Получаем список сохраненных имен локаций
-        do_selection = True
-    else:
-        selected_location = initial_location
-        do_selection = False
-        
+           
     n_of_images = filetype_checking(file_path)  # Check number of images
     base_name = splitext(basename(file_path))[0]
 
@@ -704,13 +692,12 @@ def select_location(file_path, root, initial_location = ''):
         image_in = read_image(image_file_path, as_pil = True, priority_keys=priority_keys).convert('RGB')
         image_np = np.array(image_in)
 
-        if do_selection:
-            selected_location = get_location_name(root, location_names)
-            if not selected_location:
-                messagebox.showerror("Error", "Region name cannot be empty!", parent=root)
-                return pd.DataFrame(), initial_location  # Return an empty DataFrame
-            # Сохраняем уникальное имя локации в локальных параметрах
-            local_params['location_names'].append(selected_location)
+        selected_location = get_location_name(root, location_names)
+        if not selected_location:
+            print('Marking stopped')
+            return pd.DataFrame(), initial_location  # Return an empty DataFrame
+        # Сохраняем уникальное имя локации в локальных параметрах
+        location_names.append(selected_location)
             
         coords_df = load_coordinates_from_excel(excel_path, root)
         
@@ -719,7 +706,7 @@ def select_location(file_path, root, initial_location = ''):
         coords = drawer.run()  # Wait for drawing to complete
 
         if not coords:  # If the coordinates are empty
-            messagebox.showwarning("Warning", "No coordinates were drawn. Nothing will be saved.", parent=root)
+            print("No coordinates were drawn")
             return pd.DataFrame(), initial_location  # Return an empty DataFrame
         
         # сохраняем последний регион в глобальных параметрах
@@ -736,7 +723,7 @@ def select_location(file_path, root, initial_location = ''):
         all_roi_img = draw_polygons_on_image(coords_df, 1, color_cycler, all_roi_img, simplify_contour)
         all_roi_img = draw_polygons_on_image(coords_df_new, 1, color_cycler, all_roi_img, simplify_contour)
         all_roi_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_with_roi.png")
-        save_image(all_roi_img, all_roi_image_path)#, priority_keys=priority_keys
+        save_image(all_roi_img, all_roi_image_path, Step = "Locations", priority_keys=stack_priority_keys)
         
         # Check if the Excel file exists to add new data
         if os.path.exists(excel_path):
@@ -779,7 +766,7 @@ def filter_after_roi_selection(filter_radius, file_path, location=''):
                 
         denoised_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_denoised.png")
         
-        save_image(denoised_image, denoised_image_path, priority_keys=denoised_priority_keys)
+        save_image(denoised_image, denoised_image_path, Step = "Filtration",priority_keys=denoised_priority_keys)
         
         denoised_image_path_s.append(denoised_image_path)       
         
@@ -838,18 +825,16 @@ def get_threshold_value(image_array, binarization_method):
     return threshold_value
 
 # Третий шаг - бинаризация
-def binarize_images(file_path, row, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.12):    
-    image_path = row['filepath']
-    base_name = splitext(basename(image_path))[0]
-    experiment_date = basename(dirname(image_path))
+def binarize_images(file_path, binarization_method='max_entropy', min_size=64, max_size=100, pixel_to_micron_ratio = 0.12):    
+    base_name = splitext(basename(file_path))[0]
     # distances = extract_scaling_distances_from_czi(file_path)
     # pixel_to_micron_ratio = distances['X']*1_000_000
     masks_image_path_s = []
     n_of_images = filetype_checking(file_path)
     for im_index in range(n_of_images):
         
-        denoised_image_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_denoised.png")
-        roi_coords_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_roi_coords.csv")
+        denoised_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_denoised.png")
+        roi_coords_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_roi_coords.csv")
         
         image = read_image(denoised_image_path, as_pil = True, priority_keys=denoised_priority_keys).convert('L')
         image_array = array(image)        
@@ -863,8 +848,8 @@ def binarize_images(file_path, row, binarization_method='max_entropy', min_size=
         # Save full binary image
         full_binary_image_pil = Image.fromarray((binary_image * 255).astype('uint8'))
         full_binary_image_pil = ImageOps.invert(full_binary_image_pil)
-        full_masks_image_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")        
-        save_image(full_binary_image_pil, full_masks_image_path, priority_keys=full_binary_priority_keys)   
+        full_masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")        
+        save_image(full_binary_image_pil, full_masks_image_path, Step = "Full Binarization", priority_keys=full_binary_priority_keys)   
         
         coords_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_locations.xlsx")
         if os.path.exists(coords_path):
@@ -891,11 +876,10 @@ def binarize_images(file_path, row, binarization_method='max_entropy', min_size=
                 # Create mask for the location
                 roi_mask = create_region_mask(image_array.shape, coords)
                 
-                masks_image_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_masks_roi_crop.png")
-                roi_mask_image_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_roi_mask.png")
-                full_result_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_full_roi_result_table.xlsx")
-                summary_result_path = join(dirname(image_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_summary_roi_result_table.xlsx")
-
+                masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_masks_roi_crop.png")
+                roi_mask_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_{location_name}_roi_mask.png")
+                result_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_result_table.xlsx")
+                
                 save_params({'selected_location': location_name})
                 
                 # Save ROI mask as PNG image
@@ -905,53 +889,61 @@ def binarize_images(file_path, row, binarization_method='max_entropy', min_size=
                 binary_image_roi = binary_image & roi_mask            
                 binary_image_pil = Image.fromarray((binary_image_roi * 255).astype('uint8'))
                 binary_image_pil = ImageOps.invert(binary_image_pil)                
-                save_image(binary_image_pil, masks_image_path, priority_keys=binary_image_priority_keys)               
+                save_image(binary_image_pil, masks_image_path, Step = "Binarization", priority_keys=binary_image_priority_keys)               
                 
-                process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path)
+                process_properties(location_name, 
+                                   image_array, 
+                                   binary_image_roi, 
+                                   roi_mask, 
+                                   pixel_to_micron_ratio, 
+                                   binarization_method, 
+                                   masks_image_path, 
+                                   result_path)
                 
                 masks_image_path_s.append(masks_image_path)
         
     return masks_image_path_s
 
-def remove_large_objects(ar, max_size):
-    # Label connected components
-    labeled = label(ar)
-    for region in regionprops(labeled):
-        if region.area > max_size:
-            ar[labeled == region.label] = 0
-    return ar
 
-def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_ratio, binarization_method, masks_image_path, full_result_path, summary_result_path):
+from openpyxl import load_workbook
 
+def process_properties(location_name, 
+                       image_array, 
+                       binary_image_roi, 
+                       roi_mask, 
+                       pixel_to_micron_ratio, 
+                       binarization_method, 
+                       masks_image_path, 
+                       result_path):
+    metadata = load_metadata()
     labeled_image = label(binary_image_roi)
     props = regionprops(labeled_image, intensity_image=image_array)
-                
     max_size = 500
-    
     results = []
     total_objects = 0
     total_area = 0
     total_mean_intensity = 0
     roi_area = roi_mask.sum() * pixel_to_micron_ratio**2
-
+    
     for index, prop in enumerate(props, start=1):
         area_microns = prop.area * pixel_to_micron_ratio**2
         if area_microns > max_size:
-           continue  # Skip objects larger than max_size
+            continue
         total_objects += 1
         total_area += area_microns
         total_mean_intensity += prop.mean_intensity * area_microns
-        results.append({
+        
+        result_dict = {
             "": index,
             "Area": f"{area_microns:.3f}",
             "Mean": f"{prop.mean_intensity:.3f}",
             "Min": int(prop.min_intensity),
             "Max": int(prop.max_intensity)
-        })
+        }
+        result_dict.update(metadata)
+        results.append(result_dict)
 
     results_df = DataFrame(results)
-    
-    
 
     if total_objects > 0:
         average_size = total_area / total_objects
@@ -961,7 +953,6 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         average_mean_intensity = 0
 
     summary_result = {
-        "": 1,
         "Slice": basename(masks_image_path),
         "Count": total_objects,
         "Total Area": f"{total_area:.3f}",
@@ -970,18 +961,45 @@ def process_properties(image_array, binary_image_roi, roi_mask, pixel_to_micron_
         "Mean": f"{average_mean_intensity:.3f}",
         "Binarization method": binarization_method
     }
-    
-    metadata = load_metadata()
+
     hashes = generate_hashes_from_metadata(metadata, priority_keys)
     summary_result.update(metadata)
-    
-    summary_df = DataFrame([summary_result])
-    
-    full_result_path = hash_convert_path(full_result_path, hashes)
-    summary_result_path = hash_convert_path(summary_result_path, hashes)
-    
-    results_df.to_excel(full_result_path, index=False)
-    summary_df.to_excel(summary_result_path, index=False)
+    new_summary_df = DataFrame([summary_result])
+
+    if not os.path.exists(result_path):
+        with pd.ExcelWriter(result_path, engine='openpyxl') as writer:
+            new_summary_df.to_excel(writer, sheet_name="Summary", index=False)
+            results_df.to_excel(writer, sheet_name=location_name, index=False)
+    else:
+        wb = load_workbook(result_path)
+        all_sheets = {}
+
+        for sh in wb.sheetnames:
+            old_df = pd.read_excel(result_path, sheet_name=sh)
+            all_sheets[sh] = old_df
+
+        if "Summary" in all_sheets:
+            all_sheets["Summary"] = pd.concat([all_sheets["Summary"], new_summary_df], ignore_index=True)
+        else:
+            all_sheets["Summary"] = new_summary_df
+
+        if location_name in all_sheets:
+            all_sheets[location_name] = pd.concat([all_sheets[location_name], results_df], ignore_index=True)
+        else:
+            all_sheets[location_name] = results_df
+
+        with pd.ExcelWriter(result_path, engine='openpyxl', mode='w') as writer:
+            if "Summary" in all_sheets:
+                all_sheets["Summary"].to_excel(writer, sheet_name="Summary", index=False)
+                del all_sheets["Summary"]
+            if location_name in all_sheets:
+                all_sheets[location_name].to_excel(writer, sheet_name=location_name, index=False)
+                del all_sheets[location_name]
+            for sheet_name, df_ in all_sheets.items():
+                df_.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+
   
 def gather_summary_files(file_path):
     base_name = splitext(basename(file_path))[0]
@@ -1013,6 +1031,14 @@ def gather_summary_files(file_path):
         
     # Возвращаем собранные данные (или пустой список, если ничего не было собрано)
     return summary_data_s
+
+def remove_large_objects(ar, max_size):
+    # Label connected components
+    labeled = label(ar)
+    for region in regionprops(labeled):
+        if region.area > max_size:
+            ar[labeled == region.label] = 0
+    return ar
 
 # Function for single file post-processing
 def pp_one(file_path, row, output_directory):
@@ -1211,66 +1237,56 @@ def plot_gray_histograms(image, rectangle_size, bin_size=10, invert=False, trans
     
     return fig, histograms_data
 
-def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch, root):    
+def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch, root):
     base_name = splitext(basename(file_path))[0]
-    experiment_date = basename(dirname(file_path))    
+    experiment_date = basename(dirname(file_path))
     hist_image_path_s = []
     n_of_images = filetype_checking(file_path)
-    #print(f"target_ch: {target_ch}")
-    #print(f"dapi_ch: {dapi_ch}")
-    
-    # Extract the combined image stack
+
     combined_image_s = extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch)
 
-        # Сохранение данных в файл
-    #with open('combined_image_1.pkl', 'wb') as file:
-    #    pickle.dump(combined_image_s, file)
-            
-    for im_index, combined_image in enumerate(combined_image_s):          
-        
+    for im_index, combined_image in enumerate(combined_image_s):
         excel_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_locations.xlsx")
-        
         if isfile(excel_path):
             coords_df = load_coordinates_from_excel(excel_path, root)
             if coords_df is not None:
                 coords_df.columns = rename_column_names(coords_df.columns)
         else:
             coords_df = None
-        
-        editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
-        editor.run()
-        parallelogram_points = editor.get_coordinates()
 
-        # Read processed image
+        editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
+
+        # NEW: editor.run() сам вернет либо координаты, либо None, если была отмена
+        parallelogram_points = editor.run()  
+        if parallelogram_points is None:      # Если пользователь отменил
+            continue                         # Пропускаем текущий im_index
+
         print("Read processed image")
-        masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")        
+        masks_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_full_masks_roi_crop.png")
         image = read_image(masks_image_path, priority_keys=full_binary_priority_keys)
 
-        # Transform processed image
         print("Transform processed image")
-        transformed_image_rectangle, rectangle_size, transformed_masks = transform_parallelogram_to_rectangle(image, parallelogram_points, coords_df)
+        transformed_image_rectangle, rectangle_size, transformed_masks = transform_parallelogram_to_rectangle(
+            image, parallelogram_points, coords_df
+        )
 
-        # Calculate histogram
         print("Calculate histogram")
-        fig, histograms_data = plot_gray_histograms(transformed_image_rectangle, rectangle_size, bin_size=10, invert=True, transformed_masks=transformed_masks)
+        fig, histograms_data = plot_gray_histograms(
+            transformed_image_rectangle, rectangle_size, bin_size=10, invert=True, transformed_masks=transformed_masks
+        )
 
-        # Save Histogram Figure
         hist_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_hist.png")
-        save_image(fig, hist_image_path, priority_keys = full_binary_priority_keys)
+        save_image(fig, hist_image_path, Step='Histogram', priority_keys=full_binary_priority_keys)
         hist_image_path_s.append(hist_image_path)
 
-        # Prepare to save histogram data for each region (location)
         hist_table_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_histograms.xlsx")
-
         with pd.ExcelWriter(hist_table_path, engine='openpyxl') as writer:
-            # Save data for each location
             for location_name, hist_data in histograms_data.items():
                 hist_df = pd.DataFrame({
                     'Pixel Position (X)': pd.Series(hist_data['hist_x']),
                     'Pixel Position (Y)': pd.Series(hist_data['hist_y']),
                     'Parallelogram coords (X,Y)': pd.Series(parallelogram_points)
                 })
-                # Write each location's histogram data to a new sheet in the Excel file
                 hist_df.to_excel(writer, sheet_name=location_name, index=False)
 
     return hist_image_path_s
@@ -1280,7 +1296,9 @@ TEMP_FILE = os.path.join(tempfile.gettempdir(), 'synapto_catch_params.json')
 local_params = {'location_names': []}
 
 # Ключи для установления иерархии сохранения
-priority_keys = ['protocol', 'target_ch', 'second_ch', 'slice_start', 'slice_end']
+priority_keys = ['protocol', 'target_ch', 'slice_start', 'slice_end']
+target_priority_keys = ['protocol', 'target_ch', 'slice_start', 'slice_end']
+stack_priority_keys = priority_keys + ['second_ch']
 denoised_priority_keys = priority_keys + ['filter_radius']
 full_binary_priority_keys = priority_keys + ['filter_radius']
 roi_mask_priority_keys = full_binary_priority_keys + ['selected_location']

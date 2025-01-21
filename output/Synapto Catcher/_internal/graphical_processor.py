@@ -9,7 +9,7 @@ import hashlib
 import tempfile
 import threading
 import tkinter as tk
-from PIL import Image, ImageTk, ImageDraw, ImageFont
+from PIL import Image, ImageTk, ImageDraw, ImageFont, ImageOps
 from functools import partial
 import os
 import subprocess
@@ -20,11 +20,13 @@ from tkinter import Listbox, Canvas
 import json
 from tkinter import filedialog, messagebox, PhotoImage, Toplevel, scrolledtext, StringVar, BooleanVar, Tk, simpledialog 
 from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Frame, Progressbar, Scale, Scrollbar
+from readlif.reader import LifFile
 
 
 class ThumbnailViewer:
     def __init__(self, parent, images, 
                  comments=None, image_ids=None,
+                 replaced_image_names = None,
                  on_single_click=lambda path: None, 
                  on_double_click=lambda path: None, 
                  on_selection_change=lambda selected_ids: None,
@@ -37,13 +39,15 @@ class ThumbnailViewer:
         self.image_ids = image_ids
         self.on_selection_change = on_selection_change
         
+        self.replaced_image_names = replaced_image_names
+        
         self.on_single_click = on_single_click
         self.on_double_click = on_double_click
         self.open_image_func = open_image_func
         self.max_per_page = max_per_page
         self.width = width
         self.height = height
-
+        
         self.progress_window = None
         self.progress_bar = None
         self.progress_label = None
@@ -163,8 +167,13 @@ class ThumbnailViewer:
         self.root.bind("<Control-Shift-A>", self.on_ctrl_shift_a)
 
     def get_thumbnail_filename(self, image_path):
-        hash_name = hashlib.md5(image_path.encode()).hexdigest() + '.png'
-        return os.path.join(self.TEMP_FILE, hash_name)
+        # Получаем время модификации файла в виде целого числа
+        modification_time = int(os.path.getmtime(image_path))
+        # Генерируем хэш от пути
+        base_hash = hashlib.md5(image_path.encode()).hexdigest()
+        # Склеиваем хэш и время модификации, чтобы получить уникальное имя
+        file_name = f"{base_hash}_{modification_time}.png"
+        return os.path.join(self.TEMP_FILE, file_name)
 
     def clear_thumbnails(self):
         try:
@@ -405,7 +414,11 @@ class ThumbnailViewer:
                 thumbnail_label.config(borderwidth=0, relief="flat")
             self.display_selected_ids()
 
-            file_name = os.path.basename(img_path)
+            if not self.replaced_image_names: # заменяем названия файлов
+                file_name = os.path.basename(img_path)
+            else:
+                file_name = self.replaced_image_names[start_index+idx_in_page]
+                
             file_label = Label(thumbnail_container, text=file_name, font=("Arial", 10), wraplength=100)
             file_label.pack(side=tk.TOP)
 
@@ -675,9 +688,6 @@ def process_tif_image(file_path):
     
     return combined_img
 
-from readlif.reader import LifFile
-from PIL import Image, ImageOps
-
 def process_lif_image(file_path, scale=0.3):
     lif = LifFile(file_path)
     
@@ -715,7 +725,6 @@ def process_lif_image(file_path, scale=0.3):
         collage.paste(img, (x, y))
 
     return collage
-
 
 def process_synCatch_image(file_path):
     if file_path.endswith('.czi'):
@@ -1210,9 +1219,220 @@ class PolygonModifier:
 # polygon_points = drawer.run()
 # print("Coordinates of the polygon:", polygon_points)
 
+import cv2
+import numpy as np
+import math
+import keyboard
 
+# Предполагается, что классы ColorCycler, guiButton, функции draw_polygons_on_image, simplify_contour
+# и т.д. уже импортированы или определены в вашем проекте
 
 class ParallelogramEditor:
+    def __init__(self, image, scale_factor=1.0, coords_df=None):
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        self.image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor, interpolation=cv2.INTER_LINEAR)
+        self.scale_factor = scale_factor
+        self.coords_df = coords_df
+        
+        color_cycler = ColorCycler(num_colors=10)
+        self.image = draw_polygons_on_image(self.coords_df, self.scale_factor, color_cycler, self.image, simplify_contour)
+        
+        self.original_image = self.image.copy()
+        self.drawing = False
+        self.start_point = None
+        self.points = []
+        self.rotated_points = []
+        self.finished_drawing = False
+        self.moving_point = None
+        self.rotating = False
+        self.center_point = None
+        self.initial_angle = 0
+        self.dragging = False
+        self.user_cancelled = False
+        
+        self.tool_selected = False
+        self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
+        self.cancel_button = guiButton(10, 70, 100, 50, 'Cancel', self.cancel_parallelogram)
+        self.apply_button = guiButton(10, 130, 100, 50, 'Apply', self.apply_parallelogram)
+        self.start_button.visible = True
+        self.cancel_button.visible = True
+        self.apply_button.visible = False
+        
+        cv2.namedWindow('Image')
+        cv2.setMouseCallback('Image', self.draw_parallelogram)
+
+    def start_drawing(self):
+        self.tool_selected = True
+        self.start_button.visible = False
+        self.apply_button.visible = False
+
+    def cancel_parallelogram(self):
+        cv2.destroyWindow('Image')
+        self.points = []
+        self.finished_drawing = False
+        self.user_cancelled = True
+
+    def apply_parallelogram(self):
+        coords = self.get_coordinates()
+        cv2.destroyWindow('Image')
+        return coords
+
+    def rotate_point(self, point, center, angle):
+        a = math.radians(angle)
+        x_new = int(center[0] + math.cos(a)*(point[0] - center[0]) - math.sin(a)*(point[1] - center[1]))
+        y_new = int(center[1] + math.sin(a)*(point[0] - center[0]) + math.cos(a)*(point[1] - center[1]))
+        return (x_new, y_new)
+
+    def draw_polygon(self, img, pts):
+        pts = np.array(pts, np.int32).reshape((-1, 1, 2))
+        cv2.polylines(img, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
+
+    def draw_grid(self, img, points, step_fraction=0.1):
+        v_u = np.array(points[1]) - np.array(points[0])
+        v_v = np.array(points[3]) - np.array(points[0])
+        n_x = n_y = int(1 / step_fraction)
+        for i in range(1, n_x):
+            su = v_u * (i * step_fraction)
+            s = np.array(points[0]) + su
+            e = np.array(points[3]) + su
+            cv2.line(img, tuple(s.astype(int)), tuple(e.astype(int)), (255, 0, 0), 1)
+        for j in range(1, n_y):
+            sv = v_v * (j * step_fraction)
+            s = np.array(points[0]) + sv
+            e = np.array(points[1]) + sv
+            cv2.line(img, tuple(s.astype(int)), tuple(e.astype(int)), (255, 0, 0), 1)
+
+    def draw_parallelogram(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if self.start_button.is_clicked(x, y):
+                return
+            if self.cancel_button.is_clicked(x, y):
+                return
+            if self.apply_button.is_clicked(x, y):
+                return
+        
+        if not self.tool_selected:
+            return
+
+        if not self.finished_drawing:
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.drawing = True
+                self.start_point = (x, y)
+                self.points = [self.start_point]
+            elif event == cv2.EVENT_MOUSEMOVE and self.drawing:
+                self.image = self.original_image.copy()
+                cv2.rectangle(self.image, self.start_point, (x, y), (0, 255, 0), 2)
+            elif event == cv2.EVENT_LBUTTONUP and self.drawing:
+                self.drawing = False
+                end_point = (x, y)
+                self.points = [self.start_point,
+                               (end_point[0], self.start_point[1]),
+                               end_point,
+                               (self.start_point[0], end_point[1])]
+                self.finished_drawing = True
+                self.center_point = ((self.points[0][0] + self.points[2][0]) // 2,
+                                     (self.points[0][1] + self.points[2][1]) // 2)
+                self.draw_polygon(self.image, self.points)
+                self.draw_grid(self.image, self.points)
+                self.apply_button.visible = True
+        else:
+            if event == cv2.EVENT_RBUTTONDOWN:
+                self.rotating = True
+                self.initial_angle = math.degrees(math.atan2(y - self.center_point[1], x - self.center_point[0]))
+            elif event == cv2.EVENT_RBUTTONUP:
+                if self.rotating:
+                    self.rotating = False
+                    self.points = self.rotated_points
+            elif event == cv2.EVENT_LBUTTONDOWN:
+                for i, p in enumerate(self.points):
+                    if abs(x - p[0]) < 10 and abs(y - p[1]) < 10:
+                        self.moving_point = i
+                        break
+                else:
+                    if self.is_point_inside_polygon((x, y), self.points):
+                        self.dragging = True
+                        self.drag_start = (x, y)
+                        self.original_points = self.points.copy()
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.moving_point is not None:
+                    self.image = self.original_image.copy()
+                    self.points[self.moving_point] = (x, y)
+                    if self.moving_point in [0, 1, 3]:
+                        v01 = np.array(self.points[1]) - np.array(self.points[0])
+                        v03 = np.array(self.points[3]) - np.array(self.points[0])
+                        self.points[2] = tuple(np.array(self.points[0]) + v01 + v03)
+                    cv2.line(self.image, self.points[0], self.points[1], (0, 255, 255), 2)
+                    cv2.line(self.image, self.points[0], self.points[3], (0, 255, 255), 2)
+                    self.draw_grid(self.image, self.points)
+                elif self.dragging:
+                    dx = x - self.drag_start[0]
+                    dy = y - self.drag_start[1]
+                    self.points = [(px + dx, py + dy) for px, py in self.original_points]
+                    self.image = self.original_image.copy()
+                    self.draw_polygon(self.image, self.points)
+                    self.draw_grid(self.image, self.points)
+                elif self.rotating:
+                    current_angle = math.degrees(math.atan2(y - self.center_point[1], x - self.center_point[0]))
+                    angle_diff = current_angle - self.initial_angle
+                    self.rotated_points = [self.rotate_point(pt, self.center_point, angle_diff) for pt in self.points]
+                    self.image = self.original_image.copy()
+                    self.draw_polygon(self.image, self.rotated_points)
+                    self.draw_grid(self.image, self.rotated_points)
+            elif event == cv2.EVENT_LBUTTONUP:
+                if self.moving_point is not None:
+                    self.moving_point = None
+                if self.dragging:
+                    self.dragging = False
+
+        if keyboard.is_pressed('ctrl') and self.finished_drawing:
+            self.image = self.original_image.copy()
+            cv2.line(self.image, self.points[0], self.points[1], (0, 255, 255), 2)
+            cv2.line(self.image, self.points[0], self.points[3], (0, 255, 255), 2)
+            self.draw_grid(self.image, self.points)
+
+    def is_point_inside_polygon(self, point, polygon):
+        x, y = point
+        n = len(polygon)
+        inside = False
+        p1x, p1y = polygon[0]
+        for i in range(n+1):
+            p2x, p2y = polygon[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y)*(p2x - p1x)/(p2y - p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+        return inside
+
+    def get_coordinates(self):
+        if not self.finished_drawing:
+            return None
+        current = self.rotated_points if self.rotating else self.points
+        return [(int(px/self.scale_factor), int(py/self.scale_factor)) for px, py in current]
+
+    def run(self):
+        while True:
+            img_copy = self.image.copy()
+            self.start_button.draw(img_copy)
+            self.cancel_button.draw(img_copy)
+            self.apply_button.draw(img_copy)
+            cv2.imshow('Image', img_copy)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('q'):
+                break
+            if cv2.getWindowProperty("Image", cv2.WND_PROP_VISIBLE) < 1:
+                break
+        cv2.destroyAllWindows()
+        if self.user_cancelled:
+            return None
+        else:
+            return self.get_coordinates()
+
+
+class ParallelogramEditorOld:
     def __init__(self, image, scale_factor=1.0, coords_df=None):
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         self.image = image
@@ -1448,7 +1668,20 @@ def read_metadata_from_file(file_path):
             return json.load(f)
     return {}
 
-
+def metadata_to_text(metadata, exclude_keys=None, comments=None):
+    exclude_keys = exclude_keys or []
+    comments = comments or {}
+    # Исключаем ненужные ключи
+    filtered_metadata = {key: value for key, value in metadata.items() if key not in exclude_keys}
+    # Формируем текст из метаданных
+    lines = []
+    for key, value in filtered_metadata.items():
+        line = f"{key}: {value}"
+        if key in comments:
+            line += f"  # {comments[key]}"
+        lines.append(line)
+    return "\n".join(lines)
+            
 class ExperimentWindow:
     def __init__(self, experiment_path, comment=None):
         self.experiment_path = experiment_path
@@ -1563,40 +1796,46 @@ class ExperimentWindow:
             comment_label.pack(pady=5)
 
         # Получаем все изображения результата
-        images = self.get_results_images(self.experiment_path)
-
+        images, metadatas = self.get_results_data(self.experiment_path)
+         
         # Используем функцию display_thumbnails
-        self.display_thumbnails_in_class(images)
+        self.display_thumbnails_in_class(images, metadatas)
 
         # Привязываем событие закрытия окна
         self.top.protocol("WM_DELETE_WINDOW", self.on_close)
 
     # Функция для получения всех результатов в папке по пути к эксперименту
-    def get_results_images(self, experiment_path):
+    def get_results_data(self, experiment_path):
         extension = os.path.splitext(experiment_path)[1]
         result_folder = experiment_path.replace(extension, "_results")
         if os.path.exists(result_folder):
-            return [
+            images = [
                 os.path.join(result_folder, f)
                 for f in os.listdir(result_folder)
                 if f.endswith('.png')
             ]
-        return []
+            metadata_texts = []
+            for image_path in images:
+                metadata = read_metadata_from_file(image_path)
+                metadata_texts.append(metadata_to_text(metadata, exclude_keys = ['protocol']))
+            return images, metadata_texts
+        return [], []
 
-
-    def display_thumbnails_in_class(self, images):
-        # Сортируем изображения по дате создания (ctime)
-        images = sorted(images, key=lambda x: os.path.getctime(x))
-
+    def display_thumbnails_in_class(self, images, metadatas):
+        # sort data by date
+        image_metadata_pairs = zip(images, metadatas)
+        sorted_pairs = sorted(image_metadata_pairs, key=lambda x: os.path.getctime(x[0]))
+        sorted_images, sorted_metadatas = zip(*sorted_pairs)
+        
         # Определяем функции обработки событий
         def on_single_click(path):
-            pass  # Можно добавить логику по необходимости
-
-        def on_double_click(path):
-            # При двойном клике отображаем большое изображение
+            # При клике отображаем большое изображение
             self.display_large_image(path)
             metadata = read_metadata_from_file(path)
             self.display_metadata(metadata)
+
+        def on_double_click(path):            
+            pass  # Можно добавить логику по необходимости
 
         # Уничтожаем предыдущий экземпляр ThumbnailViewer, если он существует
         if hasattr(self, 'thumbnail_viewer'):
@@ -1605,14 +1844,15 @@ class ExperimentWindow:
         # Создаем новый экземпляр ThumbnailViewer
         self.thumbnail_viewer = ThumbnailViewer(
             parent=self.thumbnail_frame,
-            images=images,
+            images=sorted_images,
+            replaced_image_names = sorted_metadatas,
             comments=None,  # Можно передать список комментариев
             on_single_click=on_single_click,
             on_double_click=on_double_click,
             open_image_func=Image.open,
             max_per_page=None,  # Показать все изображения
             width=500,
-            height=150
+            height=150,
         )
 
         # Устанавливаем фокус на thumbnail_inner_frame
