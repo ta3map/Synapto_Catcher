@@ -432,7 +432,7 @@ class ThumbnailViewer:
 
             thumbnail_container.bind("<MouseWheel>", self.on_mouse_wheel)
             thumbnail_label.bind("<MouseWheel>", self.on_mouse_wheel)
-            file_label.bind("<MouseWheel>", self.on_mouse_wheel)
+            file_label.bind("<MouseWheel>", self.on_mouse_wheel)#test
 
             # Update the progress bar
             if self.progress_bar:
