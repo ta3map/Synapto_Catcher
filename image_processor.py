@@ -46,7 +46,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 icon_path = os.path.join(current_dir, "images", "synaptocatcher.ico")
 sys.path.append(current_dir)
 from graphical_processor import PolygonDrawer, ParallelogramEditor, draw_polygons_on_image, ColorCycler, simplify_contour
-from graphical_processor import invert_image, create_region_mask, PolygonModifier, ThemeManager, initialize_window
+from graphical_processor import invert_image, create_region_mask, ThemeManager, initialize_window
 
 def generate_hashes_from_metadata(metadata, priority_keys):
     """
@@ -462,8 +462,6 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
     base_name = splitext(basename(file_path))[0]
     experiment_date = basename(dirname(file_path))    
     file_extension = splitext(file_path)[1].lower()    
-    #print(f"target_ch: {target_ch}")
-    #print(f"dapi_ch: {dapi_ch}")
     
     if file_extension == '.czi':
         
@@ -519,31 +517,13 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
     return combined_image_s
 
 def load_coordinates_from_excel(excel_path, root):
-    """
-    Function to load coordinates from an Excel file.
-
-    Arguments:
-    excel_path -- path to the Excel file
-    root -- the root window for the messagebox
-
-    Returns:
-    coords_df -- DataFrame with coordinates or None if there was an error
-    """
-    # Initialize coords_df as None
     coords_df = None
-
-    # Check if the Excel file exists
     if os.path.exists(excel_path):
-        # Try to load coordinates from the Excel file
         try:
             coords_df = pd.read_excel(excel_path, sheet_name='ROI_Coordinates')
-            # Rename columns with duplicates
-            #coords_df.columns = rename_column_names(coords_df.columns)        
         except Exception as e:
-            # Show error message if the file could not be read
             messagebox.showerror("Error", f"Could not read coordinates from Excel file: {e}", parent=root)
-            return None  # Stop execution if the file could not be read
-
+            return None
     return coords_df
 
 # Первый шаг
@@ -628,6 +608,11 @@ def filter_files_by_metadata(folder_path, key, value):
     return matching_files
 
 def get_location_name(root, location_names):
+    
+    # Определяем доступные разрешения экрана
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    
     """
     Функция отображает диалог для выбора или ввода имени региона.
     """
@@ -673,7 +658,7 @@ def get_location_name(root, location_names):
     # Waiting for window to close
     dialog.wait_window(dialog)
 
-    return selected_location[0]
+    return selected_location[0], screen_width, screen_height
 
 
 
@@ -692,7 +677,7 @@ def select_location(file_path, root, initial_location = ''):
         image_in = read_image(image_file_path, as_pil = True, priority_keys=priority_keys).convert('RGB')
         image_np = np.array(image_in)
 
-        selected_location = get_location_name(root, location_names)
+        selected_location, screen_width, screen_height = get_location_name(root, location_names)
         if not selected_location:
             print('Marking stopped')
             return pd.DataFrame(), initial_location  # Return an empty DataFrame
@@ -702,7 +687,7 @@ def select_location(file_path, root, initial_location = ''):
         coords_df = load_coordinates_from_excel(excel_path, root)
         
         # Initialize the drawing tool
-        drawer = PolygonDrawer(image_np, scale_factor=scale_factor, coords_df=coords_df, comments = f"{base_name} #{im_index}")
+        drawer = PolygonDrawer(image_np, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
         coords = drawer.run()  # Wait for drawing to complete
 
         if not coords:  # If the coordinates are empty
