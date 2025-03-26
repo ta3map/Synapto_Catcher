@@ -55,7 +55,7 @@ class ThumbnailViewer:
 
         self.cancel_loading = False
 
-        # Переменные для постраничной навигации
+        # Variables for pagination
         self.current_page = 0
         if self.max_per_page is None:
             self.max_per_page = len(self.images)
@@ -64,13 +64,13 @@ class ThumbnailViewer:
         if not os.path.exists(self.TEMP_FILE):
             os.makedirs(self.TEMP_FILE)
 
-        # Переменные для перетаскивания и клика
+        # Variables for drag and click
         self.start_x = 0
         self.start_y = 0
         self.canvas_offset_x = 0
         self.canvas_offset_y = 0
-        self.last_clicked_thumbnail = None  # Для хранения последней нажатой миниатюры
-        self.selected_images = set()  # Набор путей выбранных изображений
+        self.last_clicked_thumbnail = None  # To store the last thumbnail clicked
+        self.selected_images = set()  # Set of paths of selected images
 
         self._setup_ui()
         self._load_page_images(0)
@@ -78,49 +78,49 @@ class ThumbnailViewer:
     def display_selected_ids(self):
         """Отображаем выделенные ID в текстовом поле в порядке следования изображений."""
         if self.image_ids is None:
-            self.selected_ids_label.pack_forget()  # Скрываем текстовое поле, если ID не переданы
+            self.selected_ids_label.pack_forget()  # Hide the text field if IDs are not passed
             return
 
         if not self.selected_images:
-            self.selected_ids_label.pack_forget()  # Скрываем текстовое поле, если нет выделений
+            self.selected_ids_label.pack_forget()  # Hide the text field if there are no selections
             return
 
-        # Создаем словарь для быстрого поиска ID по изображению
+        # Create a dictionary to quickly search for IDs by image
         image_to_id = {img: img_id for img, img_id in zip(self.images, self.image_ids)}
 
-        # Собираем список ID для выделенных изображений
+        # Collect a list of IDs for the selected images
         selected_ids_num = [image_to_id[img] for img in self.selected_images if img in image_to_id]
         selected_ids_num.sort(key=lambda x: list(self.image_ids).index(x))
 
 
-        # Преобразуем все ID в строки
+        # Convert all IDs to strings
         selected_ids = [str(id) for id in selected_ids_num]
 
-        # Формируем сокращенный вывод
-        max_displayed_ids = 30  # Разрешенное количество для отображения
+        # Generate shortened output
+        max_displayed_ids = 30  # Allowed quantity to display
 
         if len(selected_ids) > max_displayed_ids:
-            # Количество чисел, которые будут показываться с начала и с конца
-            start_count = (max_displayed_ids // 2)  # Числа с начала
-            end_count = (max_displayed_ids // 2)    # Числа с конца
+            # Number of numbers to be shown from the beginning and from the end
+            start_count = (max_displayed_ids // 2)  # Numbers from the beginning
+            end_count = (max_displayed_ids // 2)    # Numbers from the end
 
-            # Формирование списка с началом, троеточиями и концом
+            # Forming a list with a beginning, ellipses and an end
             displayed_ids = ", ".join(selected_ids[:start_count]) + " ... " + ", ".join(selected_ids[-end_count:])
         else:
             displayed_ids = ", ".join(selected_ids)
 
-        # Обновляем текстовое поле
+        # Update the text field
         self.selected_ids_label.config(text=f"Selected IDs: {displayed_ids}")
-        self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X)  # Отображаем текстовое поле
+        self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X)  # Display the text field
         self.on_selection_change(selected_ids_num)
 
 
     def _setup_ui(self):
-        # Создаем фрейм для миниатюр
+        # Create a frame for the thumbnails
         self.thumbnail_frame = Frame(self.parent)
         self.thumbnail_frame.pack(fill=tk.BOTH, expand=True)
 
-        # Создаем canvas для размещения миниатюр и scrollbar
+        # Create a canvas to hold the thumbnails and scrollbar
         self.canvas = Canvas(self.thumbnail_frame, width=self.width, height=self.height, highlightthickness=0)
         self.scrollbar = tk.Scrollbar(self.thumbnail_frame, orient=tk.HORIZONTAL, command=self.canvas.xview)
         self.canvas.config(xscrollcommand=self.scrollbar.set)
@@ -134,178 +134,178 @@ class ThumbnailViewer:
 
         self.images = [image for image in self.images if os.path.exists(image)]
         
-        # Если комментарии переданы, проверяем их длину
+        # If comments are sent, check their length
         if self.comments is None:
-            self.comments = ['' for _ in self.images]  # Если комментариев нет, заполняем пустыми строками
+            self.comments = ['' for _ in self.images]  # If there are no comments, fill them with empty lines
             self.empty_comments = True
         else:
             if len(self.comments) != len(self.images):
-                raise ValueError("Количество комментариев должно соответствовать количеству изображений.")
+                raise ValueError("The number of comments should correspond to the number of images.")
 
-        # Кнопки навигации
+        # Navigation buttons
         self.prev_button = Button(self.thumbnail_frame, text="🡸", command=self.show_previous_page)
         self.next_button = Button(self.thumbnail_frame, text="🡺", command=self.show_next_page)
 
         self.prev_button.pack(side=tk.LEFT, padx=5)
         self.next_button.pack(side=tk.RIGHT, padx=5)
 
-        # Добавим поле для отображения выбранных ID
+        # Add a field to display the selected IDs
         self.selected_ids_label = Label(self.thumbnail_frame, text="")
         self.selected_ids_label.pack(side=tk.BOTTOM, fill=tk.X, padx=5, pady=5)
 
-        # Добавляем кнопку для выделения всех изображений
+        # Add a button to select all images
         self.select_all_button = Button(self.thumbnail_frame, text="Select all", command=self.select_all_images)
         self.select_all_button.pack(side=tk.LEFT, padx=5)
     
-        # Получаем корневое окно (Toplevel), содержащее этот виджет
+        # Get the root window (Toplevel) containing this widget
         self.root = self.parent.winfo_toplevel()
 
-        # Связываем события клавиш с этим окном
+        # Associate key events with this window
         self.root.bind("<Control-a>", self.on_ctrl_a)
         self.root.bind("<Control-A>", self.on_ctrl_a)
         self.root.bind("<Control-Shift-a>", self.on_ctrl_shift_a)
         self.root.bind("<Control-Shift-A>", self.on_ctrl_shift_a)
 
     def get_thumbnail_filename(self, image_path):
-        # Получаем время модификации файла в виде целого числа
+        # Get the file modification time as an integer
         modification_time = int(os.path.getmtime(image_path))
-        # Генерируем хэш от пути
+        # Generate a hash from the path
         base_hash = hashlib.md5(image_path.encode()).hexdigest()
-        # Склеиваем хэш и время модификации, чтобы получить уникальное имя
+        # Concatenate the hash and modification time to get a unique name
         file_name = f"{base_hash}_{modification_time}.png"
         return os.path.join(self.TEMP_FILE, file_name)
 
     def clear_thumbnails(self):
         try:
-            if self.thumbnail_inner_frame.winfo_exists():  # Проверяем, существует ли фрейм
+            if self.thumbnail_inner_frame.winfo_exists():  # Check if the frame exists
                 for widget in self.thumbnail_inner_frame.winfo_children():
-                    widget.destroy()  # Удаляем все дочерние виджеты
+                    widget.destroy()  # Remove all child widgets
         except tk.TclError as e:
             print(f"Error during clearing thumbnails: {e}")
 
     def add_comment_to_image(self, image, comment):
-        """Наносим комментарий поверх изображения с черным фоном, жирным шрифтом и размером 14."""
-        # Копируем изображение, чтобы не изменять оригинал
+        """Put a comment on top of an image with a black background, bold font and size 14."""
+        # Copy the image so as not to change the original
         
-            # Преобразуем изображение в RGB, если оно в другом формате
+            # Convert the image to RGB if it is in a different format
         if image.mode != 'RGB':
             image = image.convert('RGB')
             
         img_copy = image.copy()
         draw = ImageDraw.Draw(img_copy)
 
-        # Определяем шрифт, пытаемся загрузить Arial с размером 14 и жирным шрифтом
+        # Determine the font, try to load Arial with size 14 and bold
         try:
-            font = ImageFont.truetype("arialbd.ttf", 14)  # Используем жирный Arial
+            font = ImageFont.truetype("arialbd.ttf", 14)  # Use bold Arial
         except IOError:
             font = ImageFont.load_default()
 
-        # Используем font.getbbox() для расчета размера текста
+        # Use font.getbbox() to calculate text size
         text_bbox = draw.textbbox((0, 0), comment, font=font)
         text_width = text_bbox[2] - text_bbox[0]
         text_height = text_bbox[3] - text_bbox[1]
 
-        # Определяем координаты и размер черного фона (немного больше текста)
+        # Define the coordinates and size of the black background (a little more text)
         padding = 5
-        text_x, text_y = 10, 10  # Положение текста
+        text_x, text_y = 10, 10  # Text position
         background_x1 = text_x - padding
         background_y1 = text_y - padding
         background_x2 = text_x + text_width + padding
         background_y2 = text_y + text_height + padding
         
-        # Рисуем черный прямоугольник под текстом
+        # Draw a black rectangle under the text
         draw.rectangle([background_x1, background_y1, background_x2, background_y2], fill=(0, 0, 0))
 
-        # Цвет текста - белый
+        # Text color - white
         text_color = (255, 255, 255)
         
-        # Наносим текст поверх черного фона
+        # Apply text over a black background
         draw.text((text_x, text_y), comment, font=font, fill=text_color)
 
         return img_copy
 
     def on_mouse_wheel(self, event):
         if event.delta > 0:
-            self.canvas.xview_scroll(-1, "units")  # Прокрутка влево
+            self.canvas.xview_scroll(-1, "units")  # Scroll left
         else:
-            self.canvas.xview_scroll(1, "units")   # Прокрутка вправо
+            self.canvas.xview_scroll(1, "units")   # Scroll right
 
     def on_mouse_press(self, event):        
-        """Запоминаем начальную позицию мыши при нажатии."""
+        """Remember the initial position of the mouse when clicked."""
         self.start_x = event.x
         self.start_y = event.y
         self.canvas_offset_x = self.canvas.canvasx(0)
         self.canvas_offset_y = self.canvas.canvasy(0)
 
     def on_mouse_drag(self, event):
-        """Изменяем положение видимой области холста по движению мыши."""
+        """Change the position of the visible area of ​​the canvas based on mouse movement."""
         delta_x = self.start_x - event.x
         self.canvas.xview_moveto((self.canvas_offset_x + delta_x) / self.canvas.bbox("all")[2])
 
     def on_mouse_release(self, event, img_path, thumbnail_label):
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
         
-        """Определяем, было ли это кликом или перетаскиванием."""
+        """Detecting whether it was a click or a drag."""
         delta_x = event.x - self.start_x
         delta_y = event.y - self.start_y
         movement = (delta_x**2 + delta_y**2)**0.5
 
-        if movement < 5:  # Порог для определения клика
-            # Проверяем, зажата ли клавиша Ctrl
-            if event.state & 0x0004:  # Проверяем, зажата ли клавиша Ctrl
-                # Множественное выделение
+        if movement < 5:  # Threshold for detecting a click
+            # Check if the Ctrl key is held down
+            if event.state & 0x0004:  # Check if the Ctrl key is held down
+                # Multiple selection
                 if img_path in self.selected_images:
-                    # Если изображение уже выбрано, снимаем выделение
+                    # If the image is already selected, deselect it
                     self.selected_images.remove(img_path)
                     thumbnail_label.config(borderwidth=0, relief="flat")
                 else:
-                    # Добавляем изображение в выбранные
+                    # Add an image to the selected
                     self.selected_images.add(img_path)
                     thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)                
             else:
-                # Одиночное выделение
-                # Сбрасываем выделение предыдущих изображений
+                # Single selection
+                # Reset selection of previous images
                 for widget in self.thumbnail_inner_frame.winfo_children():
                     lbl = widget.children.get('!label')
                     if lbl:
                         lbl.config(borderwidth=0, relief="flat")
                 self.selected_images.clear()
 
-                # Выделяем текущую миниатюру
+                # Select the current thumbnail
                 self.selected_images.add(img_path)
                 thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)
                 self.last_clicked_thumbnail = thumbnail_label
                 
             self.display_selected_ids()
 
-            # Вызываем функцию on_single_click
+            # Call the function on_single_click
             self.on_single_click(img_path)
         else:
-            # Это перетаскивание, ничего не делаем
+            # This is drag and drop, we don't do anything
             pass
 
     def on_ctrl_a(self, event):
-        """Обрабатываем нажатие Ctrl+A для выделения всех видимых изображений."""
+        """Process the Ctrl+A press to select all visible images."""
         focus_widget = self.root.focus_get()
         if focus_widget and str(focus_widget).startswith(str(self.root)):
             self.select_all_visible()
-        return "break"  # Останавливаем дальнейшую обработку события
+        return "break"  # Stop further processing of the event
 
     def on_ctrl_shift_a(self, event):
-        """Обрабатываем нажатие Ctrl+Shift+A для выделения всех изображений."""
+        """Processing pressing Ctrl+Shift+A to select all images."""
         focus_widget = self.root.focus_get()
         if focus_widget and str(focus_widget).startswith(str(self.root)):
             self.select_all_images()
-        return "break"  # Останавливаем дальнейшую обработку события
+        return "break"  # Stop further processing of the event
 
 
     def select_all_visible(self):
-        """Выделяем все видимые изображения на текущей странице с использованием цвета подсветки из темы."""
-        # Получаем цвет подсветки через ThemeManager
+        """Select all visible images on the current page using the highlight color from the theme."""
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
 
         for widget in self.thumbnail_inner_frame.winfo_children():
             thumbnail_label = widget.children.get('!label')
@@ -316,17 +316,17 @@ class ThumbnailViewer:
                 self.display_selected_ids()
 
     def select_all_images(self):
-        """Выделяем все изображения на всех страницах."""
-        self.selected_images = set(self.images)  # Выбираем все изображения
+        """Select all images on all pages."""
+        self.selected_images = set(self.images)  # Select all images
         self.select_all_visible()
         self.display_selected_ids()
-        #self.update_thumbnails_selection()  # Обновляем отображение на текущей странице
+        #self.update_thumbnails_selection() # Update the display on the current page
 
     def update_thumbnails_selection(self):        
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
-        """Обновляем отображение выделения на текущей странице."""
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
+        """Updating the display of the selection on the current page."""
         for widget in self.thumbnail_inner_frame.winfo_children():
             thumbnail_label = widget.children.get('!label')
             if thumbnail_label:
@@ -369,13 +369,13 @@ class ThumbnailViewer:
         self.cancel_loading = False
         self.clear_thumbnails()
         
-        # Получаем цвет подсветки через ThemeManager
+        # Get the highlight color via ThemeManager
         theme_manager = ThemeManager()
-        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Используем цвет подсветки или синий по умолчанию
+        highlight_color = theme_manager.get_theme_highlight() or "blue"  # Use highlight color or default blue
         
-        # Устанавливаем количество изображений для текущей страницы
+        # Set the number of images for the current page
         end_index = min(start_index + self.max_per_page, len(self.images))
-        page_image_count = end_index - start_index  # Количество изображений на текущей странице
+        page_image_count = end_index - start_index  # Number of images on current page
 
         self.create_progress_window(page_image_count)
 
@@ -383,7 +383,7 @@ class ThumbnailViewer:
             if self.cancel_loading:
                 break
 
-            # Проверяем, существует ли thumbnail_inner_frame перед созданием виджетов
+            # Check if thumbnail_inner_frame exists before creating widgets
             if not self.thumbnail_inner_frame.winfo_exists():
                 break
 
@@ -395,7 +395,7 @@ class ThumbnailViewer:
                 img.thumbnail((150, 150))
                 img.save(thumbnail_path, format='PNG')
 
-            # Добавляем комментарий к изображению
+            # Add a comment to the image
             if not self.empty_comments:
                 img = self.add_comment_to_image(img, self.comments[idx_in_page])
 
@@ -404,17 +404,17 @@ class ThumbnailViewer:
             thumbnail_container = Frame(self.thumbnail_inner_frame)
             thumbnail_label = Label(thumbnail_container, image=img_tk)
             thumbnail_label.image = img_tk
-            thumbnail_label.img_path = img_path  # Сохраняем путь в атрибуте
+            thumbnail_label.img_path = img_path  # Save the path in an attribute
             thumbnail_label.pack(side=tk.TOP, padx=5, pady=5)
 
-            # Проверяем, выбрано ли изображение
+            # Check if the image is selected
             if img_path in self.selected_images:
                 thumbnail_label.config(borderwidth=4, relief="flat", background = highlight_color)            
             else:
                 thumbnail_label.config(borderwidth=0, relief="flat")
             self.display_selected_ids()
 
-            if not self.replaced_image_names: # заменяем названия файлов
+            if not self.replaced_image_names: # replace file names
                 file_name = os.path.basename(img_path)
             else:
                 file_name = self.replaced_image_names[start_index+idx_in_page]
@@ -424,7 +424,7 @@ class ThumbnailViewer:
 
             thumbnail_container.pack(side=tk.LEFT, padx=5, pady=5)
 
-            # Привязываем события перетаскивания и клика к миниатюрам
+            # Bind drag and click events to thumbnails
             thumbnail_label.bind("<ButtonPress-1>", self.on_mouse_press)
             thumbnail_label.bind("<B1-Motion>", self.on_mouse_drag)
             thumbnail_label.bind("<ButtonRelease-1>", partial(self.on_mouse_release, img_path=img_path, thumbnail_label=thumbnail_label))
@@ -432,17 +432,17 @@ class ThumbnailViewer:
 
             thumbnail_container.bind("<MouseWheel>", self.on_mouse_wheel)
             thumbnail_label.bind("<MouseWheel>", self.on_mouse_wheel)
-            file_label.bind("<MouseWheel>", self.on_mouse_wheel)
+            file_label.bind("<MouseWheel>", self.on_mouse_wheel)#test
 
-            # Обновляем прогресс-бар
+            # Update the progress bar
             if self.progress_bar:
-                self.progress_bar["value"] = idx_in_page - start_index + 1  # Обновляем прогресс для изображений на текущей странице
+                self.progress_bar["value"] = idx_in_page - start_index + 1  # Update progress for images on the current page
                 self.progress_label.config(text=f"Loading image {idx_in_page - start_index + 1} of {page_image_count}")
-                self.parent.update_idletasks()  # Обновляем интерфейс
+                self.parent.update_idletasks()  # Updating the interface
 
         self.close_progress_window()
 
-        # Проверяем, существует ли canvas перед вызовом bbox
+        # Check if canvas exists before calling bbox
         if self.canvas.winfo_exists():
             self.canvas.config(scrollregion=self.canvas.bbox("all"))
             
@@ -457,8 +457,8 @@ class ThumbnailViewer:
 
             self._load_page_images(self.current_page * self.max_per_page)
 
-            # Перемещаем слайдер в начало, чтобы показывать новые миниатюры с начала страницы
-            self.canvas.xview_moveto(0)  # Перемещаем слайдер в начало
+            # Move the slider to the beginning to show new thumbnails from the beginning of the page
+            self.canvas.xview_moveto(0)  # Move the slider to the beginning
 
     def show_previous_page(self):
         if self.current_page > 0:
@@ -466,11 +466,11 @@ class ThumbnailViewer:
 
             self._load_page_images(self.current_page * self.max_per_page)
 
-            # Перемещаем слайдер в конец, чтобы показывать конец предыдущей страницы
-            self.canvas.xview_moveto(1)  # Перемещаем слайдер в конец
+            # Move the slider to the end to show the end of the previous page
+            self.canvas.xview_moveto(1)  # Move the slider to the end
 
     def update_buttons(self):
-        # Проверяем существование кнопки перед обновлением ее состояния
+        # Check the existence of the button before updating its state
         if self.prev_button.winfo_exists():
             if self.current_page == 0:
                 self.prev_button.config(state=tk.DISABLED)
@@ -490,14 +490,14 @@ class ThumbnailViewer:
                 self.next_button.config(state=tk.DISABLED)
 
     def destroy(self):
-        """Метод для очистки виджетов и отвязки обработчиков событий."""
-        # Отвязываем обработчики событий
+        """Method for clearing widgets and unbinding event handlers."""
+        # Unbind event handlers
         self.root.unbind("<Control-a>")
         self.root.unbind("<Control-A>")
         self.root.unbind("<Control-Shift-a>")
         self.root.unbind("<Control-Shift-A>")
 
-        # Уничтожаем все виджеты
+        # Destroy all widgets
         self.thumbnail_frame.destroy()
 
 
@@ -806,16 +806,7 @@ class guiButton:
 
 
 def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_contour):
-    """
-    Function to draw polygons on the image.
 
-    Arguments:
-    coords_df -- DataFrame with polygon coordinates
-    scale_factor -- scaling factor for the coordinates
-    color_cycler -- object to get the color of the polygon
-    img -- image where polygons will be drawn
-    simplify_contour -- function to simplify polygon coordinates
-    """
     # If there are saved polygons, draw them
     if coords_df is not None:
         for col_x in coords_df.columns[::2]:  # Loop through every second column (assumed to be '_x' columns)
@@ -841,6 +832,9 @@ def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_
             # Blend the overlay with the original image to add transparency
             cv2.addWeighted(overlay, 0.2, img, 0.8, 0, img)
 
+            # Добавляем отрисовку границы полигона без прозрачности
+            cv2.polylines(img, [coords], isClosed=True, color=polygon_color, thickness=2)
+
             # Calculate the center of the polygon
             center_x = int(np.mean(coords[:, 0]))
             center_y = int(np.mean(coords[:, 1]))
@@ -851,6 +845,7 @@ def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_
                         0.6, (255, 255, 255), 2)
 
     return img
+
 
 
 
@@ -872,24 +867,54 @@ def is_on_edge(point, poly, tolerance=5):
     return None, None
 
 class PolygonDrawer:
-    def __init__(self, rgb_image, scale_factor=1.0, coords_df=None, comments=''):
+    def __init__(self, rgb_image, window_width=1200, window_height=800, coords_df=None, comments=''):
+        
+        # Сохраняем размеры окна
+        self.window_width = window_width
+        self.window_height = window_height
 
-        self.scale_factor = scale_factor
+        self.zoom_val = 100  # 100% – исходный масштаб
+
         self.original_rgb_image = rgb_image
-        self.rgb_image = cv2.resize(rgb_image, None, fx=self.scale_factor, fy=self.scale_factor, interpolation=cv2.INTER_LINEAR)
-        self.bgr_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_RGB2BGR)
+        orig_h, orig_w = rgb_image.shape[:2]
+        
+        # Вычисляем коэффициент масштабирования, чтобы вписать изображение в окно
+        self.effective_scale = min(window_width / orig_w, window_height / orig_h)
+        new_w = int(orig_w * self.effective_scale)
+        new_h = int(orig_h * self.effective_scale)
+        
+        # Масштабируем исходное изображение
+        resized_image = cv2.resize(rgb_image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        
+        # Создаем черный фон фиксированного размера (letterbox)
+        self.display_image = np.zeros((window_height, window_width, 3), dtype=resized_image.dtype)
+        # Вычисляем смещения для центрирования
+        self.offset_x = (window_width - new_w) // 2
+        self.offset_y = (window_height - new_h) // 2
+        # Помещаем масштабированное изображение по центру окна
+        self.display_image[self.offset_y:self.offset_y+new_h, self.offset_x:self.offset_x+new_w] = resized_image
+        
+        # Преобразуем в BGR (так как cv2.imshow ожидает BGR)
+        self.bgr_image = cv2.cvtColor(self.display_image, cv2.COLOR_RGB2BGR)
         self.img_copy = self.bgr_image.copy()
         self.comments = comments
-         
+
         self.coords_df = coords_df  # координаты других полигонов
 
         self.points = []
         self.is_drawing = False
         self.tool_selected = False  # Устанавливается True после нажатия "Start"
         self.selected_vertex = None  # Индекс выбранной вершины
-        self.dragging = False  # Флаг перетаскивания вершины
+        self.dragging = False  # Флаг перетаскивания вершины (в режиме модификации)
         self.tolerance = 10  # Радиус для определения клика на вершину
 
+        # Флаги и переменные для drag изображения (когда не выбран режим рисования)
+        self.image_dragging = False
+        self.user_offset = None  # Если не None, содержит кортеж (offset_x, offset_y)
+        self.drag_start_x = None
+        self.drag_start_y = None
+        self.drag_start_offset = (0, 0)
+        
         # Создаем кнопки
         self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
@@ -904,132 +929,153 @@ class PolygonDrawer:
         self.delete_button.visible = False
         self.modify_button.visible = False  # Скрыта по умолчанию
 
-        cv2.namedWindow("Polygon")
-        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Обработчик мыши для рисования полигона
+        cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
+        cv2.moveWindow("Polygon", 100, 100)
+
+        cv2.createTrackbar("Zoom", "Polygon", self.zoom_val, 500, self.on_trackbar)
+        cv2.setTrackbarMin('Zoom', 'Polygon', 50) 
+        
+        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Обработчик мыши
+    
+    def on_trackbar(self, val):
+        self.zoom_val = val
+        # self.user_offset = None # Сброс центрирования
+        self.update_display_image()
+
 
     def start_drawing(self):
-        """ Метод для начала рисования """
+        """Метод для начала рисования."""
         self.tool_selected = True
-        self.start_button.visible = False  # Скрываем кнопку "Start"
-        self.select_all_button.visible = False  # Скрываем кнопку "Select all"
-        self.cancel_button.visible = False  # Скрываем кнопку "Cancel"
-        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Включаем режим рисования полигона
-        # print("Draw tool selected")
+        self.start_button.visible = False
+        self.select_all_button.visible = False
+        self.cancel_button.visible = False
+        cv2.setMouseCallback("Polygon", self.mouse_callback)
 
     def apply_polygon(self):
-        original_points = [(int(x / self.scale_factor), int(y / self.scale_factor)) for x, y in self.points]
-        cv2.destroyAllWindows()  # Закрываем окно
+        # Преобразуем координаты нарисованного полигона обратно в координаты исходного изображения
+        original_points = []
+        for x, y in self.points:
+            orig_x = int((x - self.offset_x) / self.current_scale)
+            orig_y = int((y - self.offset_y) / self.current_scale)
+            original_points.append((orig_x, orig_y))
+        cv2.destroyAllWindows()
         return original_points
 
     def modify_selected_polygon(self):
-        """ Упрощает и активирует режим модификации полигона """
-        self.points = simplify_contour(self.points, epsilon=1.0)  # Упрощаем координаты полигона
-        self.modify_button.visible = False  # Скрываем кнопку после начала модификации
-        cv2.setMouseCallback("Polygon", self.mod_mouse_callback)  # Включаем режим модификации полигона
+        """Упрощает и активирует режим модификации полигона."""
+        self.points = simplify_contour(self.points, epsilon=1.0)
+        self.modify_button.visible = False
+        cv2.setMouseCallback("Polygon", self.mod_mouse_callback)
 
     def delete_polygon(self):
-        self.points = []  # Очищаем полигон
-        self.tool_selected = False  # Сбрасываем флаг
-        self.start_button.visible = True  # Показываем кнопку "Start"
-        self.select_all_button.visible = True  # Показываем кнопку "Select all"
-        self.delete_button.visible = False  # Скрываем кнопку "Delete"
-        self.apply_button.visible = False  # Скрываем кнопку "Apply"
-        self.modify_button.visible = False  # Скрываем кнопку "Modify Selected"
+        self.points = []
+        self.tool_selected = False
+        self.start_button.visible = True
+        self.select_all_button.visible = True
+        self.delete_button.visible = False
+        self.apply_button.visible = False
+        self.modify_button.visible = False
 
     def select_all(self):
-        """ Выбирает все углы изображения для создания полигона """
+        """Выбирает все углы отображаемой картинки для создания полигона."""
         height, width = self.bgr_image.shape[:2]
         self.points = [(0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1)]
-        self.delete_button.visible = True  # Показываем кнопку "Delete" после выбора всех углов
-        self.select_all_button.visible = False  # Скрываем кнопку "Select all"
-        self.start_button.visible = False  # Скрываем кнопку "Start"
-        self.apply_button.visible = True  # Показываем кнопку "Apply"
+        self.delete_button.visible = True
+        self.select_all_button.visible = False
+        self.start_button.visible = False
+        self.apply_button.visible = True
 
     def cancel_polygon(self):
-        """ Отменяет рисование полигона """
-        self.points = []  # Очищаем массив координат
-        cv2.destroyAllWindows()  # Закрываем окно
-        return self.points  # Возвращаем пустой список
+        """Отменяет рисование полигона."""
+        self.points = []
+        cv2.destroyAllWindows()
+        return self.points
 
     def mouse_callback(self, event, x, y, flags, param):
-        """ Обработчик мыши для рисования нового полигона """
-        if event == cv2.EVENT_LBUTTONDOWN:
-            # Проверка нажатия на кнопки
-            if self.start_button.is_clicked(x, y):
-                return
-            if self.delete_button.is_clicked(x, y):
-                return
-            if self.select_all_button.is_clicked(x, y):
-                return
-            if self.apply_button.is_clicked(x, y):
-                return
-            if self.cancel_button.is_clicked(x, y):
-                return
-            if self.modify_button.is_clicked(x, y):
-                return
+        """Обработчик мыши для рисования нового полигона и перетаскивания изображения."""
+        # Сначала проверяем нажатия на кнопки
+        if event == cv2.EVENT_LBUTTONDOWN and (
+            self.start_button.is_clicked(x, y) or 
+            self.delete_button.is_clicked(x, y) or 
+            self.select_all_button.is_clicked(x, y) or 
+            self.apply_button.is_clicked(x, y) or 
+            self.cancel_button.is_clicked(x, y) or 
+            self.modify_button.is_clicked(x, y)
+        ):
+            return
 
-            if self.tool_selected:
+        # Если режим рисования активирован, то работаем с полигоном
+        if self.tool_selected:
+            if event == cv2.EVENT_LBUTTONDOWN:
                 self.is_drawing = True
-                self.points = [(x, y)]  # Начинаем новый полигон с первой точки
+                self.points = [(x, y)]  # Начинаем новый полигон
 
-        elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
-            if self.is_drawing:
-                self.points.append((x, y))  # Добавляем точки в процессе рисования
+            elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
+                if self.is_drawing:
+                    self.points.append((x, y))
 
-        elif event == cv2.EVENT_LBUTTONUP:
-            if self.is_drawing:
-                self.is_drawing = False
-                if len(self.points) > 1:
-                    self.delete_button.visible = True  # Показываем кнопку "Delete" после завершения рисования
-                    self.apply_button.visible = True  # Показываем кнопку "Apply"
-                    self.modify_button.visible = True  # Показываем кнопку "Modify Selected"
+            elif event == cv2.EVENT_LBUTTONUP:
+                if self.is_drawing:
+                    self.is_drawing = False
+                    if len(self.points) > 1:
+                        self.delete_button.visible = True
+                        self.apply_button.visible = True
+                        self.modify_button.visible = True
+        else:
+            # Если режим рисования не выбран, реализуем перетаскивание изображения
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.image_dragging = True
+                self.drag_start_x = x
+                self.drag_start_y = y
+                # Если пользовательское смещение ещё не задано, используем текущее
+                if self.user_offset is None:
+                    self.user_offset = (self.offset_x, self.offset_y)
+                self.drag_start_offset = self.user_offset
+
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.image_dragging:
+                    dx = x - self.drag_start_x
+                    dy = y - self.drag_start_y
+                    self.user_offset = (self.drag_start_offset[0] + dx,
+                                        self.drag_start_offset[1] + dy)
+                    # Обновляем смещение и отображение с учетом пользовательского сдвига
+                    self.offset_x, self.offset_y = self.user_offset
+                    self.update_display_image()
+
+            elif event == cv2.EVENT_LBUTTONUP:
+                self.image_dragging = False
 
     def mod_mouse_callback(self, event, x, y, flags, param):
-        """ Обработчик мыши для модификации полигона """
-        
-        if event == cv2.EVENT_LBUTTONDOWN:
-            # Проверка нажатия на кнопки
-            if self.start_button.is_clicked(x, y):
-                return
-            if self.delete_button.is_clicked(x, y):
-                return
-            if self.select_all_button.is_clicked(x, y):
-                return
-            if self.apply_button.is_clicked(x, y):
-                return
-            if self.cancel_button.is_clicked(x, y):
-                return
-            if self.modify_button.is_clicked(x, y):
-                return
+        """Обработчик мыши для модификации полигона."""
+        if self.start_button.is_clicked(x, y) or \
+           self.delete_button.is_clicked(x, y) or \
+           self.select_all_button.is_clicked(x, y) or \
+           self.apply_button.is_clicked(x, y) or \
+           self.cancel_button.is_clicked(x, y) or \
+           self.modify_button.is_clicked(x, y):
+            return
 
-            # Проверка клика на вершину полигона для модификации
+        if event == cv2.EVENT_LBUTTONDOWN:
             for i, point in enumerate(self.points):
                 if distance(np.array(point), np.array([x, y])) < self.tolerance:
                     self.selected_vertex = i
                     self.dragging = True
                     return
 
-            # Проверка на ребро полигона
             edge_index, new_vertex = is_on_edge(np.array([x, y]), np.array(self.points))
             if edge_index is not None:
                 next_index = (edge_index + 1) % len(self.points)
-                
-                # Преобразуем self.points в список для работы с insert
                 self.points = self.points.tolist()
-                # Вставляем новую точку
                 self.points.insert(next_index, tuple(new_vertex))
-                # Преобразуем self.points обратно в numpy array
                 self.points = np.array(self.points)
 
         elif event == cv2.EVENT_LBUTTONDBLCLK:
-            # Удаление вершины при двойном клике
             for i, point in enumerate(self.points):
                 if distance(np.array(point), np.array([x, y])) < self.tolerance:
-                    # Удаляем вершину
                     self.points = self.points.tolist()
                     self.points.pop(i)
                     self.points = np.array(self.points)
-                    return  # Завершаем выполнение после удаления
+                    return
 
         elif event == cv2.EVENT_MOUSEMOVE:
             if self.dragging and self.selected_vertex is not None:
@@ -1038,14 +1084,68 @@ class PolygonDrawer:
         elif event == cv2.EVENT_LBUTTONUP:
             self.dragging = False
             self.selected_vertex = None
+            
+    def transform_coords_df(self, coords_df, effective_scale, offset_x, offset_y):
+        transformed_df = coords_df.copy()
+        # Проходим по каждому столбцу с координатами x
+        for col_x in coords_df.columns[::2]:
+            col_y = col_x.replace('_x', '_y')  # находим соответствующий столбец с координатами y
+            if col_x in coords_df.columns and col_y in coords_df.columns:
+                transformed_df[col_x] = coords_df[col_x] * effective_scale + offset_x
+                transformed_df[col_y] = coords_df[col_y] * effective_scale + offset_y
+        return transformed_df
+            
+    def update_display_image(self):
+        # Итоговый масштаб с учётом зума
+        self.current_scale = self.effective_scale * (self.zoom_val / 100.0)
+        orig_h, orig_w = self.original_rgb_image.shape[:2]
+        new_w = int(orig_w * self.current_scale)
+        new_h = int(orig_h * self.current_scale)
+
+        # Масштабируем изображение
+        resized_image = cv2.resize(self.original_rgb_image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        
+        # Определяем смещение: если задано пользователем, то используем его, иначе центрируем
+        if self.user_offset is not None:
+            offset_x, offset_y = self.user_offset
+        else:
+            offset_x = (self.window_width - new_w) // 2
+            offset_y = (self.window_height - new_h) // 2
+        # Сохраняем смещение для обратного преобразования координат
+        self.offset_x, self.offset_y = offset_x, offset_y
+
+        # Создаем фон нужного размера
+        self.display_image = np.zeros((self.window_height, self.window_width, 3), dtype=resized_image.dtype)
+        
+        # Определяем область назначения (dest) в окне
+        dest_x_start = max(0, offset_x)
+        dest_y_start = max(0, offset_y)
+        dest_x_end = min(self.window_width, offset_x + new_w)
+        dest_y_end = min(self.window_height, offset_y + new_h)
+        
+        # Определяем соответствующую область источника (src) в масштабированном изображении
+        src_x_start = max(0, -offset_x)  # если offset отрицательный, начинаем не с 0, а с -offset
+        src_y_start = max(0, -offset_y)
+        src_x_end = src_x_start + (dest_x_end - dest_x_start)
+        src_y_end = src_y_start + (dest_y_end - dest_y_start)
+        
+        self.display_image[dest_y_start:dest_y_end, dest_x_start:dest_x_end] = \
+            resized_image[src_y_start:src_y_end, src_x_start:src_x_end]
+        
+        # Обновляем итоговую копию для отображения
+        self.bgr_image = cv2.cvtColor(self.display_image, cv2.COLOR_RGB2BGR)
+        self.img_copy = self.bgr_image.copy()
+
 
     def run(self):
         while True:
             img = self.img_copy.copy()
 
-            # Рисуем полигоны, если есть другие сохраненные полигоны
+            # Рисуем сохраненные полигоны (если есть)
             color_cycler = ColorCycler(num_colors=10)
-            img = draw_polygons_on_image(self.coords_df, self.scale_factor, color_cycler, img, simplify_contour)
+            
+            transformed_df = self.transform_coords_df(self.coords_df, self.current_scale, self.offset_x, self.offset_y)
+            img = draw_polygons_on_image(transformed_df, 1, color_cycler, img, simplify_contour)
 
             # Рисуем кнопки
             self.start_button.draw(img)
@@ -1055,177 +1155,49 @@ class PolygonDrawer:
             self.cancel_button.draw(img)
             self.modify_button.draw(img)
 
-            # Рисуем полигон, который пользователь сейчас рисует
+            # Рисуем текущий полигон
             if len(self.points) > 0:
-                # Преобразуем точки в массив numpy для работы с cv2
                 polygon_points = np.array(self.points, np.int32)
-                
-                # Рисуем замкнутый полигон (isClosed=True)
                 cv2.polylines(img, [polygon_points], isClosed=True, color=(0, 255, 0), thickness=2)
-
-                # Рисуем точки на вершинах
                 for point in self.points:
-                    # Преобразуем координаты точки в целые числа
-                    cv2.circle(img, (int(point[0]), int(point[1])), radius=5, color=(0, 255, 0), thickness=-1)  # точки
+                    cv2.circle(img, (int(point[0]), int(point[1])), radius=5, color=(0, 255, 0), thickness=-1)
 
-            
-            ## ОТОБРАЖЕНИЕ comments
-            # Определяем параметры текста
-            text = self.comments  # Используем переменную comments
+            # Отрисовка комментариев по центру
+            text = self.comments
             font = cv2.FONT_HERSHEY_SIMPLEX
             font_scale = 0.6
             font_thickness = 1
-
-            # Получаем размеры текста и координаты для его центрирования
             (text_width, text_height), _ = cv2.getTextSize(text, font, font_scale, font_thickness)
             img_height, img_width = img.shape[:2]
-            x = (img_width - text_width) // 2
-            y = text_height + 20  # Отступ от верхнего края
-
-            # Рисуем серый полупрозрачный фон
+            text_x = (img_width - text_width) // 2
+            text_y = text_height + 20
             overlay = img.copy()
-            cv2.rectangle(overlay, (x - 10, y - text_height - 10), (x + text_width + 10, y + 10), (128, 128, 128), -1)
-            alpha = 0.5  # Прозрачность фона (0 полностью прозрачно, 1 полностью непрозрачно)
+            cv2.rectangle(overlay, (text_x - 10, text_y - text_height - 10), (text_x + text_width + 10, text_y + 10), (128, 128, 128), -1)
+            alpha = 0.5
             cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
+            cv2.putText(img, text, (text_x, text_y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
 
-            # Наносим белый текст поверх
-            cv2.putText(img, text, (x, y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
-
-            # ОТОБРАЖЕНИЕ изображение img
             cv2.imshow("Polygon", img)
-
             key = cv2.waitKey(1) & 0xFF
-
             if key == ord('q') or cv2.getWindowProperty("Polygon", cv2.WND_PROP_VISIBLE) < 1:
                 break
 
         cv2.destroyAllWindows()
-        original_points = [(int(x / self.scale_factor), int(y / self.scale_factor)) for x, y in self.points]
+        # Преобразование координат для возврата
+        original_points = []
+        for x, y in self.points:
+            orig_x = int((x - self.offset_x) / self.current_scale)
+            orig_y = int((y - self.offset_y) / self.current_scale)
+            original_points.append((orig_x, orig_y))
         return original_points
 
 
-
-class PolygonModifier:
-    def __init__(self, rgb_image, scale_factor=1.0, coords_df=None):
-        self.scale_factor = scale_factor
-        self.rgb_image = cv2.resize(rgb_image, None, fx=self.scale_factor, fy=self.scale_factor, interpolation=cv2.INTER_LINEAR)
-        self.bgr_image = cv2.cvtColor(self.rgb_image, cv2.COLOR_RGB2BGR)
-        self.img_copy = self.bgr_image.copy()
-
-        self.coords_df = coords_df  # DataFrame с координатами полигонов
-        self.selected_polygon_name = None
-        self.selected_polygon_points = None
-
-        # Создание кнопок
-        self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_selection)
-        self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
-        self.modify_button = guiButton(10, 130, 100, 50, 'Modify', self.modify_polygon)
-        self.cancel_button = guiButton(10, 190, 100, 50, 'Cancel', self.cancel_modification)
-
-        # Изначально кнопки "Delete" и "Modify" скрыты
-        self.delete_button.visible = False
-        self.modify_button.visible = False
-
-        cv2.namedWindow("Polygon")
-        cv2.setMouseCallback("Polygon", self.handle_mouse)
-
-    def start_selection(self):
-        """Активируем инструмент выбора полигонов"""
-        self.start_button.visible = False
-
-    def handle_mouse(self, event, x, y, flags, param):
-        """Обработка нажатий мыши для выбора полигона"""
-        if event == cv2.EVENT_LBUTTONDOWN:
-            # Проверяем кнопки
-            if self.start_button.is_clicked(x, y):
-                return
-            if self.delete_button.is_clicked(x, y):
-                return
-            if self.modify_button.is_clicked(x, y):
-                return
-            if self.cancel_button.is_clicked(x, y):
-                return
-
-            # Определение, находится ли клик внутри полигона
-            for col_x in self.coords_df.columns[::2]:
-                col_y = col_x.replace('_x', '_y')
-                polygon_points = self.coords_df[[col_x, col_y]].values.astype(np.float32) * self.scale_factor
-
-                if cv2.pointPolygonTest(np.array(polygon_points, np.int32), (x, y), False) >= 0:
-                    self.selected_polygon_name = col_x.rsplit('_', 1)[0]
-                    self.selected_polygon_points = polygon_points
-                    self.delete_button.visible = True
-                    self.modify_button.visible = True
-                    break
-
-    def delete_polygon(self):
-        """Удаление выбранного полигона"""
-        if self.selected_polygon_name:
-            col_x = f'{self.selected_polygon_name}_x'
-            col_y = f'{self.selected_polygon_name}_y'
-            # Удаляем полигон из DataFrame
-            self.coords_df.drop([col_x, col_y], axis=1, inplace=True)
-            cv2.destroyWindow("Polygon")  # Закрываем окно
-
-    def modify_polygon(self):
-        """Просто закрываем окно для дальнейшей обработки координат"""
-        cv2.destroyWindow("Polygon")  # Закрываем окно
-
-    def cancel_modification(self):
-        """Закрытие окна без изменений"""
-        self.selected_polygon_name = None
-        self.selected_polygon_points = None
-        cv2.destroyWindow("Polygon")  # Закрываем окно
-
-    def run(self):
-        """Основной цикл отрисовки интерфейса"""
-        while True:
-            img = self.img_copy.copy()
-
-            # Отрисовка всех полигонов
-            for col_x in self.coords_df.columns[::2]:
-                col_y = col_x.replace('_x', '_y')
-                polygon_points = self.coords_df[[col_x, col_y]].values.astype(np.float32) * self.scale_factor
-                color = (0, 255, 0) if col_x == f'{self.selected_polygon_name}_x' else (255, 0, 0)
-                cv2.polylines(img, [np.array(polygon_points, np.int32)], isClosed=True, color=color, thickness=2)
-
-                # Подпись имени региона в центре полигона, обработка NaN
-                center_x = int(np.nanmean(polygon_points[:, 0]))
-                center_y = int(np.nanmean(polygon_points[:, 1]))
-                text_position = (center_x, center_y)
-                location_name = col_x.rsplit('_', 1)[0]
-                cv2.putText(img, location_name, text_position, cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
-
-            # Отображение кнопок
-            self.start_button.draw(img)
-            self.delete_button.draw(img)
-            self.modify_button.draw(img)
-            self.cancel_button.draw(img)
-
-            cv2.imshow("Polygon", img)
-            key = cv2.waitKey(1) & 0xFF
-
-            if key == ord('q') or cv2.getWindowProperty("Polygon", cv2.WND_PROP_VISIBLE) < 1:
-                break
-
-        cv2.destroyAllWindows()
-
-# # Example of using the class
-# image_path = r"E:\iMAGES\4 months slide2 slice5\4 months slide2 slice5_Experiment-1271_synaptotag.png"
-# rgb_image = cv2.imread(image_path)  # Load the image into BGR
-# rgb_image = cv2.cvtColor(rgb_image, cv2.COLOR_BGR2RGB)  # Convert to RGB
-
-# drawer = PolygonDrawer(rgb_image)
-# polygon_points = drawer.run()
-# print("Coordinates of the polygon:", polygon_points)
 
 import cv2
 import numpy as np
 import math
 import keyboard
 
-# Предполагается, что классы ColorCycler, guiButton, функции draw_polygons_on_image, simplify_contour
-# и т.д. уже импортированы или определены в вашем проекте
 
 class ParallelogramEditor:
     def __init__(self, image, scale_factor=1.0, coords_df=None):

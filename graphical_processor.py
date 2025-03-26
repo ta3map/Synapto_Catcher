@@ -873,6 +873,7 @@ class PolygonDrawer:
         self.window_width = window_width
         self.window_height = window_height
 
+        self.zoom_val = 100  # 100% – исходный масштаб
 
         self.original_rgb_image = rgb_image
         orig_h, orig_w = rgb_image.shape[:2]
@@ -904,9 +905,16 @@ class PolygonDrawer:
         self.is_drawing = False
         self.tool_selected = False  # Устанавливается True после нажатия "Start"
         self.selected_vertex = None  # Индекс выбранной вершины
-        self.dragging = False  # Флаг перетаскивания вершины
+        self.dragging = False  # Флаг перетаскивания вершины (в режиме модификации)
         self.tolerance = 10  # Радиус для определения клика на вершину
 
+        # Флаги и переменные для drag изображения (когда не выбран режим рисования)
+        self.image_dragging = False
+        self.user_offset = None  # Если не None, содержит кортеж (offset_x, offset_y)
+        self.drag_start_x = None
+        self.drag_start_y = None
+        self.drag_start_offset = (0, 0)
+        
         # Создаем кнопки
         self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
@@ -923,7 +931,17 @@ class PolygonDrawer:
 
         cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
         cv2.moveWindow("Polygon", 100, 100)
-        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Обработчик мыши для рисования полигона
+
+        cv2.createTrackbar("Zoom", "Polygon", self.zoom_val, 500, self.on_trackbar)
+        cv2.setTrackbarMin('Zoom', 'Polygon', 50) 
+        
+        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Обработчик мыши
+    
+    def on_trackbar(self, val):
+        self.zoom_val = val
+        # self.user_offset = None # Сброс центрирования
+        self.update_display_image()
+
 
     def start_drawing(self):
         """Метод для начала рисования."""
@@ -937,9 +955,8 @@ class PolygonDrawer:
         # Преобразуем координаты нарисованного полигона обратно в координаты исходного изображения
         original_points = []
         for x, y in self.points:
-            # Вычитаем смещение и масштабируем обратно
-            orig_x = int((x - self.offset_x) / self.effective_scale)
-            orig_y = int((y - self.offset_y) / self.effective_scale)
+            orig_x = int((x - self.offset_x) / self.current_scale)
+            orig_y = int((y - self.offset_y) / self.current_scale)
             original_points.append((orig_x, orig_y))
         cv2.destroyAllWindows()
         return original_points
@@ -975,54 +992,70 @@ class PolygonDrawer:
         return self.points
 
     def mouse_callback(self, event, x, y, flags, param):
-        """Обработчик мыши для рисования нового полигона."""
-        if event == cv2.EVENT_LBUTTONDOWN:
-            # Проверка нажатия на кнопки
-            if self.start_button.is_clicked(x, y):
-                return
-            if self.delete_button.is_clicked(x, y):
-                return
-            if self.select_all_button.is_clicked(x, y):
-                return
-            if self.apply_button.is_clicked(x, y):
-                return
-            if self.cancel_button.is_clicked(x, y):
-                return
-            if self.modify_button.is_clicked(x, y):
-                return
+        """Обработчик мыши для рисования нового полигона и перетаскивания изображения."""
+        # Сначала проверяем нажатия на кнопки
+        if event == cv2.EVENT_LBUTTONDOWN and (
+            self.start_button.is_clicked(x, y) or 
+            self.delete_button.is_clicked(x, y) or 
+            self.select_all_button.is_clicked(x, y) or 
+            self.apply_button.is_clicked(x, y) or 
+            self.cancel_button.is_clicked(x, y) or 
+            self.modify_button.is_clicked(x, y)
+        ):
+            return
 
-            if self.tool_selected:
+        # Если режим рисования активирован, то работаем с полигоном
+        if self.tool_selected:
+            if event == cv2.EVENT_LBUTTONDOWN:
                 self.is_drawing = True
                 self.points = [(x, y)]  # Начинаем новый полигон
 
-        elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
-            if self.is_drawing:
-                self.points.append((x, y))
+            elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
+                if self.is_drawing:
+                    self.points.append((x, y))
 
-        elif event == cv2.EVENT_LBUTTONUP:
-            if self.is_drawing:
-                self.is_drawing = False
-                if len(self.points) > 1:
-                    self.delete_button.visible = True
-                    self.apply_button.visible = True
-                    self.modify_button.visible = True
+            elif event == cv2.EVENT_LBUTTONUP:
+                if self.is_drawing:
+                    self.is_drawing = False
+                    if len(self.points) > 1:
+                        self.delete_button.visible = True
+                        self.apply_button.visible = True
+                        self.modify_button.visible = True
+        else:
+            # Если режим рисования не выбран, реализуем перетаскивание изображения
+            if event == cv2.EVENT_LBUTTONDOWN:
+                self.image_dragging = True
+                self.drag_start_x = x
+                self.drag_start_y = y
+                # Если пользовательское смещение ещё не задано, используем текущее
+                if self.user_offset is None:
+                    self.user_offset = (self.offset_x, self.offset_y)
+                self.drag_start_offset = self.user_offset
+
+            elif event == cv2.EVENT_MOUSEMOVE:
+                if self.image_dragging:
+                    dx = x - self.drag_start_x
+                    dy = y - self.drag_start_y
+                    self.user_offset = (self.drag_start_offset[0] + dx,
+                                        self.drag_start_offset[1] + dy)
+                    # Обновляем смещение и отображение с учетом пользовательского сдвига
+                    self.offset_x, self.offset_y = self.user_offset
+                    self.update_display_image()
+
+            elif event == cv2.EVENT_LBUTTONUP:
+                self.image_dragging = False
 
     def mod_mouse_callback(self, event, x, y, flags, param):
         """Обработчик мыши для модификации полигона."""
-        if event == cv2.EVENT_LBUTTONDOWN:
-            if self.start_button.is_clicked(x, y):
-                return
-            if self.delete_button.is_clicked(x, y):
-                return
-            if self.select_all_button.is_clicked(x, y):
-                return
-            if self.apply_button.is_clicked(x, y):
-                return
-            if self.cancel_button.is_clicked(x, y):
-                return
-            if self.modify_button.is_clicked(x, y):
-                return
+        if self.start_button.is_clicked(x, y) or \
+           self.delete_button.is_clicked(x, y) or \
+           self.select_all_button.is_clicked(x, y) or \
+           self.apply_button.is_clicked(x, y) or \
+           self.cancel_button.is_clicked(x, y) or \
+           self.modify_button.is_clicked(x, y):
+            return
 
+        if event == cv2.EVENT_LBUTTONDOWN:
             for i, point in enumerate(self.points):
                 if distance(np.array(point), np.array([x, y])) < self.tolerance:
                     self.selected_vertex = i
@@ -1053,24 +1086,66 @@ class PolygonDrawer:
             self.selected_vertex = None
             
     def transform_coords_df(self, coords_df, effective_scale, offset_x, offset_y):
-                    transformed_df = coords_df.copy()
-                    # Проходим по каждому столбцу с координатами x
-                    for col_x in coords_df.columns[::2]:
-                        col_y = col_x.replace('_x', '_y')  # находим соответствующий столбец с координатами y
-                        if col_x in coords_df.columns and col_y in coords_df.columns:
-                            transformed_df[col_x] = coords_df[col_x] * effective_scale + offset_x
-                            transformed_df[col_y] = coords_df[col_y] * effective_scale + offset_y
-                    return transformed_df
+        transformed_df = coords_df.copy()
+        # Проходим по каждому столбцу с координатами x
+        for col_x in coords_df.columns[::2]:
+            col_y = col_x.replace('_x', '_y')  # находим соответствующий столбец с координатами y
+            if col_x in coords_df.columns and col_y in coords_df.columns:
+                transformed_df[col_x] = coords_df[col_x] * effective_scale + offset_x
+                transformed_df[col_y] = coords_df[col_y] * effective_scale + offset_y
+        return transformed_df
             
+    def update_display_image(self):
+        # Итоговый масштаб с учётом зума
+        self.current_scale = self.effective_scale * (self.zoom_val / 100.0)
+        orig_h, orig_w = self.original_rgb_image.shape[:2]
+        new_w = int(orig_w * self.current_scale)
+        new_h = int(orig_h * self.current_scale)
+
+        # Масштабируем изображение
+        resized_image = cv2.resize(self.original_rgb_image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+        
+        # Определяем смещение: если задано пользователем, то используем его, иначе центрируем
+        if self.user_offset is not None:
+            offset_x, offset_y = self.user_offset
+        else:
+            offset_x = (self.window_width - new_w) // 2
+            offset_y = (self.window_height - new_h) // 2
+        # Сохраняем смещение для обратного преобразования координат
+        self.offset_x, self.offset_y = offset_x, offset_y
+
+        # Создаем фон нужного размера
+        self.display_image = np.zeros((self.window_height, self.window_width, 3), dtype=resized_image.dtype)
+        
+        # Определяем область назначения (dest) в окне
+        dest_x_start = max(0, offset_x)
+        dest_y_start = max(0, offset_y)
+        dest_x_end = min(self.window_width, offset_x + new_w)
+        dest_y_end = min(self.window_height, offset_y + new_h)
+        
+        # Определяем соответствующую область источника (src) в масштабированном изображении
+        src_x_start = max(0, -offset_x)  # если offset отрицательный, начинаем не с 0, а с -offset
+        src_y_start = max(0, -offset_y)
+        src_x_end = src_x_start + (dest_x_end - dest_x_start)
+        src_y_end = src_y_start + (dest_y_end - dest_y_start)
+        
+        self.display_image[dest_y_start:dest_y_end, dest_x_start:dest_x_end] = \
+            resized_image[src_y_start:src_y_end, src_x_start:src_x_end]
+        
+        # Обновляем итоговую копию для отображения
+        self.bgr_image = cv2.cvtColor(self.display_image, cv2.COLOR_RGB2BGR)
+        self.img_copy = self.bgr_image.copy()
+
+
     def run(self):
         while True:
             img = self.img_copy.copy()
 
             # Рисуем сохраненные полигоны (если есть)
             color_cycler = ColorCycler(num_colors=10)
-            
-            transformed_df = self.transform_coords_df(self.coords_df, self.effective_scale, self.offset_x, self.offset_y)
-            img = draw_polygons_on_image(transformed_df, 1, color_cycler, img, simplify_contour)
+            if self.coords_df:
+                transformed_df = self.transform_coords_df(self.coords_df, self.current_scale, self.offset_x, self.offset_y)
+                img = draw_polygons_on_image(transformed_df, 1, color_cycler, img, simplify_contour)
 
             # Рисуем кнопки
             self.start_button.draw(img)
@@ -1111,11 +1186,10 @@ class PolygonDrawer:
         # Преобразование координат для возврата
         original_points = []
         for x, y in self.points:
-            orig_x = int((x - self.offset_x) / self.effective_scale)
-            orig_y = int((y - self.offset_y) / self.effective_scale)
+            orig_x = int((x - self.offset_x) / self.current_scale)
+            orig_y = int((y - self.offset_y) / self.current_scale)
             original_points.append((orig_x, orig_y))
         return original_points
-
 
 
 
