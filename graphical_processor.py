@@ -1000,11 +1000,6 @@ class PolygonDrawer:
             else:
                 self.coords_df = pd.concat([self.coords_df, self.new_polygons_df], axis=1)
 
-            # 4) Сбрасываем временный new_polygons_df, если хотите
-            self.new_polygons_df = pd.DataFrame()
-            self.new_polygons.clear()
-            self.new_polygon_names.clear()
-
             # 5) Очищаем текущие точки для возможности рисовать новый полигон
             self.points = []
 
@@ -1100,7 +1095,7 @@ class PolygonDrawer:
                 # Если пользовательское смещение ещё не задано, используем текущее
                 self.drag_start_offset = (self.offset_x, self.offset_y)
                 self.user_offset = (self.offset_x, self.offset_y)
-                
+                # Находим полигон на который кликнули
                 self.selected_polygon_df = self.find_clicked_polygon_df(
                     x, y, 
                     coords_df=self.coords_df,
@@ -1108,6 +1103,7 @@ class PolygonDrawer:
                     offset_y=self.offset_y,
                     current_scale=self.current_scale
                 )
+                self.modify_button.visible = not self.selected_polygon_df.empty
                 
             elif event == cv2.EVENT_MOUSEMOVE:
                 if self.image_dragging:
@@ -1251,17 +1247,40 @@ class PolygonDrawer:
 
 
     def find_clicked_polygon_df(self, x, y, coords_df, offset_x, offset_y, current_scale):
+        """Возвращает DataFrame с колонками <имя>_x, <имя>_y, если клик попал в соответствующий полигон.
+        Иначе — пустой DataFrame без строк и столбцов."""
+        if coords_df is None or coords_df.empty:
+            return pd.DataFrame()
+
+        # Преобразуем координаты клика из экранных в исходные
         orig_x = (x - offset_x) / current_scale
         orig_y = (y - offset_y) / current_scale
-        x_cols = [c for c in coords_df.columns if c.endswith('_x')]
+
+        # Ищем, какой полигон (колонки *_x, *_y) содержит эту точку
+        x_cols = [col for col in coords_df.columns if col.endswith('_x')]
         for x_col in x_cols:
-            base_name = x_col[:-2]
+            base_name = x_col[:-2]  # 'Roof', 'Wall' и т.п.
             y_col = base_name + '_y'
-            poly_points_np = coords_df[[x_col, y_col]].dropna().values
-            contour = poly_points_np.astype(np.int32)
-            if cv2.pointPolygonTest(contour, (orig_x, orig_y), False) >= 0:
-                return pd.DataFrame(poly_points_np, columns=['sel_x', 'sel_y'])
-        return pd.DataFrame(columns=['sel_x', 'sel_y'])
+            if y_col not in coords_df.columns:
+                continue
+
+            # Извлекаем все (x, y), убираем NaN
+            poly_points = coords_df[[x_col, y_col]].dropna().values
+            if len(poly_points) < 3:
+                continue  # меньше 3 точек не формируют полигон
+
+            # pointPolygonTest >= 0 => точка внутри или на границе
+            if cv2.pointPolygonTest(poly_points.astype(np.int32), (orig_x, orig_y), False) >= 0:
+                # Возвращаем ровно эти колонки; они уже будут названы <имя>_x, <имя>_y
+                # (и будут содержать только непустые строки).
+                df_poly = coords_df[[x_col, y_col]].dropna().reset_index(drop=True)
+                # Важно: колонки (x_col, y_col) сохранятся как есть (например, "Roof_x", "Roof_y")
+                # Без хранения отдельного "selected_polygon_name" – всё в именах столбцов.
+                return df_poly
+
+        # Если клик не попал ни в один полигон, возвращаем пустой DF
+        return pd.DataFrame()
+
 
     def run(self):
         while True:
@@ -1284,7 +1303,7 @@ class PolygonDrawer:
                         self.offset_x, 
                         self.offset_y
                     )
-                pts = df_trans[['sel_x', 'sel_y']].dropna().values.astype(int)
+                pts = df_trans[self.selected_polygon_df.columns].dropna().values.astype(int)
                 if len(pts) > 1:
                     cv2.polylines(img, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
                 
