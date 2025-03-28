@@ -927,7 +927,6 @@ class ROIAnalyzerApp:
     def select_location_action(self):
         df, rows_to_process = self.prepare_data()
         total = len(rows_to_process)
-        selected_location = ''
         for idx, row_idx in enumerate(rows_to_process):
             file_path = df.iloc[row_idx]['filepath']
             print(file_path)
@@ -940,7 +939,7 @@ class ROIAnalyzerApp:
 
             stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch)
             
-            coords_df, selected_location = select_location(file_path, self.root, initial_location=selected_location)
+            coords_df = select_location(file_path, self.root)
             
             if coords_df.empty:
                 print("Processing stopped")

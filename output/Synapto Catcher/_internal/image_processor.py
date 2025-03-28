@@ -677,27 +677,30 @@ def select_location(file_path, root, initial_location = ''):
         image_in = read_image(image_file_path, as_pil = True, priority_keys=priority_keys).convert('RGB')
         image_np = np.array(image_in)
 
-        selected_location, screen_width, screen_height = get_location_name(root, location_names)
-        if not selected_location:
-            print('Marking stopped')
-            return pd.DataFrame(), initial_location  # Return an empty DataFrame
+        #selected_location, screen_width, screen_height = get_location_name(root, location_names)
+        #if not selected_location:
+        #    print('Marking stopped')
+        #    return pd.DataFrame(), initial_location  # Return an empty DataFrame
         # Save the unique location name in local parameters
-        location_names.append(selected_location)
+        #location_names.append(selected_location)
             
         coords_df = load_coordinates_from_excel(excel_path, root)
         
+        # Определяем доступные разрешения экрана
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
         # Initialize the drawing tool
-        drawer = PolygonDrawer(image_np, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
-        coords = drawer.run()  # Wait for drawing to complete
+        drawer = PolygonDrawer(image_np, root, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
+        coords_df_new = drawer.run()  # Wait for drawing to complete
 
-        if not coords:  # If the coordinates are empty
-            print("No coordinates were drawn")
-            return pd.DataFrame(), initial_location  # Return an empty DataFrame
+        #if not coords:  # If the coordinates are empty
+        #    print("No coordinates were drawn")
+        #    return pd.DataFrame(), initial_location  # Return an empty DataFrame
         
         # save the last region in global parameters
-        save_params({'selected_location': selected_location})
+        # save_params({'selected_location': selected_location})
         # Преобразуем координаты в DataFrame
-        coords_df_new = pd.DataFrame(coords, columns=[f'{selected_location}_x', f'{selected_location}_y'])
+        # coords_df_new = pd.DataFrame(coords, columns=[f'{selected_location}_x', f'{selected_location}_y'])
 
         # Initialize ColorCycler
         color_cycler = ColorCycler(num_colors=10)
@@ -720,8 +723,8 @@ def select_location(file_path, root, initial_location = ''):
             with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
                 coords_df_new.to_excel(writer, sheet_name='ROI_Coordinates', index=False)
 
-    print(f"Coordinates for {selected_location} successfully saved.")
-    return coords_df_new, selected_location
+    print(f"Coordinates for region(s) successfully saved.")
+    return coords_df_new
 
 # Second step - filtering
 def filter_after_roi_selection(filter_radius, file_path, location=''):
