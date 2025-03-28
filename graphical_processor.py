@@ -865,11 +865,15 @@ def is_on_edge(point, poly, tolerance=5):
 
 from tkinter import simpledialog
 
+import cv2
+import numpy as np
+import pandas as pd
+from tkinter import simpledialog
+
 class PolygonDrawer:
     def __init__(self, rgb_image, root, window_width=1200, window_height=800, coords_df=None, comments=''):
         
         self.root = root #tkinter root
-        
         # Сохраняем размеры окна
         self.window_width = window_width
         self.window_height = window_height
@@ -905,6 +909,7 @@ class PolygonDrawer:
         self.points = []
         self.new_polygons = []  # Список для хранения всех добавленных полигонов
         self.new_polygons_df = pd.DataFrame()
+        self.selected_polygon_df = pd.DataFrame()
         self.new_polygon_names = []# Добавляем список для хранения имён новых полигонов
         self.current_polygon_name = None  # для текущего полигона
         
@@ -977,24 +982,40 @@ class PolygonDrawer:
     def apply_polygon(self):
         """Преобразует текущий нарисованный полигон, добавляет его в список и очищает текущее рисование."""
         if len(self.points) > 0:
-            # Преобразуем координаты нарисованного полигона обратно в координаты исходного изображения
+            # 1) Преобразуем координаты нарисованного полигона обратно в координаты исходного изображения
             original_points = []
             for x, y in self.points:
                 orig_x = int((x - self.offset_x) / self.current_scale)
                 orig_y = int((y - self.offset_y) / self.current_scale)
                 original_points.append((orig_x, orig_y))
-            # Добавляем полученный полигон в список новых полигонов
+
+            # 2) Добавляем полученный полигон в список новых полигонов
             self.new_polygons.append(original_points)
             self.new_polygons_df = self.convert_polygons_to_df(self.new_polygons, self.new_polygon_names)
-            # Очищаем текущие точки для возможности рисовать новый полигон
+
+            # 3) "Приклеиваем" новые полигоны к self.coords_df,
+            #    чтобы у нас было ЕДИНОЕ хранилище всех полигонов
+            if self.coords_df is None or self.coords_df.empty:
+                self.coords_df = self.new_polygons_df.copy()
+            else:
+                self.coords_df = pd.concat([self.coords_df, self.new_polygons_df], axis=1)
+
+            # 4) Сбрасываем временный new_polygons_df, если хотите
+            self.new_polygons_df = pd.DataFrame()
+            self.new_polygons.clear()
+            self.new_polygon_names.clear()
+
+            # 5) Очищаем текущие точки для возможности рисовать новый полигон
             self.points = []
-            # Обновляем видимость кнопок (при необходимости)
+
+            # 6) Обновляем видимость кнопок
             self.start_button.visible = True
             self.delete_button.visible = False
             self.apply_button.visible = False
             self.modify_button.visible = False
             self.cancel_button.visible = True
-            self.tool_selected  = False
+            self.tool_selected = False
+
 
 
     def modify_selected_polygon(self):
@@ -1041,6 +1062,7 @@ class PolygonDrawer:
         ):
             return
         
+                    
         # Меняем зум колесиком мыши
         if event == cv2.EVENT_MOUSEWHEEL:
             if flags > 0:
@@ -1078,7 +1100,15 @@ class PolygonDrawer:
                 # Если пользовательское смещение ещё не задано, используем текущее
                 self.drag_start_offset = (self.offset_x, self.offset_y)
                 self.user_offset = (self.offset_x, self.offset_y)
-
+                
+                self.selected_polygon_df = self.find_clicked_polygon_df(
+                    x, y, 
+                    coords_df=self.coords_df,
+                    offset_x=self.offset_x,
+                    offset_y=self.offset_y,
+                    current_scale=self.current_scale
+                )
+                
             elif event == cv2.EVENT_MOUSEMOVE:
                 if self.image_dragging:
                     dx = x - self.drag_start_x
@@ -1220,21 +1250,44 @@ class PolygonDrawer:
         return df
 
 
+    def find_clicked_polygon_df(self, x, y, coords_df, offset_x, offset_y, current_scale):
+        orig_x = (x - offset_x) / current_scale
+        orig_y = (y - offset_y) / current_scale
+        x_cols = [c for c in coords_df.columns if c.endswith('_x')]
+        for x_col in x_cols:
+            base_name = x_col[:-2]
+            y_col = base_name + '_y'
+            poly_points_np = coords_df[[x_col, y_col]].dropna().values
+            contour = poly_points_np.astype(np.int32)
+            if cv2.pointPolygonTest(contour, (orig_x, orig_y), False) >= 0:
+                return pd.DataFrame(poly_points_np, columns=['sel_x', 'sel_y'])
+        return pd.DataFrame(columns=['sel_x', 'sel_y'])
+
     def run(self):
         while True:
             img = self.img_copy.copy()
 
-            # Рисуем сохраненные полигоны (если есть)
+            # Рисуем полигоны
             color_cycler = ColorCycler(num_colors=10)
             if self.coords_df is not None and not self.coords_df.empty:
-                transformed_df = self.transform_coords_df(self.coords_df, self.current_scale, self.offset_x, self.offset_y)
+                transformed_df = self.transform_coords_df(self.coords_df,
+                                                        self.current_scale,
+                                                        self.offset_x,
+                                                        self.offset_y)
                 img = draw_polygons_on_image(transformed_df, 1, color_cycler, img, simplify_contour)
 
-            # Рисуем уже добавленные новые полигоны
-            if self.new_polygons:                
-                new_transformed_df = self.transform_coords_df(self.new_polygons_df, self.current_scale, self.offset_x, self.offset_y)
-                img = draw_polygons_on_image(new_transformed_df, 1, color_cycler, img, simplify_contour)
-
+            # Выделенный полигон подсвечивается
+            if self.selected_polygon_df is not None and not self.selected_polygon_df.empty:                
+                df_trans = self.transform_coords_df(
+                        self.selected_polygon_df, 
+                        self.current_scale, 
+                        self.offset_x, 
+                        self.offset_y
+                    )
+                pts = df_trans[['sel_x', 'sel_y']].dropna().values.astype(int)
+                if len(pts) > 1:
+                    cv2.polylines(img, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
+                
             # Рисуем кнопки
             self.start_button.draw(img)
             self.delete_button.draw(img)
