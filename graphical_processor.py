@@ -928,14 +928,14 @@ class PolygonDrawer:
         
         self.last_mouse_x = self.offset_x
         self.last_mouse_y = self.offset_y
-            
+        
         # Создаем кнопки
         self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
         self.select_all_button = guiButton(10, 130, 100, 50, 'Select all', self.select_all)
         self.apply_button = guiButton(10, 190, 100, 50, 'Apply', self.apply_polygon)
-        self.cancel_button = guiButton(10, 250, 100, 50, 'Exit', self.cancel_polygon)
-        self.modify_button = guiButton(10, 310, 100, 50, 'Modify', self.modify_selected_polygon)  # Новая кнопка
+        self.cancel_button = guiButton(10, 400, 150, 50, 'Save and Exit', self.cancel_polygon)
+        self.modify_button = guiButton(10, 310, 100, 50, 'Modify', self.modify_selected_polygon)
 
         # Управляем видимостью кнопок
         self.cancel_button.visible = True
@@ -1196,9 +1196,10 @@ class PolygonDrawer:
                     self.is_drawing = False
                     if len(self.points) > 1:
                         self.points = simplify_contour(self.points, epsilon=1.0)
-                        self.delete_button.visible = True
-                        self.apply_button.visible = True
-                        self.modify_button.visible = True
+                        # self.delete_button.visible = True
+                        # self.apply_button.visible = True
+                        # self.modify_button.visible = True
+                        self.apply_polygon()# сразу применяем полигон
         else:
             # Если режим рисования не выбран, реализуем перетаскивание изображения
             if event == cv2.EVENT_LBUTTONDOWN:
