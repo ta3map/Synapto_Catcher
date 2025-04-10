@@ -685,29 +685,27 @@ def select_location(file_path, root, initial_location = ''):
         # Initialize the drawing tool
         drawer = PolygonDrawer(image_np, root, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
         coords_df, coords_df_new = drawer.run()  # Wait for drawing to complete
-        if not coords_df_new.empty:
-            
-            # Объединяем старые координаты с новыми
-            combined_df = pd.concat([coords_df, coords_df_new], axis=1)
-            
-            # Initialize ColorCycler
-            color_cycler = ColorCycler(num_colors=10)
+        
+        # Объединяем старые координаты с новыми
+        combined_df = pd.concat([coords_df, coords_df_new], axis=1)
+        
+        # Initialize ColorCycler
+        color_cycler = ColorCycler(num_colors=10)
 
-            # Отрисовка старых и новых полигонов
-            all_roi_img = image_np.copy()
-            all_roi_img = cv2.cvtColor(all_roi_img, cv2.COLOR_RGB2BGR)
-            all_roi_img = draw_polygons_on_image(coords_df, 1, color_cycler, all_roi_img, simplify_contour)
-            all_roi_img = draw_polygons_on_image(coords_df_new, 1, color_cycler, all_roi_img, simplify_contour)
-            all_roi_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_with_roi.png")
-            save_image(all_roi_img, all_roi_image_path, Step = "Locations", priority_keys=stack_priority_keys)
-            
-            # Перезаписываем Excel-файл полностью с комбинированными данными
-            with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
-                combined_df.to_excel(writer, sheet_name='ROI_Coordinates', index=False)
+        # Отрисовка старых и новых полигонов
+        all_roi_img = image_np.copy()
+        all_roi_img = cv2.cvtColor(all_roi_img, cv2.COLOR_RGB2BGR)
+        all_roi_img = draw_polygons_on_image(coords_df, 1, color_cycler, all_roi_img, simplify_contour)
+        all_roi_img = draw_polygons_on_image(coords_df_new, 1, color_cycler, all_roi_img, simplify_contour)
+        all_roi_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_with_roi.png")
+        save_image(all_roi_img, all_roi_image_path, Step = "Locations", priority_keys=stack_priority_keys)
+        
+        # Перезаписываем Excel-файл полностью с комбинированными данными
+        with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
+            combined_df.to_excel(writer, sheet_name='ROI_Coordinates', index=False)
 
-            print(f"The coordinates of new region(s) have been successfully saved.")
-        else:
-            print(f"No new coordinates to save.")
+        print(f"The coordinates of new region(s) have been successfully saved.")
+        
     return coords_df_new
 
 # Second step - filtering
