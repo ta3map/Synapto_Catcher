@@ -517,13 +517,13 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
     return combined_image_s
 
 def load_coordinates_from_excel(excel_path, root):
-    coords_df = None
+    coords_df = pd.DataFrame()
     if os.path.exists(excel_path):
         try:
             coords_df = pd.read_excel(excel_path, sheet_name='ROI_Coordinates')
         except Exception as e:
             messagebox.showerror("Error", f"Could not read coordinates from Excel file: {e}", parent=root)
-            return None
+            return pd.DataFrame()
     return coords_df
 
 # Первый шаг
@@ -685,7 +685,7 @@ def select_location(file_path, root, initial_location = ''):
         # Initialize the drawing tool
         drawer = PolygonDrawer(image_np, root, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
         coords_df, coords_df_new = drawer.run()  # Wait for drawing to complete
-        
+
         # Объединяем старые координаты с новыми
         combined_df = pd.concat([coords_df, coords_df_new], axis=1)
         
@@ -704,8 +704,8 @@ def select_location(file_path, root, initial_location = ''):
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
             combined_df.to_excel(writer, sheet_name='ROI_Coordinates', index=False)
 
-        print(f"The coordinates of new region(s) have been successfully saved.")
-        
+        print(f"Success")
+
     return coords_df_new
 
 # Second step - filtering

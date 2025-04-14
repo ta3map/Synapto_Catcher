@@ -761,7 +761,6 @@ def create_region_mask(image_shape, coords, simplify=True, epsilon=1.0):
     
     return mask
 
-
 class ColorCycler:
     def __init__(self, num_colors=10):
         # Инициализируем палитру из N цветов
@@ -799,8 +798,6 @@ class guiButton:
                 self.callback()
             return True
         return False
-
-
 
 def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_contour):
 
@@ -842,13 +839,8 @@ def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_
                         0.6, (255, 255, 255), 2)
 
     return img
-
-
-
-
 def distance(p1, p2):
     return np.linalg.norm(p1 - p2)
-
 def is_on_edge(point, poly, tolerance=5):
     # Определение, попадает ли клик на ребро полигона
     for i in range(len(poly)):
@@ -862,13 +854,6 @@ def is_on_edge(point, poly, tolerance=5):
                 nearest_point = poly[i] + t * vec
                 return i, nearest_point.astype(np.int32)
     return None, None
-
-from tkinter import simpledialog
-
-import cv2
-import numpy as np
-import pandas as pd
-from tkinter import simpledialog
 
 class PolygonDrawer:
     def __init__(self, rgb_image, root, window_width=1200, window_height=800, coords_df=None, comments=''):
@@ -904,7 +889,8 @@ class PolygonDrawer:
         self.img_copy = self.bgr_image.copy()
         self.comments = comments
 
-        self.coords_df = coords_df  # координаты других полигонов
+        self.coords_df = coords_df.copy()  # оригинал для возможных изменений
+        self.original_coords_df = coords_df.copy()  # оригинал, который останется неизменным
 
         self.points = []
         self.new_polygons = []  # Список для хранения всех добавленных полигонов
@@ -930,18 +916,21 @@ class PolygonDrawer:
         self.last_mouse_y = self.offset_y
         
         # Создаем кнопки
-        self.start_button = guiButton(10, 10, 100, 50, 'Start', self.start_drawing)
+        self.start_button = guiButton(10, 10, 150, 50, 'Add region', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
         self.select_all_button = guiButton(10, 130, 100, 50, 'Select all', self.select_all)
         self.apply_button = guiButton(10, 190, 100, 50, 'Apply', self.apply_polygon)
-        self.cancel_button = guiButton(10, 400, 150, 50, 'Save and Exit', self.cancel_polygon)
         self.modify_button = guiButton(10, 310, 100, 50, 'Modify', self.modify_selected_polygon)
+        self.exit_s_button = guiButton(10, 410, 150, 50, 'Save and Exit', self.exit_s)
+        self.exit_ns_button = guiButton(10, 470, 150, 50, 'Don''t save', self.exit_ns)
+        
 
         # Управляем видимостью кнопок
-        self.cancel_button.visible = True
+        self.exit_s_button.visible = True
+        self.exit_ns_button.visible = True
         self.apply_button.visible = False
         self.delete_button.visible = False
-        self.modify_button.visible = False  # Скрыта по умолчанию
+        self.modify_button.visible = False
 
         cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
         cv2.moveWindow("Polygon", 100, 100)
@@ -973,11 +962,9 @@ class PolygonDrawer:
         self.tool_selected = True
         self.start_button.visible = False
         self.select_all_button.visible = False
-        self.cancel_button.visible = False
+        self.exit_s_button.visible = False
+        self.exit_ns_button.visible = False
         cv2.setMouseCallback("Polygon", self.mouse_callback)
-
-
-
 
     def apply_polygon(self):
         """Преобразует текущий нарисованный полигон, добавляет его в список и очищает текущее рисование."""
@@ -1003,7 +990,8 @@ class PolygonDrawer:
             self.delete_button.visible = False
             self.apply_button.visible = False
             self.modify_button.visible = False
-            self.cancel_button.visible = True
+            self.exit_s_button.visible = True
+            self.exit_ns_button.visible = True
             self.tool_selected = False
 
             # Возвращаем основной обработчик мыши
@@ -1071,7 +1059,6 @@ class PolygonDrawer:
         """Удаляет ВЫБРАННЫЙ полигон (из self.selected_polygon_df)
         из соответствующего DataFrame (coords_df или new_polygons_df)."""
         if self.selected_polygon_df is None or self.selected_polygon_df.empty:
-            print("Нет выбранного полигона для удаления.")
             return # Ничего не делать, если полигон не выбран
 
         # Получаем имена колонок удаляемого полигона (например, ['Roof_x', 'Roof_y'])
@@ -1089,11 +1076,10 @@ class PolygonDrawer:
                 # Если после удаления не осталось колонок, делаем DataFrame пустым
                 if self.coords_df.shape[1] == 0:
                     self.coords_df = pd.DataFrame()
-                print(f"Полигон {cols_to_delete[0][:-2]} удален из coords_df.")
+                print(f"Polygon {cols_to_delete[0][:-2]} removed.")
                 deleted_from_old = True
 
         # Пытаемся удалить из новых полигонов (new_polygons_df), если не удалили из старых
-        # Или если он мог быть и там, и там (хотя это странный случай)
         if not deleted_from_old and self.new_polygons_df is not None and not self.new_polygons_df.empty:
             # Проверяем, есть ли *все* нужные колонки в этом DataFrame
             if all(col in self.new_polygons_df.columns for col in cols_to_delete):
@@ -1102,23 +1088,19 @@ class PolygonDrawer:
                 # Если после удаления не осталось колонок, делаем DataFrame пустым
                 if self.new_polygons_df.shape[1] == 0:
                     self.new_polygons_df = pd.DataFrame()
-                print(f"Полигон {cols_to_delete[0][:-2]} удален из new_polygons_df.")
+                print(f"Polygon {cols_to_delete[0][:-2]} removed.")
                 deleted_from_new = True
 
                 # Также нужно удалить соответствующее имя и полигон из списков,
                 # используемых для создания new_polygons_df
                 poly_name_to_remove = cols_to_delete[0][:-2]
-                try:
-                    idx_to_remove = self.new_polygon_names.index(poly_name_to_remove)
-                    self.new_polygon_names.pop(idx_to_remove)
-                    self.new_polygons.pop(idx_to_remove)
-                    print(f"Связанные данные для {poly_name_to_remove} удалены из списков new_polygon_names и new_polygons.")
-                except ValueError:
-                    print(f"Предупреждение: Не удалось найти {poly_name_to_remove} в списке new_polygon_names для удаления.")
+                idx_to_remove = self.new_polygon_names.index(poly_name_to_remove)
+                self.new_polygon_names.pop(idx_to_remove)
+                self.new_polygons.pop(idx_to_remove)
 
 
         if not deleted_from_old and not deleted_from_new:
-            print(f"Предупреждение: Не удалось найти колонки {cols_to_delete} для удаления ни в coords_df, ни в new_polygons_df.")
+            print(f"Warning: Could not find {cols_to_delete} columns to delete in either coords_df or new_polygons_df.")
 
         # Сбрасываем выбор полигона
         self.selected_polygon_df = pd.DataFrame()
@@ -1131,7 +1113,8 @@ class PolygonDrawer:
         self.delete_button.visible = False # Скрываем кнопку Delete после удаления
         self.apply_button.visible = False
         self.modify_button.visible = False # Скрываем кнопку Modify после удаления
-        self.cancel_button.visible = True # Exit должен быть виден
+        self.exit_s_button.visible = True # Exit должен быть виден
+        self.exit_ns_button.visible = True
 
         # Переключаем обработчик мыши обратно на основной (если вдруг был другой)
         cv2.setMouseCallback("Polygon", self.mouse_callback)
@@ -1148,12 +1131,16 @@ class PolygonDrawer:
         self.start_button.visible = False
         self.apply_button.visible = True
 
-    def cancel_polygon(self):
-        """Отменяет рисование полигона."""
-        self.points = []
+    def exit_s(self):
+        # Закрываем окно, run вернет полигон
         cv2.destroyAllWindows()
-        return self.points
-
+        
+    def exit_ns(self):
+        # Закрываем окно, run вернет пустой полигон
+        cv2.destroyAllWindows()
+        self.new_polygons_df = pd.DataFrame()# без новых полигонов, они пустые
+        self.coords_df = self.original_coords_df.copy()# возвращаем значения в старом виде
+        
     def mouse_callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE:
             self.last_mouse_x = x
@@ -1165,7 +1152,8 @@ class PolygonDrawer:
             self.delete_button.is_clicked(x, y) or 
             self.select_all_button.is_clicked(x, y) or 
             self.apply_button.is_clicked(x, y) or 
-            self.cancel_button.is_clicked(x, y) or 
+            self.exit_s_button.is_clicked(x, y) or 
+            self.exit_ns_button.is_clicked(x, y) or 
             self.modify_button.is_clicked(x, y)
         ):
             return
@@ -1251,7 +1239,8 @@ class PolygonDrawer:
             self.delete_button.is_clicked(x, y) or 
             self.select_all_button.is_clicked(x, y) or 
             self.apply_button.is_clicked(x, y) or 
-            self.cancel_button.is_clicked(x, y) or 
+            self.exit_s_button.is_clicked(x, y) or 
+            self.exit_ns_button.is_clicked(x, y) or 
             self.modify_button.is_clicked(x, y)):
             return
 
@@ -1434,9 +1423,10 @@ class PolygonDrawer:
             # Рисуем кнопки
             self.start_button.draw(img)
             self.delete_button.draw(img)
-            self.select_all_button.draw(img)
+            # self.select_all_button.draw(img) # отключил кнопку в связи с изменением старой логики
             self.apply_button.draw(img)
-            self.cancel_button.draw(img)
+            self.exit_s_button.draw(img)
+            self.exit_ns_button.draw(img)
             self.modify_button.draw(img)
 
             # Рисуем текущий полигон
