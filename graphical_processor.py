@@ -899,6 +899,21 @@ class PolygonDrawer:
         self.new_polygon_names = []# Добавляем список для хранения имён новых полигонов
         self.current_polygon_name = None  # для текущего полигона
         
+        # Имена оригинальных полигонов
+        self.original_polygon_names = []
+        if self.coords_df is not None and not self.coords_df.empty:
+            # Используем set для автоматического добавления только уникальных имен
+            original_names_set = set()
+            for col_name in self.coords_df.columns:
+                if col_name.endswith('_x'):
+                    base_name = col_name[:-2] # Убираем '_x' для получения имени полигона
+                    # Убедимся, что парная _y колонка тоже существует, прежде чем добавлять
+                    if f"{base_name}_y" in self.coords_df.columns:
+                        original_names_set.add(base_name)
+            self.original_polygon_names = list(original_names_set)
+        
+        
+        
         self.is_drawing = False
         self.tool_selected = False  # Устанавливается True после нажатия "Start"
         self.selected_vertex = None  # Индекс выбранной вершины
@@ -954,10 +969,31 @@ class PolygonDrawer:
         cv2.setWindowProperty("Polygon", cv2.WND_PROP_TOPMOST, 1)
         self.root.attributes('-topmost', False)
         if polygon_name is not None and polygon_name.strip() != "":
-            self.current_polygon_name = polygon_name.strip()
+            base_name = polygon_name.strip()
+
+            # Собираем все существующие имена для проверки
+            all_existing_names = set(self.original_polygon_names) | set(self.new_polygon_names)
+
+            final_polygon_name = base_name
+            index = 1
+
+            # Проверяем, существует ли предложенное имя (base_name)
+            if final_polygon_name in all_existing_names:
+                # Если имя существует, ищем первый свободный индекс
+                while True:
+                    potential_name = f"{base_name}_{index}"
+                    if potential_name not in all_existing_names:
+                        final_polygon_name = potential_name
+                        print(f"Name '{base_name}' already exists. Using '{final_polygon_name}' instead.")
+                        break
+                    index += 1
+            # Если имя base_name не найдено, оно и будет final_polygon_name
+
+            self.current_polygon_name = final_polygon_name
             self.new_polygon_names.append(self.current_polygon_name)
+
         else:
-            print("Имя не задано, режим рисования не активирован.")
+            print("The name is not set, the drawing mode is not activated.")
             return
         self.tool_selected = True
         self.start_button.visible = False
