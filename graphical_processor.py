@@ -933,7 +933,7 @@ class PolygonDrawer:
         # Создаем кнопки
         self.start_button = guiButton(10, 10, 150, 50, 'Add region', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
-        self.select_all_button = guiButton(10, 130, 100, 50, 'Select all', self.select_all)
+        self.select_all_button = guiButton(170, 10, 100, 50, 'Select all', self.select_all)
         self.apply_button = guiButton(10, 190, 100, 50, 'Apply', self.apply_polygon)
         self.modify_button = guiButton(10, 310, 100, 50, 'Modify', self.modify_selected_polygon)
         self.exit_s_button = guiButton(10, 410, 150, 50, 'Save and Exit', self.exit_s)
@@ -946,6 +946,7 @@ class PolygonDrawer:
         self.apply_button.visible = False
         self.delete_button.visible = False
         self.modify_button.visible = False
+        self.select_all_button.visible = False
 
         cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
         cv2.moveWindow("Polygon", 100, 100)
@@ -995,9 +996,16 @@ class PolygonDrawer:
         else:
             print("The name is not set, the drawing mode is not activated.")
             return
+        
         self.tool_selected = True
+        self.points = []
+        self.is_drawing = False
+        
         self.start_button.visible = False
-        self.select_all_button.visible = False
+        self.select_all_button.visible = True
+        self.apply_button.visible = False
+        self.delete_button.visible = False
+        self.modify_button.visible = False
         self.exit_s_button.visible = False
         self.exit_ns_button.visible = False
         cv2.setMouseCallback("Polygon", self.mouse_callback)
@@ -1023,16 +1031,19 @@ class PolygonDrawer:
 
             # Обновляем видимость кнопок
             self.start_button.visible = True
+            self.select_all_button.visible = False
             self.delete_button.visible = False
             self.apply_button.visible = False
             self.modify_button.visible = False
             self.exit_s_button.visible = True
             self.exit_ns_button.visible = True
             self.tool_selected = False
+            
+            # Обнуляем имя текущего полигона
+            self.current_polygon_name = None
 
             # Возвращаем основной обработчик мыши
             cv2.setMouseCallback("Polygon", self.mouse_callback)
-
 
     def modify_selected_polygon(self):
         """Вызывается при нажатии кнопки 'Modify'. Перекладывает координаты 
@@ -1072,24 +1083,19 @@ class PolygonDrawer:
         # Очистим выделенный полигон, так как он теперь в self.points
         self.selected_polygon_df = pd.DataFrame()
 
+        self.tool_selected = True
+        
         # Настраиваем видимость кнопок
+        self.start_button.visible = False
         self.modify_button.visible = False
-        self.apply_button.visible = True
-        self.delete_button.visible = True
-        self.tool_selected = True  # Чтобы в дальнейшем логика apply сработала, как при рисовании
+        self.apply_button.visible = True # можно только нажать Apply чтобы применить модификацию
+        self.delete_button.visible = False        
+        self.exit_s_button.visible = False
+        self.exit_ns_button.visible = False
+
 
         # Переключаемся на обработчик модификации вершин
         cv2.setMouseCallback("Polygon", self.mod_mouse_callback)
-
-
-    def delete_polygon_old_version(self):
-        self.points = []
-        self.tool_selected = False
-        self.start_button.visible = True
-        self.select_all_button.visible = True
-        self.delete_button.visible = False
-        self.apply_button.visible = False
-        self.modify_button.visible = False
 
     def delete_polygon(self):
         """Удаляет ВЫБРАННЫЙ полигон (из self.selected_polygon_df)
@@ -1145,7 +1151,7 @@ class PolygonDrawer:
         self.points = [] # На всякий случай очищаем точки (хотя не должны быть в режиме рисования)
         self.tool_selected = False
         self.start_button.visible = True
-        self.select_all_button.visible = True
+        self.select_all_button.visible = False 
         self.delete_button.visible = False # Скрываем кнопку Delete после удаления
         self.apply_button.visible = False
         self.modify_button.visible = False # Скрываем кнопку Modify после удаления
@@ -1159,13 +1165,62 @@ class PolygonDrawer:
         self.update_display_image() # Важно перерисовать без удаленного полигона
         
     def select_all(self):
-        """Выбирает все углы отображаемой картинки для создания полигона."""
-        height, width = self.bgr_image.shape[:2]
-        self.points = [(0, 0), (width - 1, 0), (width - 1, height - 1), (0, height - 1)]
-        self.delete_button.visible = True
-        self.select_all_button.visible = False
-        self.start_button.visible = False
-        self.apply_button.visible = True
+        """Создает полигон, охватывающий все изображение (без черных полей),
+        используя текущее имя полигона, и применяет его."""
+        print("Select All clicked") # Отладочное сообщение
+
+        if not self.tool_selected or self.current_polygon_name is None:
+            print("Error: 'Select All' can only be used after starting to add a region and setting a name.")
+            return
+
+        # 1. Получаем размеры оригинального изображения
+        orig_h, orig_w = self.original_rgb_image.shape[:2]
+
+        # 2. Получаем текущие параметры масштабирования и смещения
+        # Убедимся, что они актуальны
+        if not hasattr(self, 'current_scale') or not self.current_scale:
+            # Если current_scale еще не вычислен или равен 0, используем effective_scale
+            self.current_scale = self.effective_scale * (self.zoom_val / 100.0)
+            # Пересчитаем new_w/new_h и offset_x/offset_y как в update_display_image,
+            # но без полного обновления (для простоты, можно вызвать update_display_image)
+            new_w_temp = int(orig_w * self.current_scale)
+            new_h_temp = int(orig_h * self.current_scale)
+            self.offset_x = (self.window_width - new_w_temp) // 2 # Центрируем для расчета
+            self.offset_y = (self.window_height - new_h_temp) // 2 # Центрируем для расчета
+            # Если update_display_image вызывался с учетом курсора, offset может быть другим.
+            # Лучше вызвать update_display_image() перед этим методом, если есть сомнения.
+            # Или просто использовать уже имеющиеся self.offset_x/y и self.current_scale
+
+        current_scale = self.current_scale
+        offset_x = self.offset_x
+        offset_y = self.offset_y
+
+        # 3. Вычисляем размеры масштабированного изображения на экране
+        new_w = int(orig_w * current_scale)
+        new_h = int(orig_h * current_scale)
+
+        # 4. Вычисляем координаты углов *реального* изображения в *экранных* координатах
+        top_left_x = offset_x
+        top_left_y = offset_y
+        top_right_x = offset_x + new_w
+        top_right_y = offset_y
+        bottom_right_x = offset_x + new_w
+        bottom_right_y = offset_y + new_h
+        bottom_left_x = offset_x
+        bottom_left_y = offset_y + new_h
+
+        # 5. Записываем точки в self.points (в порядке обхода)
+        self.points = [
+            (top_left_x, top_left_y),
+            (top_right_x, top_right_y),
+            (bottom_right_x, bottom_right_y),
+            (bottom_left_x, bottom_left_y)
+        ]
+        print(f"Calculated points for Select All: {self.points}") # Отладка
+        print(f"Polygon '{self.current_polygon_name}' created using 'Select All' and applied.")
+        # 6. Применяем полигон размером со все изображение
+        self.apply_polygon()
+       
 
     def exit_s(self):
         # Закрываем окно, run вернет полигон
@@ -1208,8 +1263,17 @@ class PolygonDrawer:
         # Если режим рисования активирован, то работаем с полигоном
         if self.tool_selected:
             if event == cv2.EVENT_LBUTTONDOWN:
+                # --- НАЧАЛО РУЧНОГО РИСОВАНИЯ ---
+                # Убедимся что клик не по кнопке (проверка выше должна это обработать, но для надежности)
+                if self.select_all_button.is_clicked(x, y):
+                    return # Клик по кнопке уже обработан
+
+                print("Starting manual draw") # Отладка
                 self.is_drawing = True
-                self.points = [(x, y)]  # Начинаем новый полигон
+                self.points = [(x, y)]  # Начинаем новый полигон с этой точки
+
+                # --- СКРЫВАЕМ КНОПКУ SELECT ALL ---
+                self.select_all_button.visible = False
 
             elif event == cv2.EVENT_MOUSEMOVE and flags & cv2.EVENT_FLAG_LBUTTON:
                 if self.is_drawing:
@@ -1217,13 +1281,27 @@ class PolygonDrawer:
 
             elif event == cv2.EVENT_LBUTTONUP:
                 if self.is_drawing:
+                    print("Finishing manual draw") # Отладка
                     self.is_drawing = False
-                    if len(self.points) > 1:
+                    # --- ПРОВЕРКА КОЛИЧЕСТВА ТОЧЕК ---
+                    if len(self.points) > 2: # Нужно хотя бы 3 точки для полигона
                         self.points = simplify_contour(self.points, epsilon=1.0)
-                        # self.delete_button.visible = True
-                        # self.apply_button.visible = True
-                        # self.modify_button.visible = True
-                        self.apply_polygon()# сразу применяем полигон
+                        # print(f"Simplified points: {self.points}") # Отладка
+                        # Сразу применяем полигон
+                        self.apply_polygon()
+                    else:
+                        # Слишком мало точек, отменяем рисование
+                        print("Not enough points for a polygon. Drawing cancelled.")
+                        self.points = []
+                        # Возвращаемся в состояние "готов к рисованию"
+                        self.start_button.visible = False
+                        self.select_all_button.visible = True # Снова показываем Select All
+                        self.apply_button.visible = False
+                        self.delete_button.visible = False
+                        self.modify_button.visible = False
+                        self.exit_s_button.visible = False
+                        self.exit_ns_button.visible = False
+                        self.tool_selected = True # Остаемся в режиме готовности
         else:
             # Если режим рисования не выбран, реализуем перетаскивание изображения
             if event == cv2.EVENT_LBUTTONDOWN:
@@ -1459,7 +1537,7 @@ class PolygonDrawer:
             # Рисуем кнопки
             self.start_button.draw(img)
             self.delete_button.draw(img)
-            # self.select_all_button.draw(img) # отключил кнопку в связи с изменением старой логики
+            self.select_all_button.draw(img)
             self.apply_button.draw(img)
             self.exit_s_button.draw(img)
             self.exit_ns_button.draw(img)
