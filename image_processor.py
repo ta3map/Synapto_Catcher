@@ -1223,10 +1223,13 @@ def define_hist(file_path, location, slice_start, slice_end, target_ch, dapi_ch,
                 coords_df.columns = rename_column_names(coords_df.columns)
         else:
             coords_df = None
-
-        editor = ParallelogramEditor(combined_image, scale_factor=0.8, coords_df=coords_df)
-
-        # NEW: editor.run() itself will return either the coordinates or None if there was a cancellation
+            
+        screen_width = root.winfo_screenwidth()
+        screen_height = root.winfo_screenheight()
+        
+        # Initialize the drawing tool
+        editor = ParallelogramEditor(combined_image, coords_df=coords_df, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8))
+  
         parallelogram_points = editor.run()  
         if parallelogram_points is None:      # If the user cancels
             continue                         # Skip the current im_index

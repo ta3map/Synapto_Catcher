@@ -1,6 +1,6 @@
 #%matplotlib qt
 #%%
-from tkinter import filedialog, messagebox, PhotoImage, Toplevel, scrolledtext, StringVar, BooleanVar, Tk, Canvas, Menu
+from tkinter import filedialog, messagebox, PhotoImage, scrolledtext, StringVar, Canvas, Menu
 from tkinter.ttk import Button, Label, Entry, OptionMenu, Style, Checkbutton, Separator, Combobox, Frame
 from ttkthemes import ThemedTk
 import tkinter as tk
@@ -11,10 +11,7 @@ import tempfile
 import pandas as pd
 import time
 from os.path import splitext, basename, dirname, join, exists
-from tqdm import tqdm
-import threading
 from threading import Thread
-import queue
 import itertools
 import webbrowser
 import subprocess
@@ -558,23 +555,6 @@ class ROIAnalyzerApp:
                 entry.pack_forget()
                 entry_var.set('all')
             
-    # def toggle_entry(self, attr_name, enabled):
-    #     entry = getattr(self, f"{attr_name}_entry", None)
-    #     entry_var = getattr(self, f"selected_{attr_name}", None)
-    #     label = getattr(self, f"{attr_name}_label", None)
-    #     if entry and entry_var:
-    #         if enabled:
-    #             label.pack(side=tk.LEFT)
-    #             entry.pack(side=tk.LEFT)
-    #             # entry.config(state='normal')
-    #             if entry_var.get()=='':
-    #                 entry_var.set('all')
-    #         else:
-    #             label.pack_forget()
-    #             entry.pack_forget()
-    #             # entry.config(state='disabled')
-    #             entry_var.set('')
-
 
     def create_label_and_option_menu(self, parent, label_text, options, default_value, attr_name):
         frame = Frame(parent)
@@ -1198,7 +1178,7 @@ def start_event_loop(loop):
     loop.run_forever()
 
 try:
-    import pyi_splash
+    import pyi_splash # type: ignore
     pyi_splash.update_text('UI Loaded ...')
     pyi_splash.close()
 except:

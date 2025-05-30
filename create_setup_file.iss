@@ -1,10 +1,12 @@
+#define MyAppVersion "1.01"
+
 [Setup]
 AppName=Synapto Catcher
-AppVersion=1.0
+AppVersion={#MyAppVersion}
 DefaultDirName={pf}\Synapto Catcher
 DefaultGroupName=Synapto Catcher
 OutputDir=setup
-OutputBaseFilename=synapto_catcher_setup
+OutputBaseFilename=synapto_catcher_setup_{#MyAppVersion}
 SetupIconFile=.\images\synaptocatcher.ico
 WizardImageFile=.\images\synaptocatcher_logo.bmp
 WizardSmallImageFile=.\images\synaptocatcher_small.bmp
