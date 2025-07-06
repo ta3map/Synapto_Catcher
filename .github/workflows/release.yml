@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'  # Запускается только при создании тегов версий
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -168,7 +171,9 @@ jobs:
           ./artifacts/synapto-catcher-macos/Synapto Catcher.dmg
           ./artifacts/synapto-catcher-linux/Synapto_Catcher-x86_64.AppImage
         name: Synapto Catcher ${{ github.ref_name }}
+        tag_name: ${{ github.ref_name }}
         draft: false
         prerelease: false
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
