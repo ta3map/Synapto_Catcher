@@ -28,7 +28,7 @@ jobs:
         pyinstaller --onefile --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.ico" --add-data "images;images" --add-data "image_processor.py;." --add-data "statistics_processor.py;." --add-data "graphical_processor.py;." app.py
     
     - name: Upload Windows EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: synapto-catcher-windows
         path: dist/Synapto Catcher.exe
@@ -62,7 +62,7 @@ jobs:
         hdiutil create -volname "Synapto Catcher" -srcfolder dmg_temp -ov -format UDZO "dist/Synapto Catcher.dmg"
     
     - name: Upload macOS DMG
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: synapto-catcher-macos
         path: dist/Synapto Catcher.dmg
@@ -139,7 +139,7 @@ jobs:
         ./appimagetool-x86_64.AppImage AppDir Synapto_Catcher-x86_64.AppImage
     
     - name: Upload Linux AppImage
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: synapto-catcher-linux
         path: Synapto_Catcher-x86_64.AppImage
@@ -152,7 +152,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         path: ./artifacts/
     

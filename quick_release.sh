@@ -24,8 +24,7 @@ fi
 if ! git diff-index --quiet HEAD --; then
     echo -e "${BLUE}📝 Коммитим изменения...${NC}"
     git add .
-    read -p "Сообщение коммита: " commit_message
-    git commit -m "$commit_message"
+    git commit -m "Prepare release version"
 fi
 
 # Получаем последнюю версию
@@ -45,7 +44,7 @@ fi
 echo -e "${GREEN}Новая версия: $NEW_VERSION${NC}"
 
 # Создаем релиз
-git tag -a "$NEW_VERSION" -m "🐛 Patch релиз $NEW_VERSION"
+git tag -a "$NEW_VERSION" -m "Release version $NEW_VERSION"
 git push origin main
 git push origin "$NEW_VERSION"
 
