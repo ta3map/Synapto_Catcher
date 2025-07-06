@@ -924,6 +924,7 @@ def process_properties(location_name,
 
     summary_result = {
         "Slice": basename(masks_image_path),
+        "ROI Area": f"{roi_area:.3f}",
         "Count": total_objects,
         "Total Area": f"{total_area:.3f}",
         "Average Size": f"{average_size:.3f}",
