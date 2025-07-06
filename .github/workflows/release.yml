@@ -52,13 +52,26 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
+        # Устанавливаем специфические версии библиотек для совместимости с macOS 10.15.7
+        pip install 'opencv-python<4.8.0'
+        pip install 'pillow<10.0.0'
+        pip install 'numpy<1.24.0'
+        pip install 'matplotlib<3.7.0'
     
     - name: Set macOS deployment target
       run: echo "MACOSX_DEPLOYMENT_TARGET=10.15.7" >> $GITHUB_ENV
-    
+      
     - name: Build macOS App
+      env:
+        MACOSX_DEPLOYMENT_TARGET: '10.15.7'
+        SYSTEM_VERSION_COMPAT: '0'
       run: |
+        # Ensure deployment target is set before PyInstaller
+        export MACOSX_DEPLOYMENT_TARGET=10.15.7
+        # Build the app with PyInstaller
         pyinstaller --onedir --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py
+        # Set minimum version in Info.plist
+        /usr/libexec/PlistBuddy -c "Add :LSMinimumSystemVersion string 10.15.7" "dist/Synapto Catcher.app/Contents/Info.plist"
     
     - name: Create DMG
       run: |
