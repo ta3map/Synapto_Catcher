@@ -1,0 +1,170 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # Запускается только при создании тегов версий
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build Windows EXE
+      run: |
+        pyinstaller --onefile --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.ico" --add-data "images;images" --add-data "image_processor.py;." --add-data "statistics_processor.py;." --add-data "graphical_processor.py;." app.py
+    
+    - name: Upload Windows EXE
+      uses: actions/upload-artifact@v3
+      with:
+        name: synapto-catcher-windows
+        path: dist/Synapto Catcher.exe
+
+  build-macos:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build macOS App
+      run: |
+        pyinstaller --onedir --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py
+    
+    - name: Create DMG
+      run: |
+        mkdir -p dmg_temp
+        cp -R "dist/Synapto Catcher.app" dmg_temp/
+        ln -s /Applications dmg_temp/Applications
+        hdiutil create -volname "Synapto Catcher" -srcfolder dmg_temp -ov -format UDZO "dist/Synapto Catcher.dmg"
+    
+    - name: Upload macOS DMG
+      uses: actions/upload-artifact@v3
+      with:
+        name: synapto-catcher-macos
+        path: dist/Synapto Catcher.dmg
+
+  build-linux:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 libxrender1 libxrandr2 libxss1 libgtk-3-0 libgconf-2-4 libasound2 libxtst6 libxss1 libdrm2 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 libgbm1 libxkbcommon0 libgtk-3-0
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Build Linux executable
+      run: |
+        pyinstaller --onefile --windowed --name "Synapto_Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py
+    
+    - name: Download AppImage tools
+      run: |
+        wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+        chmod +x appimagetool-x86_64.AppImage
+    
+    - name: Create AppDir structure
+      run: |
+        mkdir -p AppDir/usr/bin
+        mkdir -p AppDir/usr/share/applications
+        mkdir -p AppDir/usr/share/icons/hicolor/256x256/apps
+        
+        # Copy executable
+        cp dist/Synapto_Catcher AppDir/usr/bin/
+        
+        # Copy icon
+        cp images/synaptocatcher.png AppDir/usr/share/icons/hicolor/256x256/apps/synaptocatcher.png
+        cp images/synaptocatcher.png AppDir/synaptocatcher.png
+        
+        # Create desktop file
+        cat > AppDir/usr/share/applications/synaptocatcher.desktop << EOF
+        [Desktop Entry]
+        Type=Application
+        Name=Synapto Catcher
+        Exec=Synapto_Catcher
+        Icon=synaptocatcher
+        Categories=Science;Education;
+        Comment=Synaptotagmin analysis tool
+        EOF
+        
+        # Create AppRun
+        cat > AppDir/AppRun << 'EOF'
+        #!/bin/bash
+        HERE="$(dirname "$(readlink -f "${0}")")"
+        export PATH="${HERE}/usr/bin:${PATH}"
+        exec "${HERE}/usr/bin/Synapto_Catcher" "$@"
+        EOF
+        chmod +x AppDir/AppRun
+        
+        # Copy desktop file to root
+        cp AppDir/usr/share/applications/synaptocatcher.desktop AppDir/
+    
+    - name: Create AppImage
+      run: |
+        ./appimagetool-x86_64.AppImage AppDir Synapto_Catcher-x86_64.AppImage
+    
+    - name: Upload Linux AppImage
+      uses: actions/upload-artifact@v3
+      with:
+        name: synapto-catcher-linux
+        path: Synapto_Catcher-x86_64.AppImage
+
+  create-release:
+    needs: [build-windows, build-macos, build-linux]
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        path: ./artifacts/
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          ./artifacts/synapto-catcher-windows/Synapto Catcher.exe
+          ./artifacts/synapto-catcher-macos/Synapto Catcher.dmg
+          ./artifacts/synapto-catcher-linux/Synapto_Catcher-x86_64.AppImage
+        name: Synapto Catcher ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

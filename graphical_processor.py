@@ -1881,14 +1881,29 @@ class ExperimentWindow:
         self.top = Toplevel()
         self.top.title("Gallery of Experiment")
         self.top.geometry("1024x768")
-        self.top.iconbitmap(icon_path)  # Установка иконки окна
+        # Устанавливаем иконку только если файл существует
+        if os.path.exists(icon_path):
+            try:
+                import platform
+                if platform.system() == "Windows" and icon_path.endswith('.ico'):
+                    self.top.iconbitmap(icon_path)  # Установка иконки окна
+                else:
+                    # Для Linux и macOS используем PNG иконку
+                    icon_image = tk.PhotoImage(file=icon_path)
+                    self.top.iconphoto(True, icon_image)
+            except Exception as e:
+                print(f"Не удалось установить иконку: {e}")
+        else:
+            print(f"Файл иконки не найден: {icon_path}")
 
         
         # Фрейм для миниатюр
         self.thumbnail_frame = Frame(self.top)
 
-        # Разворачиваем окно на весь экран
-        self.top.wm_state("zoomed")
+        # Универсальное решение для всех ОС - просто устанавливаем размер на весь экран
+        screen_width = self.top.winfo_screenwidth()
+        screen_height = self.top.winfo_screenheight()
+        self.top.geometry(f'{screen_width}x{screen_height}+0+0')
 
         # Метка для отображения имени файла
         self.file_name_label = Label(self.top, text="", font=("Arial", 14))
@@ -2366,11 +2381,17 @@ class ExperimentWindow:
     
     # Функция для открытия файла в проводнике
     def open_file(self, file_path):
-        file_path = file_path.replace('/', '\\')
+        file_path = os.path.normpath(file_path)
         if os.path.exists(file_path):
             try:
-                cmd = f'explorer "{file_path}"'
-                subprocess.Popen(cmd)
+                import platform
+                system = platform.system()
+                if system == "Windows":
+                    subprocess.Popen(['explorer', file_path])
+                elif system == "Darwin":  # macOS
+                    subprocess.Popen(["open", file_path])
+                else:  # Linux и другие Unix-подобные системы
+                    subprocess.Popen(["xdg-open", file_path])
             except Exception as e:
                 print(f"Failed to open file '{file_path}': {e}")
         else:
@@ -2421,7 +2442,18 @@ class ExperimentWindow:
 
     def open_results_folder(self):
         if os.path.exists(self.results_folder):
-            subprocess.Popen(f'explorer "{os.path.abspath(self.results_folder)}"')
+            try:
+                import platform
+                system = platform.system()
+                abs_path = os.path.abspath(self.results_folder)
+                if system == "Windows":
+                    subprocess.Popen(['explorer', abs_path])
+                elif system == "Darwin":  # macOS
+                    subprocess.Popen(["open", abs_path])
+                else:  # Linux и другие Unix-подобные системы
+                    subprocess.Popen(["xdg-open", abs_path])
+            except Exception as e:
+                print(f"Failed to open folder '{self.results_folder}': {e}")
         else:
             print(f"Results folder '{self.results_folder}' not found")
 
@@ -2540,7 +2572,20 @@ class FileDeletionDialog(tk.Toplevel):
         # Центрируем окно
         self.geometry("600x600")
         self.resizable(False, False)
-        self.iconbitmap(icon_path)
+        # Устанавливаем иконку только если файл существует
+        if os.path.exists(icon_path):
+            try:
+                import platform
+                if platform.system() == "Windows" and icon_path.endswith('.ico'):
+                    self.iconbitmap(icon_path)
+                else:
+                    # Для Linux и macOS используем PNG иконку
+                    icon_image = tk.PhotoImage(file=icon_path)
+                    self.iconphoto(True, icon_image)
+            except Exception as e:
+                print(f"Не удалось установить иконку: {e}")
+        else:
+            print(f"Файл иконки не найден: {icon_path}")
         
         self.folders = folders
         self.deletion_done = False  # Track if deletion happened
@@ -2849,8 +2894,17 @@ def initialize_window(root, title, width, height, resizable=False, icon_path=Non
         window.resizable(False, False)
     
     # Если передан путь к иконке, устанавливаем ее
-    if icon_path:
-        window.iconbitmap(icon_path)
+    if icon_path and os.path.exists(icon_path):
+        try:
+            import platform
+            if platform.system() == "Windows" and icon_path.endswith('.ico'):
+                window.iconbitmap(icon_path)
+            else:
+                # Для Linux и macOS используем PNG иконку
+                icon_image = tk.PhotoImage(file=icon_path)
+                window.iconphoto(True, icon_image)
+        except Exception as e:
+            print(f"Не удалось установить иконку: {e}")
     
     return window
 
@@ -3016,5 +3070,5 @@ def run_lif_file_conversion_dialog():
 
 # Установка иконки окна
 current_dir = os.path.dirname(os.path.abspath(__file__))
-icon_path = os.path.join(current_dir, "images", "synaptocatcher.ico")
+icon_path = os.path.join(current_dir, "images", "synaptocatcher.png")
 

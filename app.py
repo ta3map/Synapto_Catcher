@@ -22,7 +22,8 @@ import traceback
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-icon_path = current_dir + "\\images\\synaptocatcher.ico"
+# Используем PNG иконку для кроссплатформенности
+icon_path = os.path.join(current_dir, "images", "synaptocatcher.png")
 sys.path.append(current_dir)
 from image_processor import binarize_images, select_location, stack_image
 from image_processor import filter_after_roi_selection, pp_one, define_hist
@@ -46,15 +47,29 @@ class ROIAnalyzerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Synapto Catcher")
-        self.root.iconbitmap(icon_path)
+        
+        # Устанавливаем иконку только если файл существует
+        if os.path.exists(icon_path):
+            try:
+                import platform
+                if platform.system() == "Windows" and icon_path.endswith('.ico'):
+                    self.root.iconbitmap(icon_path)
+                else:
+                    # Для Linux и macOS используем PNG иконку
+                    icon_image = PhotoImage(file=icon_path)
+                    self.root.iconphoto(True, icon_image)
+            except Exception as e:
+                print(f"Не удалось установить иконку: {e}")
+        else:
+            print(f"Файл иконки не найден: {icon_path}")
 
         self.icons_path = {
-            "binarize": current_dir + "\\images\\buttons\\binarize_32.png",
-            "mark_area": current_dir + "\\images\\buttons\\mark_area_32.png",
-            "histogram": current_dir + "\\images\\buttons\\histogram_32.png",
-            "preview": current_dir + "\\images\\buttons\\preview_32.png",
-            "final_analysis": current_dir + "\\images\\buttons\\final_analysis_32.png",
-            "clear_area": current_dir + "\\images\\buttons\\clear_area_32.png"
+            "binarize": os.path.join(current_dir, "images", "buttons", "binarize_32.png"),
+            "mark_area": os.path.join(current_dir, "images", "buttons", "mark_area_32.png"),
+            "histogram": os.path.join(current_dir, "images", "buttons", "histogram_32.png"),
+            "preview": os.path.join(current_dir, "images", "buttons", "preview_32.png"),
+            "final_analysis": os.path.join(current_dir, "images", "buttons", "final_analysis_32.png"),
+            "clear_area": os.path.join(current_dir, "images", "buttons", "clear_area_32.png")
         }
 
         self._update_in_progress = False  # Flag to prevent repeated calls
@@ -242,7 +257,7 @@ class ROIAnalyzerApp:
             self.age_group_window.focus()
             return
 
-        icon_path = current_dir + "\\images\\synaptocatcher.ico"
+        icon_path = os.path.join(current_dir, "images", "synaptocatcher.png")
         self.age_group_window = initialize_window(self.root, "Group analysis", 500, 300, icon_path=icon_path)        
 
         
@@ -303,7 +318,7 @@ class ROIAnalyzerApp:
     def browse_result_table(self):
         result_table_path = filedialog.askopenfilename(filetypes=[("Result table file", "*.xlsx")])
         if result_table_path:
-            result_table_path = result_table_path.replace('/', '\\')
+            result_table_path = os.path.normpath(result_table_path)
             self.selected_result_table.set(result_table_path)
             self.save_params('result_table', result_table_path)
 
@@ -632,13 +647,18 @@ class ROIAnalyzerApp:
         self.text_area.tag_bind(tag_name, "<Button-1>", lambda event, fp=file_path: self.open_file(fp))
 
     def open_file(self, file_path):
-        file_path = file_path.replace('/', '\\')
+        file_path = os.path.normpath(file_path)
         if os.path.exists(file_path):
             try:
-                # cmd = f'explorer /select,"{file_path}"'
-                cmd = f'explorer "{file_path}"'
-                #print(cmd)
-                subprocess.Popen(cmd)
+                import platform
+                system = platform.system()
+                if system == "Windows":
+                    cmd = f'explorer "{file_path}"'
+                    subprocess.Popen(cmd, shell=True)
+                elif system == "Darwin":  # macOS
+                    subprocess.Popen(["open", file_path])
+                else:  # Linux и другие Unix-подобные системы
+                    subprocess.Popen(["xdg-open", file_path])
             except Exception as e:
                 print(f"Failed to open file '{file_path}': {e}")
         else:
@@ -654,7 +674,7 @@ class ROIAnalyzerApp:
     def browse_protocol(self):
         protocol_path = filedialog.askopenfilename(filetypes=[("Protocol files", "*.lif;*.tif;*.czi;*.xlsx")])
         if protocol_path:
-            protocol_path = protocol_path.replace('/', '\\')
+            protocol_path = os.path.normpath(protocol_path)
             self.selected_protocol.set(protocol_path)
             self.save_params('protocol', protocol_path)
             protocol_dir = os.path.dirname(protocol_path)
@@ -1235,26 +1255,18 @@ if __name__ == "__main__":
     # Apply a theme to the main window widgets
     root.after(100, lambda: theme_manager.apply_theme(root))
     
-    # Determine the screen dimensions
+    # Универсальное решение для всех ОС - просто устанавливаем размер на весь экран
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-
-    # Determine the window dimensions
-    window_width = 1024
-    window_height = 768
-
-    # Calculate coordinates for window placement
-    position_right = int(screen_width / 2 - window_width / 2)
-    position_down = int(screen_height / 2 - window_height / 2)
-
+    
+    # Устанавливаем размер окна на весь экран
+    root.geometry(f'{screen_width}x{screen_height}+0+0')
+    
     # Bring the window to the foreground
     root.lift()
     root.attributes('-topmost', True)
     root.after_idle(root.attributes, '-topmost', False)
     root.focus_force()
-    # Set the size and position of the window
-    root.geometry(f'{window_width}x{window_height}+{position_right}+{position_down}')
-    root.wm_state("zoomed")
     # Create a new asyncio event loop and run it in a separate thread
     new_loop = asyncio.new_event_loop()
     t = Thread(target=start_event_loop, args=(new_loop,))
