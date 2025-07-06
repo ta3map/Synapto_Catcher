@@ -97,6 +97,8 @@ jobs:
     
     - name: Download AppImage tools
       run: |
+        # Установка FUSE для AppImage
+        sudo apt-get install -y fuse libfuse2
         wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
         chmod +x appimagetool-x86_64.AppImage
     
