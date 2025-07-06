@@ -927,6 +927,9 @@ class PolygonDrawer:
         self.last_mouse_x = self.offset_x
         self.last_mouse_y = self.offset_y
         
+        # Флаг для выхода из основного цикла
+        self.should_exit = False
+        
         # Создаем кнопки
         self.start_button = guiButton(10, 10, 150, 50, 'Add region', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
@@ -947,7 +950,7 @@ class PolygonDrawer:
 
         cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
         cv2.moveWindow("Polygon", 100, 100)
-        cv2.setWindowProperty("Polygon", cv2.WND_PROP_TOPMOST, 1)# выставляем окно вперед
+        # Убираем принудительный topmost для более стабильной работы в Linux
         
         cv2.createTrackbar("Zoom", "Polygon", self.zoom_val, 500, self.on_trackbar)
         cv2.setTrackbarMin('Zoom', 'Polygon', 50) 
@@ -961,11 +964,8 @@ class PolygonDrawer:
 
 
     def start_drawing(self):
-        cv2.setWindowProperty("Polygon", cv2.WND_PROP_TOPMOST, 0)
-        self.root.attributes('-topmost', True)
+        # Простое управление окнами без сложного переключения topmost
         polygon_name = simpledialog.askstring("New region", "Name:", parent=self.root)
-        cv2.setWindowProperty("Polygon", cv2.WND_PROP_TOPMOST, 1)
-        self.root.attributes('-topmost', False)
         if polygon_name is not None and polygon_name.strip() != "":
             base_name = polygon_name.strip()
 
@@ -1220,14 +1220,12 @@ class PolygonDrawer:
        
 
     def exit_s(self):
-        # Закрываем окно, run вернет полигон
-        cv2.destroyAllWindows()
+        self.should_exit = True
         
     def exit_ns(self):
-        # Закрываем окно, run вернет пустой полигон
-        cv2.destroyAllWindows()
-        self.new_polygons_df = pd.DataFrame()# без новых полигонов, они пустые
-        self.coords_df = self.original_coords_df.copy()# возвращаем значения в старом виде
+        self.should_exit = True
+        self.new_polygons_df = pd.DataFrame()
+        self.coords_df = self.original_coords_df.copy()
         
     def mouse_callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_MOUSEMOVE:
@@ -1500,7 +1498,7 @@ class PolygonDrawer:
 
 
     def run(self):
-        while True:
+        while not self.should_exit:
             img = self.img_copy.copy()
 
             # Рисуем существовавшие полигоны
@@ -1562,12 +1560,17 @@ class PolygonDrawer:
             cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
             cv2.putText(img, text, (text_x, text_y), font, font_scale, (255, 255, 255), font_thickness, cv2.LINE_AA)
 
-            cv2.imshow("Polygon", img)
-            key = cv2.waitKey(50) & 0xFF
-            if key == ord('q') or cv2.getWindowProperty("Polygon", cv2.WND_PROP_VISIBLE) < 1:
+            try:
+                cv2.imshow("Polygon", img)
+                key = cv2.waitKey(50) & 0xFF
+                if key == ord('q') or self.should_exit:
+                    break
+            except:
+                # Если произошла ошибка с окном, выходим из цикла
                 break
             
         cv2.destroyAllWindows()
+        
         # Возвращаем список старых и новых полигонов
         return self.coords_df, self.new_polygons_df
 
@@ -1640,14 +1643,22 @@ class ParallelogramEditor:
         self.needs_redraw = True  # Обновляем перерисовку
 
     def cancel_parallelogram(self):
-        cv2.destroyWindow(self.window_name)
+        try:
+            cv2.destroyWindow(self.window_name)
+            cv2.waitKey(1)
+        except:
+            pass
         self.points = []
         self.finished_drawing = False
         self.user_cancelled = True
 
     def apply_parallelogram(self):
         coords = self.get_coordinates()
-        cv2.destroyWindow(self.window_name)
+        try:
+            cv2.destroyWindow(self.window_name)
+            cv2.waitKey(1)
+        except:
+            pass
         return coords
 
     def rotate_point(self, point, center, angle):
@@ -1820,23 +1831,34 @@ class ParallelogramEditor:
 
     def run(self):
         while True:
-            if self.needs_redraw:
-                img_copy = self.image.copy()
-                self.start_button.draw(img_copy)
-                self.cancel_button.draw(img_copy)
-                self.apply_button.draw(img_copy)
-                cv2.imshow(self.window_name, img_copy)
-                self.needs_redraw = False
-                
-            key = cv2.waitKey(1) & 0xFF
-            if key == ord('q'):
-                self.user_cancelled = True
-                break
-            if cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE) < 1:
-                if not self.user_cancelled and not self.finished_drawing:
+            try:
+                if self.needs_redraw:
+                    img_copy = self.image.copy()
+                    self.start_button.draw(img_copy)
+                    self.cancel_button.draw(img_copy)
+                    self.apply_button.draw(img_copy)
+                    cv2.imshow(self.window_name, img_copy)
+                    self.needs_redraw = False
+                    
+                key = cv2.waitKey(1) & 0xFF
+                if key == ord('q'):
                     self.user_cancelled = True
+                    break
+                if cv2.getWindowProperty(self.window_name, cv2.WND_PROP_VISIBLE) < 1:
+                    if not self.user_cancelled and not self.finished_drawing:
+                        self.user_cancelled = True
+                    break
+            except:
+                # Если произошла ошибка с окном, выходим из цикла
                 break
-        cv2.destroyAllWindows()
+                
+        # Безопасное закрытие окон
+        try:
+            cv2.destroyWindow(self.window_name)
+            cv2.waitKey(1)
+        except:
+            pass
+            
         if self.user_cancelled:
             return None
         else:
@@ -2959,7 +2981,10 @@ class LifFileConversion(tk.Toplevel):
         self.image_progress.pack(pady=5)
 
     def select_files(self):
-        file_paths = filedialog.askopenfilenames(title="Select LIF Files", filetypes=[("LIF files", "*.lif")])
+        file_paths = filedialog.askopenfilenames(title="Select LIF Files", filetypes=[
+            ("LIF files", "*.lif"),
+            ("All files", "*.*")
+        ])
         if file_paths:
             self.file_paths = self.tk.splitlist(file_paths)
             # Bring the main window to the front after file selection

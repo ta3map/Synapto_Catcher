@@ -941,6 +941,11 @@ class ROIAnalyzerApp:
             
             coords_df = select_location(file_path, self.root)
             
+            # Восстановление главного окна после закрытия PolygonDrawer
+            self.root.deiconify()
+            self.root.lift()
+            self.root.focus_force()
+            
             if coords_df.empty:
                 print("Processing stopped")
                 break
@@ -1258,10 +1263,10 @@ if __name__ == "__main__":
     # Универсальное решение для всех ОС - просто устанавливаем размер на весь экран
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    
+
     # Устанавливаем размер окна на весь экран
     root.geometry(f'{screen_width}x{screen_height}+0+0')
-    
+
     # Bring the window to the foreground
     root.lift()
     root.attributes('-topmost', True)

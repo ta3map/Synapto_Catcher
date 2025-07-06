@@ -43,7 +43,12 @@ def custom_open_image_with_opencv(image_path):
 
 # Function for selecting a file and viewing the folder contents
 def load_images():
-    file_selected = filedialog.askopenfilename(title="Select a file in the folder", filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+    file_selected = filedialog.askopenfilename(title="Select a file in the folder", filetypes=[
+        ("Image files", "*.png *.jpg *.jpeg"),
+        ("PNG files", "*.png"),
+        ("JPEG files", "*.jpg *.jpeg"),
+        ("All files", "*.*")
+    ])
 
     if not file_selected:
         messagebox.showwarning("Error", "No file selected")
