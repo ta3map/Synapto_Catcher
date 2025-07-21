@@ -25,7 +25,6 @@ import time
 import pickle
 from readlif.reader import LifFile
 import random
-
 import hashlib
 import matplotlib.gridspec as gridspec
 
@@ -309,7 +308,8 @@ def read_tiff_channels(file_path, num_channels, num_layers):
     if n_frames != num_channels * num_layers:
         raise ValueError(f"The number of frames in the file ({n_frames}) does not correspond to the specified channels ({num_channels}) and layers ({num_layers})")
 
-    # Initialize lists for each channel
+    # Initialize lists for each 
+    
     channels = [[] for _ in range(num_channels)]
 
     # Read all images and distribute them across channels
@@ -353,22 +353,26 @@ def collect_lif_frames(im_in, ch):
 
 def handle_slide_indexing(slice_start, slice_end, max_slice):
     
-    # Handle 'all' for slice_start and slice_end
+    # normalize inputs to 0-based ints
     if slice_start == 'all' or slice_end == 'all':
-        slice_start = 0
-        slice_end = max_slice - 1
-        
-        save_params({'slice_start': slice_start+1, 'slice_end': slice_end+1})
+        s = 0
+        e = max_slice - 1
     else:
-        slice_start = int(slice_start)
-        slice_end = int(slice_end)
+        s = int(slice_start)
+        e = int(slice_end)
 
-    if slice_start < 0 or slice_end >= max_slice:
-        print(f"Invalid slice range: start={slice_start}, end={slice_end}. Must be within 0 and {max_slice - 1}.")
+    # validate
+    if s < 0 or e >= max_slice or s > e:
+        print(f"Invalid slice range: {s}–{e}. Must be within 0 and {max_slice-1}.")
         return None
-    
-    slide = list(range(slice_start, slice_end + 1))
-    return slide
+
+    # ★ save the **actual** window boundaries every time ★
+    save_params({
+        'slice_start': s + 1,  # if you want 1-based in Excel
+        'slice_end':   e + 1
+    })
+
+    return list(range(s, e + 1))
 
 def extract_czi_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
     base_name = splitext(basename(file_path))[0]
@@ -894,7 +898,9 @@ def process_properties(location_name,
     total_area = 0
     total_mean_intensity = 0
     roi_area = roi_mask.sum() * pixel_to_micron_ratio**2
-    
+    print(f"ROI totale : {roi_area:.3f} µm²")
+
+
     for index, prop in enumerate(props, start=1):
         area_microns = prop.area * pixel_to_micron_ratio**2
         if area_microns > max_size:
@@ -924,9 +930,9 @@ def process_properties(location_name,
 
     summary_result = {
         "Slice": basename(masks_image_path),
-        "ROI Area": f"{roi_area:.3f}",
         "Count": total_objects,
         "Total Area": f"{total_area:.3f}",
+        "ROI Area": f"{roi_area:.3f}",
         "Average Size": f"{average_size:.3f}",
         "%Area": f"{(total_area / roi_area) * 100:.3f}",
         "Mean": f"{average_mean_intensity:.3f}",
