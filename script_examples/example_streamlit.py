@@ -1,6 +1,6 @@
 import streamlit as st
 
-# Настройка стилей с помощью Markdown и CSS
+# Style setup using Markdown and CSS
 st.markdown("""
     <style>
         .main {
@@ -27,39 +27,39 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Заголовок приложения
+# Application title
 st.title("Полный пример приложения на Streamlit")
 
-# Текстовый ввод
+# Text input
 st.subheader("Ввод данных")
 name = st.text_input("Введите ваше имя:")
 if name:
     st.write(f"Привет, {name}!")
 
-# Чекбокс
+# Checkbox
 st.subheader("Чекбокс")
 show_greeting = st.checkbox("Показать приветствие")
 if show_greeting:
     st.write("Привет! Рад вас видеть.")
 
-# Радиокнопки
+# Radio buttons
 st.subheader("Выбор пола")
 gender = st.radio("Укажите ваш пол:", ("Мужчина", "Женщина", "Не указывать"))
 if gender:
     st.write(f"Вы выбрали: {gender}")
 
-# Выпадающий список
+# Dropdown list
 st.subheader("Выбор возраста")
 age_group = st.selectbox("Выберите возрастную группу:", 
                          ("< 18", "18-30", "31-50", "50+"))
 st.write(f"Вы выбрали: {age_group}")
 
-# Ползунок
+# Slider
 st.subheader("Настройка яркости")
 brightness = st.slider("Выберите уровень яркости", 0, 100, 50)
 st.write(f"Текущая яркость: {brightness}%")
 
-# Мультивыбор
+# Multi-select
 st.subheader("Мультивыбор увлечений")
 hobbies = st.multiselect(
     "Выберите ваши увлечения:",
@@ -68,7 +68,7 @@ hobbies = st.multiselect(
 if hobbies:
     st.write(f"Вы выбрали следующие увлечения: {', '.join(hobbies)}")
 
-# Цветовой выбор
+# Color picker
 st.subheader("Выбор цвета")
 color = st.color_picker("Выберите цвет фона", "#ffffff")
 st.markdown(f"<div style='background-color:{color};padding:10px;border-radius:5px;'>Это ваш выбранный цвет</div>", unsafe_allow_html=True)

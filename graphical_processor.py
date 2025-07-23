@@ -507,62 +507,62 @@ def create_excel_snapshot_to_image(excel_file, sheet_name=None, rows=10, cols=5)
         if sheet_name is not None:
             df = df[sheet_name]
         else:
-            # Используем первый лист
+            # Use first sheet
             df = list(df.values())[0]
     
-    # Обрезаем до заданного количества строк и столбцов, добавляем доп. колонку с троеточиями
+    # Trim to specified number of rows and columns, add additional column with ellipsis
     df_snapshot = df.iloc[:rows, :cols]
-    df_snapshot["..."] = "..."  # Добавляем колонку с троеточиями
+    df_snapshot["..."] = "..."  # Add column with ellipsis
 
-    # Заменяем NaN на пустые строки
+    # Replace NaN with empty strings
     df_snapshot = df_snapshot.fillna("")
 
-    # Добавляем дополнительную строку с троеточиями
+    # Add additional row with ellipsis
     df_snapshot.loc[len(df_snapshot)] = ["..." for _ in range(cols + 1)]
 
-    # Настройка шрифта
-    font = ImageFont.truetype("arial.ttf", 16)  # Arial с размером 16
+    # Font setup
+    font = ImageFont.truetype("arial.ttf", 16)  # Arial with size 16
     
-    # Размеры для отрисовки
-    line_spacing = 30  # Отступ между строками
-    column_spacing = 150  # Ширина одного столбца
-    num_cols = df_snapshot.shape[1]  # Количество столбцов
+    # Dimensions for drawing
+    line_spacing = 30  # Spacing between lines
+    column_spacing = 150  # Width of one column
+    num_cols = df_snapshot.shape[1]  # Number of columns
     
-    text_height = (rows + 2) * line_spacing  # Высота текста с учетом отступов и заголовка
-    text_width = column_spacing * num_cols  # Ширина всего изображения
+    text_height = (rows + 2) * line_spacing  # Text height including spacing and header
+    text_width = column_spacing * num_cols  # Width of entire image
     
-    # Создание изображения
+    # Create image
     image = Image.new('RGB', (text_width, text_height), 'white')
     draw = ImageDraw.Draw(image)
     
-    # Координаты для начала отрисовки текста
+    # Coordinates for starting text drawing
     x_start, y_start = 10, 10
-    text_offset = 5  # Отступ текста от вертикальных линий
+    text_offset = 5  # Text offset from vertical lines
     
-    # Цвета для чередования строк
-    row_colors = ["white", "#D3D3D3"]  # Белый и светло-серый
+    # Colors for alternating rows
+    row_colors = ["white", "#D3D3D3"]  # White and light gray
     
-    # Отрисовка заголовков столбцов
+    # Draw column headers
     header_y = y_start
-    header_color = "#A9A9A9"  # Цвет фона заголовка
+    header_color = "#A9A9A9"  # Header background color
     
-    # Отрисовка фона для заголовков
+    # Draw background for headers
     draw.rectangle([0, header_y, text_width, header_y + line_spacing], fill=header_color)
     
-    # Отрисовка заголовков с отступами и вертикальными разделителями
+    # Draw headers with spacing and vertical separators
     for j, col_name in enumerate(df_snapshot.columns):
         x = x_start + j * column_spacing
         draw.text((x + text_offset, header_y), str(col_name), font=font, fill='black')
     
-    # Отрисовка строк данных с чередованием фона
+    # Draw data rows with alternating background
     for i, row in enumerate(df_snapshot.itertuples(index=False, name=None)):
-        y = y_start + (i + 1) * line_spacing  # Сдвиг вниз после заголовка
+        y = y_start + (i + 1) * line_spacing  # Shift down after header
         row_color = row_colors[i % 2]
         
-        # Отрисовываем фон для строки
+        # Draw background for row
         draw.rectangle([0, y, text_width, y + line_spacing], fill=row_color)
         
-        # Отрисовка каждой ячейки в строке с фоном, соответствующим строке, только если ячейка непустая
+        # Draw each cell in row with corresponding background, only if cell is non-empty
         for j, cell in enumerate(row):
             x = x_start + j * column_spacing
             

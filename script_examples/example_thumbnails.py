@@ -8,34 +8,34 @@ import subprocess
 
 from graphical_processor import display_thumbnails, process_czi_image
 
-# Тестовая функция для одиночного клика
+# Test function for single click
 def test_single_click(image_path):
     print(f"Single click on: {image_path}")
 
-# Функция для открытия изображения в системе (пример функции для двойного клика)
+# Function to open image in system (example function for double click)
 def open_image(image_path):
     print(f"Open the file: {image_path}")
     try:
         if os.name == 'nt':  # Windows
             os.startfile(image_path)
-        elif os.name == 'posix':  # macOS или Linux
+        elif os.name == 'posix':  # macOS or Linux
             subprocess.call(('open' if sys.platform == 'darwin' else 'xdg-open', image_path))
     except Exception as e:
         messagebox.showerror("Error", f"Failed to open file: {e}")
 
             
-# Тестовая кастомная функция для открытия изображения через OpenCV
+# Test custom function to open image via OpenCV
 def custom_open_image_with_opencv(image_path):
-    # Открываем изображение с помощью OpenCV
+    # Open image using OpenCV
     img_cv = cv2.imread(image_path)
     
     if img_cv is None:
         raise ValueError(f"Could not open image: {image_path}")
 
-    # Преобразуем цвет с BGR на RGB
+    # Convert color from BGR to RGB
     img_rgb = cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB)
 
-    # Преобразуем в формат PIL
+    # Convert to PIL format
     img_pil = Image.fromarray(img_rgb)
     
     return img_pil
@@ -69,20 +69,20 @@ def load_images():
     display_thumbnails(display_frame, images, max_per_page=4)
 
 
-# Создаем основное окно
+# Create main window
 root = tk.Tk()
 root.title("Image Gallery")
 root.geometry("600x400")
 
-# Фрейм для отображения миниатюр
+# Frame for displaying thumbnails
 display_frame = tk.Frame(root)
 display_frame.pack(fill=tk.BOTH, expand=True)
 
-# Кнопка для выбора папки с изображениями
+# Button to select folder with images
 select_folder_button = tk.Button(root, text="Select folder with images", command=load_images)
 select_folder_button.pack(side=tk.TOP, pady=10)
 
-# Запуск основного цикла
+# Start main loop
 root.mainloop()
 
 

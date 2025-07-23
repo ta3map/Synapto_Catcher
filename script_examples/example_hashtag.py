@@ -6,36 +6,36 @@ import re
 class RedirectText(object):
     def __init__(self, text_widget):
         self.text_widget = text_widget
-        # Определяем стили для хэштегов
+        # Define styles for hashtags
         self.text_widget.tag_configure("bold", font=("Helvetica", 12, "bold"))
         self.text_widget.tag_configure("red", foreground="red")
         self.text_widget.tag_configure("large", font=("Helvetica", 16))
         self.text_widget.tag_configure("italic", font=("Helvetica", 12, "italic"))
 
     def write(self, string):
-        # Здесь мы ищем хэштеги, которые не будут отображаться, но будут влиять на стиль текста
+        # Here we search for hashtags that won't be displayed but will affect text style
         hashtags = re.findall(r'#\w+', string)
 
-        # Если хэштеги найдены, применяем их, но не выводим
+        # If hashtags are found, apply them but don't display
         if hashtags:
             self.apply_style(hashtags)
         else:
-            # Вставляем текст без изменений, если хэштегов нет
+            # Insert text unchanged if no hashtags
             self.text_widget.insert(tk.END, string)
-            self.text_widget.see(tk.END)  # Автопрокрутка
+            self.text_widget.see(tk.END)  # Auto-scroll
 
     def apply_style(self, hashtags):
-        # Получаем весь текст
+        # Get all text
         start = "1.0"
         end = tk.END
 
-        # Удаляем все стили перед применением новых
+        # Remove all styles before applying new ones
         self.text_widget.tag_remove("bold", start, end)
         self.text_widget.tag_remove("red", start, end)
         self.text_widget.tag_remove("large", start, end)
         self.text_widget.tag_remove("italic", start, end)
 
-        # Применяем стили по найденным хэштегам
+        # Apply styles based on found hashtags
         if "#bold" in hashtags:
             self.text_widget.tag_add("bold", start, end)
         if "#red" in hashtags:
@@ -54,26 +54,26 @@ class MyApp:
         self.root = root
         self.root.title("Redirected Output with Hashtags")
 
-        # Создаем текстовое поле с прокруткой
+        # Create text field with scrolling
         self.text_area = scrolledtext.ScrolledText(root, wrap=tk.WORD, width=50, height=15)
         self.text_area.pack(padx=5, pady=5, fill=tk.BOTH, expand=True)
 
-        # Перенаправляем print в текстовое поле
+        # Redirect print to text field
         redirect_text = RedirectText(self.text_area)
         sys.stdout = redirect_text
 
-        # Изначально выводим тестовое сообщение
+        # Initially output test message
         print("TEST\n")
 
-        # Счетчик для изменения стилей
+        # Counter for changing styles
         self.style_counter = 0
 
-        # Добавляем кнопку для изменения стиля текста
+        # Add button to change text style
         self.style_button = tk.Button(self.root, text="Change Style", command=self.on_button_click)
         self.style_button.pack(pady=10)
 
     def on_button_click(self):
-        # Здесь будет происходить вывод хэштегов через print для изменения стиля
+        # Here hashtags will be output via print to change style
         if self.style_counter == 0:
             print("#bold")
         elif self.style_counter == 1:
@@ -87,7 +87,7 @@ class MyApp:
         elif self.style_counter == 5:
             print("#large #italic")
 
-        # Увеличиваем счётчик для циклического изменения стиля
+        # Increment counter for cyclic style change
         self.style_counter = (self.style_counter + 1) % 6
 
 if __name__ == "__main__":

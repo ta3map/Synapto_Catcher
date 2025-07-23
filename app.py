@@ -69,7 +69,8 @@ class ROIAnalyzerApp:
             "histogram": os.path.join(current_dir, "images", "buttons", "histogram_32.png"),
             "preview": os.path.join(current_dir, "images", "buttons", "preview_32.png"),
             "final_analysis": os.path.join(current_dir, "images", "buttons", "final_analysis_32.png"),
-            "clear_area": os.path.join(current_dir, "images", "buttons", "clear_area_32.png")
+            "clear_area": os.path.join(current_dir, "images", "buttons", "clear_area_32.png"),
+            "batch": os.path.join(current_dir, "images", "buttons", "batch_32.png")
         }
 
         self._update_in_progress = False  # Flag to prevent repeated calls
@@ -137,8 +138,8 @@ class ROIAnalyzerApp:
         self.create_header(self.canvas1, "Settings", font_size=10, underline=True)
         self.create_separator(self.canvas1)
 
-        self.create_label_and_entry(self.canvas1,"slice start:", default_value='2', attr_name="slice_start")
-        self.create_label_and_entry(self.canvas1,"slice end:", default_value='6', attr_name="slice_end")
+        self.create_label_and_entry(self.canvas1,"slice start:", default_value='', attr_name="slice_start")
+        self.create_label_and_entry(self.canvas1,"slice end:", default_value='', attr_name="slice_end")
         self.create_label_and_checkbutton(
             self.canvas1, 
             "select all slices", 
@@ -155,6 +156,14 @@ class ROIAnalyzerApp:
         self.create_separator(self.canvas1)
         self.create_label_and_entry(self.canvas1,"Filter radius:", default_value=17, attr_name="filter_radius")
         #self.create_button(self.canvas1,"2. Filter", self.filter_action)
+        
+        # Batch processing field
+        self.create_label_and_entry(
+            self.canvas1,
+            "Batch size:",
+            default_value='4',
+            attr_name="batch_size"
+        )
 
         self.create_separator(self.canvas1)
         self.create_label_and_option_menu(self.canvas1,"Binarization Method:", ['otsu', 'otsu', 'max_entropy', 'yen', 'li', 'isodata', 'mean', 'minimum'], default_value='otsu', attr_name="binarization")
@@ -193,6 +202,11 @@ class ROIAnalyzerApp:
                            icon_path=self.icons_path["mark_area"], side='left', attr_name = "mark_area")
         self.create_button(self.inner_canvas1,"2. Filter and Binarize", self.binarize_action,
                            icon_path=self.icons_path["binarize"], side='left', attr_name = "binarize")
+        
+        # Batch processing button
+        self.create_button(self.inner_canvas1, "Batch Binarize", self.batch_binarize_action,
+                           icon_path=self.icons_path["batch"], side='left', attr_name = "batch")
+        
         self.create_button(self.inner_canvas1,"3. Histogram analysis", self.define_hist_action,
                            icon_path=self.icons_path["histogram"], side='left', attr_name = "histogram")
         self.create_button(self.inner_canvas1,"4. General analysis", self.run_postprocess,
@@ -969,9 +983,86 @@ class ROIAnalyzerApp:
     def filter_action(self):
         asyncio.run_coroutine_threadsafe(self.async_filter_action(), self.loop)
 
-    def binarize_action(self):
+    def _check_slice_fields(self):
+        """
+        Check if slice fields are properly filled.
+        Returns True if validation passes, False otherwise.
+        """
+        # If "select all slices" is checked, validation always passes
+        all_slices_selected = self.selected_all_slices_selected.get()
+        if all_slices_selected:
+            return True
+            
+        # Check if slice fields are filled when "select all slices" is not checked
+        slice_start_val = self.slice_start_entry.get().strip()
+        slice_end_val = self.slice_end_entry.get().strip()
+        
+        if not slice_start_val or not slice_end_val:
+            messagebox.showwarning("Missing Values", "Please fill in both 'slice start' and 'slice end' fields or check 'select all slices' option.")
+            return False
+            
+        return True
+
+    def batch_binarize_action(self):
+                 # Prevent running twice at the same time
+        if getattr(self, "_batch_in_progress", False):
+            return
+            
+        # Check slice fields validation
+        if not self._check_slice_fields():
+            return
+                
+        self._batch_in_progress = True
+        orig_start = self.slice_start_entry.get()
+        orig_end   = self.slice_end_entry.get()
+
         try:
+            big_start = int(self.slice_start_entry.get())
+            big_end   = int(self.slice_end_entry.get())
+            # read the user's batch size (as an integer)
+            window_length = int(self.batch_size_entry.get())
+            total_windows = ((big_end - big_start + 1) + window_length - 1) // window_length
+            counter = 0
+
+            for s in range(big_start, big_end + 1, window_length):
+                e = min(s + window_length - 1, big_end)
+
+                                 # Update your entries to reflect the slice
+                self.slice_start_entry.delete(0, tk.END)
+                self.slice_start_entry.insert(0, str(s))
+                self.slice_end_entry.delete(0, tk.END)
+                self.slice_end_entry.insert(0, str(e))
+
+                # Recharge les params et lance la binarisation
+                self.save_all_params()
+                self.binarize_action()
+                self.root.update_idletasks()
+                self.root.update()
+                                 # --- ASCII progress bar update ---
+                counter += 1
+                self.update_progress_bar(counter, total_windows)
+            # ---------------------------------------
+
+            messagebox.showinfo("Batch terminé", "Toutes les fenêtres ont été traitées.")
+        finally:
+            self.slice_start_entry.delete(0, tk.END)
+            self.slice_start_entry.insert(0, orig_start)
+            self.slice_end_entry.delete(0, tk.END)
+            self.slice_end_entry.insert(0, orig_end)
+            self._batch_in_progress = False
+
+    def binarize_action(self, return_df=False):
+        """
+        Si return_df=False : exécution comme avant (écrit dans Excel).
+        Si return_df=True : renvoie un DataFrame au lieu d'écrire dans Excel.
+        """
+        try:
+            # Check slice fields validation
+            if not self._check_slice_fields():
+                return
+                
             df, rows_to_process = self.prepare_data()
+            results = []
             total = len(rows_to_process)
             filter_radius = int(self.filter_radius_entry.get())
             for idx, row_idx in enumerate(rows_to_process):
@@ -988,37 +1079,67 @@ class ROIAnalyzerApp:
                 stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch)
                 # Filtration
                 filter_after_roi_selection(filter_radius, file_path)
-                # Binarization
-                binarize_images(
-                    file_path, 
-                    self.binarization_method.get(), int(self.min_size_entry.get()),
-                    int(self.max_size_entry.get()), self.pixel_to_micron_ratio
-                )
+                
+                if return_df:
+                                         # we get the DataFrame returned by binarize_images
+                    sub_df = binarize_images(
+                        file_path,
+                        self.binarization_method.get(),
+                        int(self.min_size_entry.get()),
+                        int(self.max_size_entry.get()),
+                        self.pixel_to_micron_ratio,
+                        return_df=True
+                    )
+                    results.append(sub_df)
+                                 else:
+                     # historical writing
+                    binarize_images(
+                        file_path, 
+                        self.binarization_method.get(), int(self.min_size_entry.get()),
+                        int(self.max_size_entry.get()), self.pixel_to_micron_ratio
+                    )
 
                 self.update_progress_bar(idx, total)
                 time.sleep(0)
-            print("Binarization completed successfully.")
+                
+            if return_df:
+                return pd.concat(results, ignore_index=True)
+            else:
+                print("Binarization completed successfully.")
         except Exception as e:
             print(f"An error occurred: {e}")
             traceback.print_exc()
 
 
     def define_hist_action(self):
+        # Use batch processing like in syn_catch_GUItestAM.py
+        big_start     = int(self.slice_start_entry.get())
+        big_end       = int(self.slice_end_entry.get())
+        window_length = int(self.batch_size_entry.get())
         df, rows_to_process = self.prepare_data()
-        total = len(rows_to_process)
         files_out = []
-        for idx, row_idx in enumerate(rows_to_process):
-            file_path = df.iloc[row_idx]['filepath']
-            location = df.iloc[row_idx]['location']
-            slice_start = self.parse_entry(self.slice_start_entry.get())
-            slice_end = self.parse_entry(self.slice_end_entry.get())
-            target_ch = int(self.target_ch_entry.get())-1
-            second_ch = int(self.second_ch_entry.get())-1
-            print(file_path)
-            #print(f"target_ch: {target_ch}")
-            #print(f"second_ch: {second_ch}")
-            files_out.append(define_hist(file_path, location, slice_start, slice_end, target_ch, second_ch, self.root))
-            self.update_progress_bar(idx, total)
+
+        for s in range(big_start, big_end+1, window_length):
+            e = min(s + window_length - 1, big_end)
+            self.slice_start_entry.delete(0, tk.END)
+            self.slice_start_entry.insert(0, str(s))
+            self.slice_end_entry.delete(0, tk.END)
+            self.slice_end_entry.insert(0, str(e))
+            self.save_all_params()
+            total = len(rows_to_process)
+
+            for idx, row_idx in enumerate(rows_to_process):
+                file_path = df.iloc[row_idx]['filepath']
+                location = df.iloc[row_idx]['location']
+                slice_start = self.parse_entry(self.slice_start_entry.get())
+                slice_end = self.parse_entry(self.slice_end_entry.get())
+                target_ch = int(self.target_ch_entry.get())-1
+                second_ch = int(self.second_ch_entry.get())-1
+                print(file_path)
+                #print(f"target_ch: {target_ch}")
+                #print(f"second_ch: {second_ch}")
+                files_out.append(define_hist(file_path, location, slice_start, slice_end, target_ch, second_ch, self.root))
+                self.update_progress_bar(idx, total)
         print("Histogram selection is over")
 
     # Asynchronous function to perform post-processing
