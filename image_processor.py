@@ -364,6 +364,8 @@ def handle_slide_indexing(slice_start, slice_end, max_slice):
     # validate
     if s < 0 or e >= max_slice or s > e:
         print(f"Invalid slice range: {s}–{e}. Must be within 0 and {max_slice-1}.")
+        messagebox.showwarning("Invalid Slice Range", 
+                              f"Invalid slice range: {s+1}–{e+1}.\nMust be within 1 and {max_slice}.\n\nPlease adjust your slice start/end values.")
         return None
 
     # ★ save the **actual** window boundaries every time ★
@@ -398,6 +400,8 @@ def extract_czi_image_stack(file_path, slice_start, slice_end, target_ch, dapi_c
         
         if target_ch >= max_channels:
             print(f"Invalid target channel: {target_ch}. Max channels available: {max_channels}.")
+            messagebox.showwarning("Invalid Target Channel", 
+                                  f"Invalid target channel: {target_ch+1}.\nOnly {max_channels} channels available (1-{max_channels}).\n\nPlease select a valid target channel.")
             return None
         
         # Output directory for results
@@ -435,6 +439,12 @@ def extract_lif_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
                         
             frames_1, max_channels, max_slice = collect_lif_frames(image, target_ch)
             frames_2, _, _ = collect_lif_frames(image, dapi_ch)
+
+            if target_ch >= max_channels:
+                print(f"Invalid target channel: {target_ch}. Max channels available: {max_channels}.")
+                messagebox.showwarning("Invalid Target Channel", 
+                                      f"Invalid target channel: {target_ch+1}.\nOnly {max_channels} channels available (1-{max_channels}).\n\nPlease select a valid target channel.")
+                return None
 
             slide = handle_slide_indexing(slice_start, slice_end, max_slice)
             
