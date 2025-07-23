@@ -59,9 +59,9 @@ class ROIAnalyzerApp:
                     icon_image = PhotoImage(file=icon_path)
                     self.root.iconphoto(True, icon_image)
             except Exception as e:
-                print(f"Не удалось установить иконку: {e}")
+                print(f"Failed to set icon: {e}")
         else:
-            print(f"Файл иконки не найден: {icon_path}")
+            print(f"Icon file not found: {icon_path}")
 
         self.icons_path = {
             "binarize": os.path.join(current_dir, "images", "buttons", "binarize_32.png"),
@@ -245,8 +245,8 @@ class ROIAnalyzerApp:
 
     def update_canvas_visibility(self, canvas_list):
         """
-        Обновляет видимость канвасов на основе параметров.
-        canvas_list: список кортежей (канвас, ключ состояния).
+        Updates canvas visibility based on parameters.
+        canvas_list: list of tuples (canvas, state key).
         """
         for canvas, key in canvas_list:
             # Check the visibility state from the parameters
@@ -1043,7 +1043,7 @@ class ROIAnalyzerApp:
                 self.update_progress_bar(counter, total_windows)
             # ---------------------------------------
 
-            messagebox.showinfo("Batch terminé", "Toutes les fenêtres ont été traitées.")
+            messagebox.showinfo("Batch completed", "All windows have been processed.")
         finally:
             self.slice_start_entry.delete(0, tk.END)
             self.slice_start_entry.insert(0, orig_start)

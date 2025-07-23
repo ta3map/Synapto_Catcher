@@ -76,7 +76,7 @@ class ThumbnailViewer:
         self._load_page_images(0)
         
     def display_selected_ids(self):
-        """Отображаем выделенные ID в текстовом поле в порядке следования изображений."""
+        """Display selected IDs in a text field in image sequence order."""
         if self.image_ids is None:
             self.selected_ids_label.pack_forget()  # Hide the text field if IDs are not passed
             return
@@ -566,18 +566,18 @@ def create_excel_snapshot_to_image(excel_file, sheet_name=None, rows=10, cols=5)
         for j, cell in enumerate(row):
             x = x_start + j * column_spacing
             
-            if cell != "":  # Если ячейка непустая, рисуем фон для текста
+            if cell != "":  # If cell is not empty, draw background for text
                 draw.rectangle([x, y, x + column_spacing, y + line_spacing], fill=row_color)
             
-            # Отрисовка текста с отступом, если ячейка непустая
+            # Draw text with offset if cell is not empty
             draw.text((x + text_offset, y), str(cell), font=font, fill='black')
     
-    # Отрисовка вертикальных линий после текста для их отображения поверх
+    # Draw vertical lines after text to display them on top
     for j in range(num_cols + 1):
         x = x_start + j * column_spacing
         draw.line([(x, y_start), (x, text_height)], fill='black', width=2)
     
-    # Конвертация изображения в BytesIO для вывода
+    # Convert image to BytesIO for output
     img_byte_arr = BytesIO()
     image.save(img_byte_arr, format='PNG')
     img_byte_arr.seek(0)
@@ -586,7 +586,7 @@ def create_excel_snapshot_to_image(excel_file, sheet_name=None, rows=10, cols=5)
 
 
 def normalize_channel(channel_data):
-    """Нормирует данные канала в диапазон от 0 до 255"""
+    """Normalizes channel data to range from 0 to 255"""
     channel_min = channel_data.min()
     channel_max = channel_data.max()
     if channel_max > channel_min:
@@ -596,34 +596,34 @@ def normalize_channel(channel_data):
     return normalized_data.astype(np.uint8)
 
 def create_combined_image(image_data, channels, slices, scale, max_channel, max_slice):
-    """Создает RGB-изображение из заданных каналов и слайдов с опциональным масштабированием"""
+    """Creates RGB image from specified channels and slices with optional scaling"""
     
-    # Фильтруем только валидные каналы и срезы
-    valid_channels = [ch for ch in channels if ch < max_channel]  # Игнорируем каналы, которые out of bounds
-    valid_slices = [sl for sl in slices if sl < max_slice]        # Игнорируем срезы, которые out of bounds
+    # Filter only valid channels and slices
+    valid_channels = [ch for ch in channels if ch < max_channel]  # Ignore channels that are out of bounds
+    valid_slices = [sl for sl in slices if sl < max_slice]        # Ignore slices that are out of bounds
 
     sample_slices = []
     
-    # Получаем данные по каждому каналу через максимумы по валидным срезам
+    # Get data for each channel through maximums over valid slices
     for ch in valid_channels:
         sample_slice = np.max(image_data[0, 0, ch, valid_slices, :, :, 0], axis=0)
         sample_slices.append(sample_slice)
     
-    # Если scale не равен 1, уменьшаем изображение
+    # If scale is not equal to 1, reduce image
     if scale != 1.0:
         sample_slices = [zoom(slice_data, (scale, scale), order=1) for slice_data in sample_slices]
     
-    # Инициализируем пустое RGB изображение
+    # Initialize empty RGB image
     combined_image = np.zeros((*sample_slices[0].shape, 3), dtype='uint8')
     
-    # Выбираем цвета для каналов (RGB и дополнительные)
-    colormap = cm.get_cmap('rainbow', len(valid_channels))  # Используем колорбар для распределения цветов по каналам
+    # Choose colors for channels (RGB and additional)
+    colormap = cm.get_cmap('rainbow', len(valid_channels))  # Use colorbar for color distribution across channels
     
-    # Проходим по каналам и добавляем их в RGB-изображение
+    # Iterate through channels and add them to RGB image
     for i, sample_slice in enumerate(sample_slices):
         normalized_slice = normalize_channel(sample_slice)
-        color = np.array(colormap(i)[:3]) * 255  # Получаем RGB цвет из колорбара
-        for j in range(3):  # RGB компоненты
+        color = np.array(colormap(i)[:3]) * 255  # Get RGB color from colorbar
+        for j in range(3):  # RGB components
             combined_image[:, :, j] += (normalized_slice * color[j] / 255).astype(np.uint8)
 
     return combined_image
@@ -654,28 +654,28 @@ def process_tif_image(file_path):
     img = Image.open(file_path)
     
     img_stack = []        
-    # Проходим по каждому слою в многослойном изображении
+    # Iterate through each layer in multi-layer image
     for i in range(img.n_frames):
         img.seek(i)
         
-        # Преобразуем слой в массив и нормализуем в 8-битный диапазон
+        # Convert layer to array and normalize to 8-bit range
         layer = np.array(img, dtype=np.uint16)
         layer_max = layer.max()
         
-        # Проверка на максимальное значение, чтобы избежать деления на ноль
+        # Check for maximum value to avoid division by zero
         if layer_max > 0:
             layer_normalized = (layer * (255.0 / layer_max)).astype(np.uint8)
         else:
-            layer_normalized = layer.astype(np.uint8)  # Если max=0, просто переводим в uint8
+            layer_normalized = layer.astype(np.uint8)  # If max=0, just convert to uint8
             
-        # Дублируем слой по трем каналам для RGB
+        # Duplicate layer across three channels for RGB
         rgb_layer = np.stack([layer_normalized] * 3, axis=-1)
         img_stack.append(rgb_layer)
     
-    # Объединяем все слои в одно RGB-изображение, используя максимумы по каждому каналу
+    # Combine all layers into one RGB image using maximums for each channel
     combined_array = np.max(np.stack(img_stack), axis=0)
     
-    # Преобразуем в PIL-изображение и гарантируем режим RGB
+    # Convert to PIL image and ensure RGB mode
     combined_img = Image.fromarray(combined_array, mode='RGB')
     if combined_img.mode != 'RGB':
         combined_img = combined_img.convert('RGB')
@@ -685,34 +685,34 @@ def process_tif_image(file_path):
 def process_lif_image(file_path, scale=0.3):
     lif = LifFile(file_path)
     
-    # Извлекаем, конвертируем в RGB, масштабируем и добавляем рамку к каждому изображению
-    border_color = (128, 40, 128)  # цвет рамки
-    border_size = 5  # Толщина рамки
+    # Extract, convert to RGB, scale and add border to each image
+    border_color = (128, 40, 128)  # border color
+    border_size = 5  # Border thickness
     pil_images = []
     for img in lif.get_iter_image():
         plane = img.get_plane().convert("RGB")
         
-        # Масштабируем изображение
+        # Scale image
         new_size = (int(plane.width * scale), int(plane.height * scale))
         scaled_image = plane.resize(new_size, Image.LANCZOS)
         
-        # Добавляем зеленую рамку
+        # Add green border
         bordered_image = ImageOps.expand(scaled_image, border=border_size, fill=border_color)
         pil_images.append(bordered_image)
 
-    # Определяем размеры для коллажа
+    # Define dimensions for collage
     rows = int(len(pil_images) ** 0.5)
     cols = (len(pil_images) + rows - 1) // rows
 
-    # Получаем размер каждого изображения с учетом рамки
+    # Get size of each image including border
     width, height = pil_images[0].size
     collage_width = cols * width
     collage_height = rows * height
 
-    # Создаем пустой холст для коллажа
+    # Create empty canvas for collage
     collage = Image.new('RGB', (collage_width, collage_height))
 
-    # Размещаем каждое изображение с рамкой в коллаже
+    # Place each bordered image in collage
     for i, img in enumerate(pil_images):
         x = (i % cols) * width
         y = (i // cols) * height
@@ -760,19 +760,19 @@ def create_region_mask(image_shape, coords, simplify=True, epsilon=1.0):
 
 class ColorCycler:
     def __init__(self, num_colors=10):
-        # Инициализируем палитру из N цветов
+        # Initialize palette of N colors
         self.palette = self.generate_color_palette(num_colors)
-        self.index = 0  # Текущий индекс
+        self.index = 0  # Current index
 
     def generate_color_palette(self, num_colors):
-        colormap = cm.get_cmap('tab10', num_colors)  # Используем палитру 'tab10'
+        colormap = cm.get_cmap('tab10', num_colors)  # Use 'tab10' palette
         colors = [tuple((np.array(colormap(i)[:3]) * 255).astype(int)) for i in range(num_colors)]
         return colors
 
     def get_next_color(self):
-        # Возвращаем цвет по кругу, используя индекс
+        # Return color cyclically using index
         color = self.palette[self.index]
-        self.index = (self.index + 1) % len(self.palette)  # Циклическое обновление индекса
+        self.index = (self.index + 1) % len(self.palette)  # Cyclic index update
         return color    
 class guiButton:
     def __init__(self, x, y, width, height, text, callback=None):
@@ -823,7 +823,7 @@ def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_
             # Blend the overlay with the original image to add transparency
             cv2.addWeighted(overlay, 0.2, img, 0.8, 0, img)
 
-            # Добавляем отрисовку границы полигона без прозрачности
+            # Add polygon border rendering without transparency
             cv2.polylines(img, [coords], isClosed=True, color=polygon_color, thickness=2)
 
             # Calculate the center of the polygon
@@ -839,12 +839,12 @@ def draw_polygons_on_image(coords_df, scale_factor, color_cycler, img, simplify_
 def distance(p1, p2):
     return np.linalg.norm(p1 - p2)
 def is_on_edge(point, poly, tolerance=5):
-    # Определение, попадает ли клик на ребро полигона
+    # Determine if click is on polygon edge
     for i in range(len(poly)):
         next_point = poly[(i + 1) % len(poly)]
         d = np.cross(next_point - poly[i], point - poly[i]) / distance(poly[i], next_point)
         if abs(d) < tolerance:
-            # Если клик на ребре, возвращаем индекс ребра и ближайшую точку на ребре
+            # If click is on edge, return edge index and closest point on edge
             vec = next_point - poly[i]
             t = np.dot(point - poly[i], vec) / np.dot(vec, vec)
             if 0 <= t <= 1:
@@ -856,55 +856,55 @@ class PolygonDrawer:
     def __init__(self, rgb_image, root, window_width=1200, window_height=800, coords_df=None, comments=''):
         
         self.root = root #tkinter root
-        # Сохраняем размеры окна
+        # Save window dimensions
         self.window_width = window_width
         self.window_height = window_height
 
-        self.zoom_val = 100  # 100% – исходный масштаб
+        self.zoom_val = 100  # 100% - original scale
 
         self.original_rgb_image = rgb_image
         orig_h, orig_w = rgb_image.shape[:2]
         
-        # Вычисляем коэффициент масштабирования, чтобы вписать изображение в окно
+        # Calculate scaling factor to fit image in window
         self.effective_scale = min(window_width / orig_w, window_height / orig_h)
         new_w = int(orig_w * self.effective_scale)
         new_h = int(orig_h * self.effective_scale)
         
-        # Масштабируем исходное изображение
+        # Scale original image
         resized_image = cv2.resize(rgb_image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
         
-        # Создаем черный фон фиксированного размера (letterbox)
+        # Create black background of fixed size (letterbox)
         self.display_image = np.zeros((window_height, window_width, 3), dtype=resized_image.dtype)
-        # Вычисляем смещения для центрирования
+        # Calculate offsets for centering
         self.offset_x = (window_width - new_w) // 2
         self.offset_y = (window_height - new_h) // 2
-        # Помещаем масштабированное изображение по центру окна
+        # Place scaled image in center of window
         self.display_image[self.offset_y:self.offset_y+new_h, self.offset_x:self.offset_x+new_w] = resized_image
         
-        # Преобразуем в BGR (так как cv2.imshow ожидает BGR)
+        # Convert to BGR (since cv2.imshow expects BGR)
         self.bgr_image = cv2.cvtColor(self.display_image, cv2.COLOR_RGB2BGR)
         self.img_copy = self.bgr_image.copy()
         self.comments = comments
 
-        self.coords_df = coords_df.copy()  # оригинал для возможных изменений
-        self.original_coords_df = coords_df.copy()  # оригинал, который останется неизменным
+        self.coords_df = coords_df.copy()  # original for possible changes
+        self.original_coords_df = coords_df.copy()  # original that will remain unchanged
 
         self.points = []
-        self.new_polygons = []  # Список для хранения всех добавленных полигонов
+        self.new_polygons = []  # List for storing all added polygons
         self.new_polygons_df = pd.DataFrame()
         self.selected_polygon_df = pd.DataFrame()
-        self.new_polygon_names = []# Добавляем список для хранения имён новых полигонов
-        self.current_polygon_name = None  # для текущего полигона
+        self.new_polygon_names = []# Add list for storing new polygon names
+        self.current_polygon_name = None  # for current polygon
         
-        # Имена оригинальных полигонов
+        # Original polygon names
         self.original_polygon_names = []
         if self.coords_df is not None and not self.coords_df.empty:
-            # Используем set для автоматического добавления только уникальных имен
+            # Use set to automatically add only unique names
             original_names_set = set()
             for col_name in self.coords_df.columns:
                 if col_name.endswith('_x'):
-                    base_name = col_name[:-2] # Убираем '_x' для получения имени полигона
-                    # Убедимся, что парная _y колонка тоже существует, прежде чем добавлять
+                    base_name = col_name[:-2] # Remove '_x' to get polygon name
+                    # Make sure paired _y column exists before adding
                     if f"{base_name}_y" in self.coords_df.columns:
                         original_names_set.add(base_name)
             self.original_polygon_names = list(original_names_set)
@@ -912,14 +912,14 @@ class PolygonDrawer:
         
         
         self.is_drawing = False
-        self.tool_selected = False  # Устанавливается True после нажатия "Start"
-        self.selected_vertex = None  # Индекс выбранной вершины
-        self.dragging = False  # Флаг перетаскивания вершины (в режиме модификации)
-        self.tolerance = 10  # Радиус для определения клика на вершину
+        self.tool_selected = False  # Set to True after pressing "Start"
+        self.selected_vertex = None  # Index of selected vertex
+        self.dragging = False  # Flag for dragging vertex (in modification mode)
+        self.tolerance = 10  # Radius for determining vertex click
 
-        # Флаги и переменные для drag изображения (когда не выбран режим рисования)
+        # Flags and variables for dragging image (when drawing mode not selected)
         self.image_dragging = False
-        self.user_offset = None  # Если не None, содержит кортеж (offset_x, offset_y)
+        self.user_offset = None  # If not None, contains tuple (offset_x, offset_y)
         self.drag_start_x = None
         self.drag_start_y = None
         self.drag_start_offset = (0, 0)
@@ -927,10 +927,10 @@ class PolygonDrawer:
         self.last_mouse_x = self.offset_x
         self.last_mouse_y = self.offset_y
         
-        # Флаг для выхода из основного цикла
+        # Flag for exiting main loop
         self.should_exit = False
         
-        # Создаем кнопки
+        # Create buttons
         self.start_button = guiButton(10, 10, 150, 50, 'Add region', self.start_drawing)
         self.delete_button = guiButton(10, 70, 100, 50, 'Delete', self.delete_polygon)
         self.select_all_button = guiButton(170, 10, 100, 50, 'Select all', self.select_all)
@@ -940,7 +940,7 @@ class PolygonDrawer:
         self.exit_ns_button = guiButton(10, 470, 150, 50, 'Don''t save', self.exit_ns)
         
 
-        # Управляем видимостью кнопок
+        # Manage button visibility
         self.exit_s_button.visible = True
         self.exit_ns_button.visible = True
         self.apply_button.visible = False
@@ -950,34 +950,34 @@ class PolygonDrawer:
 
         cv2.namedWindow("Polygon", cv2.WINDOW_AUTOSIZE)
         cv2.moveWindow("Polygon", 100, 100)
-        # Убираем принудительный topmost для более стабильной работы в Linux
+        # Remove forced topmost for more stable work in Linux
         
         cv2.createTrackbar("Zoom", "Polygon", self.zoom_val, 500, self.on_trackbar)
         cv2.setTrackbarMin('Zoom', 'Polygon', 50) 
         
-        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Обработчик мыши
+        cv2.setMouseCallback("Polygon", self.mouse_callback)  # Mouse handler
     
     def on_trackbar(self, val):
         self.zoom_val = val
-        # self.user_offset = None # Сброс центрирования
+        # self.user_offset = None # Reset centering
         self.update_display_image()
 
 
     def start_drawing(self):
-        # Простое управление окнами без сложного переключения topmost
+        # Simple window management without complex topmost switching
         polygon_name = simpledialog.askstring("New region", "Name:", parent=self.root)
         if polygon_name is not None and polygon_name.strip() != "":
             base_name = polygon_name.strip()
 
-            # Собираем все существующие имена для проверки
+            # Collect all existing names for checking
             all_existing_names = set(self.original_polygon_names) | set(self.new_polygon_names)
 
             final_polygon_name = base_name
             index = 1
 
-            # Проверяем, существует ли предложенное имя (base_name)
+            # Check if proposed name (base_name) exists
             if final_polygon_name in all_existing_names:
-                # Если имя существует, ищем первый свободный индекс
+                # If name exists, search for first free index
                 while True:
                     potential_name = f"{base_name}_{index}"
                     if potential_name not in all_existing_names:
@@ -985,7 +985,7 @@ class PolygonDrawer:
                         print(f"Name '{base_name}' already exists. Using '{final_polygon_name}' instead.")
                         break
                     index += 1
-            # Если имя base_name не найдено, оно и будет final_polygon_name
+            # If base_name not found, it will be final_polygon_name
 
             self.current_polygon_name = final_polygon_name
             self.new_polygon_names.append(self.current_polygon_name)
@@ -1008,25 +1008,25 @@ class PolygonDrawer:
         cv2.setMouseCallback("Polygon", self.mouse_callback)
 
     def apply_polygon(self):
-        """Преобразует текущий нарисованный полигон, добавляет его в список и очищает текущее рисование."""
+        """Converts current drawn polygon, adds it to list and clears current drawing."""
         if len(self.points) > 0:
-            # Преобразуем координаты нарисованного полигона обратно в координаты исходного изображения
+            # Convert drawn polygon coordinates back to original image coordinates
             original_points = []
             for x, y in self.points:
                 orig_x = int((x - self.offset_x) / self.current_scale)
                 orig_y = int((y - self.offset_y) / self.current_scale)
                 original_points.append((orig_x, orig_y))
 
-            # Добавляем полученный полигон в список новых полигонов
+            # Add resulting polygon to list of new polygons
             self.new_polygons.append(original_points)
             self.new_polygons_df = self.convert_polygons_to_df(self.new_polygons, self.new_polygon_names)
             
             #print(self.new_polygons_df)
             #print("++++++")
-            # Очищаем текущие точки для возможности рисовать новый полигон
+            # Clear current points to allow drawing new polygon
             self.points = []
 
-            # Обновляем видимость кнопок
+            # Update button visibility
             self.start_button.visible = True
             self.select_all_button.visible = False
             self.delete_button.visible = False
@@ -1036,29 +1036,29 @@ class PolygonDrawer:
             self.exit_ns_button.visible = True
             self.tool_selected = False
             
-            # Обнуляем имя текущего полигона
+            # Reset current polygon name
             self.current_polygon_name = None
 
-            # Возвращаем основной обработчик мыши
+            # Return main mouse handler
             cv2.setMouseCallback("Polygon", self.mouse_callback)
 
     def modify_selected_polygon(self):
-        """Вызывается при нажатии кнопки 'Modify'. Перекладывает координаты 
-        выделенного полигона в self.points и удаляет его из coords_df."""
-        # Если нечего модифицировать
+        """Called when 'Modify' button is pressed. Moves coordinates 
+        of selected polygon to self.points and removes it from coords_df."""
+        # If nothing to modify
         if self.selected_polygon_df.empty:
             return
 
         # В self.selected_polygon_df у нас должен быть ровно один полигон, 
         # у которого колонки вида <name>_x и <name>_y
-        x_col = self.selected_polygon_df.columns[0]  # например, 'Roof_x'
-        base_name = x_col[:-2]                       # отрезаем '_x' → 'Roof'
+        x_col = self.selected_polygon_df.columns[0]  # for example, 'Roof_x'
+        base_name = x_col[:-2]                       # cut off '_x' → 'Roof'
         y_col = base_name + '_y'                     # 'Roof_y'
 
-        # Извлекаем (x, y) в оригинальных координатах (как в coords_df)
+        # Extract (x, y) in original coordinates (as in coords_df)
         poly_points = self.selected_polygon_df[[x_col, y_col]].dropna().values
 
-        # Конвертируем их в координаты экрана (self.points) для редактирования
+        # Convert them to screen coordinates (self.points) for editing
         new_points = []
         for (orig_x, orig_y) in poly_points:
             disp_x = int(orig_x * self.current_scale + self.offset_x)
@@ -1066,41 +1066,41 @@ class PolygonDrawer:
             new_points.append((disp_x, disp_y))
         self.points = new_points
 
-        # Удаляем этот полигон из исходного DataFrame
+        # Remove this polygon from source DataFrame
         if self.coords_df is not None and not self.coords_df.empty:
-            # На всякий случай используем errors='ignore', чтобы не упасть, 
-            # если вдруг колонки уже отсутствуют
+            # Use errors='ignore' to be safe, 
+            # in case columns are already missing
             self.coords_df = self.coords_df.drop(columns=[x_col, y_col], errors='ignore')
 
-        # Запоминаем имя текущего (теперь редактируемого) полигона
+        # Remember name of current (now editable) polygon
         self.current_polygon_name = base_name
-        # Добавляем это имя в список "новых" (которые пойдут через apply)
+        # Add this name to list of "new" ones (which will go through apply)
         self.new_polygon_names.append(base_name)
 
-        # Очистим выделенный полигон, так как он теперь в self.points
+        # Clear selected polygon since it's now in self.points
         self.selected_polygon_df = pd.DataFrame()
 
         self.tool_selected = True
         
-        # Настраиваем видимость кнопок
+        # Configure button visibility
         self.start_button.visible = False
         self.modify_button.visible = False
-        self.apply_button.visible = True # можно только нажать Apply чтобы применить модификацию
+        self.apply_button.visible = True # can only press Apply to apply modification
         self.delete_button.visible = False        
         self.exit_s_button.visible = False
         self.exit_ns_button.visible = False
 
 
-        # Переключаемся на обработчик модификации вершин
+        # Switch to vertex modification handler
         cv2.setMouseCallback("Polygon", self.mod_mouse_callback)
 
     def delete_polygon(self):
-        """Удаляет ВЫБРАННЫЙ полигон (из self.selected_polygon_df)
-        из соответствующего DataFrame (coords_df или new_polygons_df)."""
+        """Deletes SELECTED polygon (from self.selected_polygon_df)
+        from corresponding DataFrame (coords_df or new_polygons_df)."""
         if self.selected_polygon_df is None or self.selected_polygon_df.empty:
-            return # Ничего не делать, если полигон не выбран
+            return # Do nothing if polygon not selected
 
-        # Получаем имена колонок удаляемого полигона (например, ['Roof_x', 'Roof_y'])
+        # Get column names of polygon to delete (for example, ['Roof_x', 'Roof_y'])
         cols_to_delete = self.selected_polygon_df.columns.tolist()
 
         deleted_from_old = False

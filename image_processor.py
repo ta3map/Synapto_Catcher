@@ -628,7 +628,7 @@ def get_location_name(root, location_names):
     screen_height = root.winfo_screenheight()
     
     """
-    Функция отображает диалог для выбора или ввода имени региона.
+    Function displays a dialog for selecting or entering a region name.
     """
     # Draw a window
     dialog = initialize_window(root, "Select region", 350, 200, icon_path=icon_path)
