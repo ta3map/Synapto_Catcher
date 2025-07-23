@@ -37,7 +37,7 @@ jobs:
         path: dist/Synapto Catcher.exe
 
   build-macos:
-    runs-on: macos-13
+    runs-on: macos-latest
     
     steps:
     - uses: actions/checkout@v4
@@ -45,27 +45,19 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
+        python-version: '3.9'
     
     - name: Install dependencies
-      env:
-        MACOSX_DEPLOYMENT_TARGET: "10.15"
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
     
     - name: Build macOS App
-      env:
-        MACOSX_DEPLOYMENT_TARGET: "10.15"
-        CPPFLAGS: "-mmacosx-version-min=10.15"
-        LDFLAGS: "-mmacosx-version-min=10.15"
       run: |
-        pyinstaller --onedir --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." --target-arch x86_64 --osx-bundle-identifier com.synaptocatcher.app app.py
+        pyinstaller --onedir --windowed --name "Synapto Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py
     
     - name: Create DMG
-      env:
-        MACOSX_DEPLOYMENT_TARGET: "10.15"
       run: |
         mkdir -p dmg_temp
         cp -R "dist/Synapto Catcher.app" dmg_temp/

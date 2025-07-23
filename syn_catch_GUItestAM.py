@@ -24,8 +24,8 @@ import traceback
 current_dir = os.path.dirname(os.path.abspath(__file__))
 icon_path = current_dir + "\\images\\synaptocatcher.ico"
 sys.path.append(current_dir)
-from image_processornvAM2 import binarize_images, select_location, stack_image
-from image_processornvAM2 import filter_after_roi_selection, pp_one, define_hist
+from image_processor import binarize_images, select_location, stack_image
+from image_processor import filter_after_roi_selection, pp_one, define_hist
 from statistics_processor import analyze_and_plot_many_graphs, analyze_and_plot_one_graph
 from graphical_processor import ExperimentWindow, process_synCatch_image, ThumbnailViewer, ThemeManager, initialize_window
 from graphical_processor import run_lif_file_conversion_dialog
