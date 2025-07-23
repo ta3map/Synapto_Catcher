@@ -59,10 +59,26 @@ jobs:
     
     - name: Create DMG
       run: |
+        # Wait for filesystem to settle
+        sleep 10
+        
+        # Kill any processes that might be accessing the app
+        sudo pkill -f "Synapto Catcher" || true
+        sudo pkill -f "dist/Synapto Catcher.app" || true
+        
+        # Clear any quarantine attributes
+        sudo xattr -r -d com.apple.quarantine "dist/Synapto Catcher.app" || true
+        
+        # Create DMG structure
         mkdir -p dmg_temp
         cp -R "dist/Synapto Catcher.app" dmg_temp/
         ln -s /Applications dmg_temp/Applications
-        hdiutil create -volname "Synapto Catcher" -srcfolder dmg_temp -ov -format UDZO "dist/Synapto Catcher.dmg"
+        
+        # Another short wait
+        sleep 5
+        
+        # Create DMG with more specific options
+        hdiutil create -volname "Synapto Catcher" -srcfolder dmg_temp -ov -format UDZO -imagekey zlib-level=9 "dist/Synapto Catcher.dmg"
     
     - name: Upload macOS DMG
       uses: actions/upload-artifact@v4
