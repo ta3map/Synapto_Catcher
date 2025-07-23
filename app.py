@@ -1081,7 +1081,7 @@ class ROIAnalyzerApp:
                 filter_after_roi_selection(filter_radius, file_path)
                 
                 if return_df:
-                                         # we get the DataFrame returned by binarize_images
+                    # we get the DataFrame returned by binarize_images
                     sub_df = binarize_images(
                         file_path,
                         self.binarization_method.get(),
@@ -1091,8 +1091,8 @@ class ROIAnalyzerApp:
                         return_df=True
                     )
                     results.append(sub_df)
-                                 else:
-                     # historical writing
+                else:
+                    # historical writing
                     binarize_images(
                         file_path, 
                         self.binarization_method.get(), int(self.min_size_entry.get()),
