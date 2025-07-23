@@ -163,13 +163,21 @@ jobs:
       with:
         path: ./artifacts/
     
+    - name: Create archives
+      run: |
+        cd ./artifacts/
+        # Создаем zip-архивы для каждой платформы
+        cd synapto-catcher-windows && zip -r "../synapto-catcher-windows-${{ github.ref_name }}.zip" . && cd ..
+        cd synapto-catcher-macos && zip -r "../synapto-catcher-macos-${{ github.ref_name }}.zip" . && cd ..
+        cd synapto-catcher-linux && zip -r "../synapto-catcher-linux-${{ github.ref_name }}.zip" . && cd ..
+    
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          ./artifacts/synapto-catcher-windows/Synapto Catcher.exe
-          ./artifacts/synapto-catcher-macos/Synapto Catcher.dmg
-          ./artifacts/synapto-catcher-linux/Synapto_Catcher-x86_64.AppImage
+          ./artifacts/synapto-catcher-windows-${{ github.ref_name }}.zip
+          ./artifacts/synapto-catcher-macos-${{ github.ref_name }}.zip
+          ./artifacts/synapto-catcher-linux-${{ github.ref_name }}.zip
         name: Synapto Catcher ${{ github.ref_name }}
         tag_name: ${{ github.ref_name }}
         draft: false
