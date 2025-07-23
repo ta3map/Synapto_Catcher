@@ -501,7 +501,7 @@ def extract_image_stack(file_path, slice_start, slice_end, target_ch, dapi_ch):
             else:
                 layer_normalized = layer.astype(np.uint8)# If max=0, just convert to uint8
                 
-            # Дублируем слой по трем каналам для RGB
+            # Duplicate layer across three channels for RGB
             rgb_layer = np.stack([layer_normalized] * 3, axis=-1)
             img_stack.append(rgb_layer)
         
@@ -530,7 +530,7 @@ def load_coordinates_from_excel(excel_path, root):
             return pd.DataFrame()
     return coords_df
 
-# Первый шаг
+    # First step
 def stack_image(file_path, slice_start, slice_end, target_ch, dapi_ch):
     base_name = splitext(basename(file_path))[0]
     experiment_date = basename(dirname(file_path))
@@ -613,7 +613,7 @@ def filter_files_by_metadata(folder_path, key, value):
 
 def get_location_name(root, location_names):
     
-    # Определяем доступные разрешения экрана
+    # Determine available screen resolutions
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
     
@@ -683,20 +683,20 @@ def select_location(file_path, root, initial_location = ''):
             
         coords_df = load_coordinates_from_excel(excel_path, root)
         
-        # Определяем доступные разрешения экрана
+        # Determine available screen resolutions
         screen_width = root.winfo_screenwidth()
         screen_height = root.winfo_screenheight()
         # Initialize the drawing tool
         drawer = PolygonDrawer(image_np, root, window_width=int(screen_width*0.8), window_height=int(screen_height*0.8), coords_df=coords_df, comments = f"{base_name} #{im_index}")
         coords_df, coords_df_new = drawer.run()  # Wait for drawing to complete
 
-        # Объединяем старые координаты с новыми
+        # Combine old coordinates with new ones
         combined_df = pd.concat([coords_df, coords_df_new], axis=1)
         
         # Initialize ColorCycler
         color_cycler = ColorCycler(num_colors=10)
 
-        # Отрисовка старых и новых полигонов
+        # Drawing old and new polygons
         all_roi_img = image_np.copy()
         all_roi_img = cv2.cvtColor(all_roi_img, cv2.COLOR_RGB2BGR)
         all_roi_img = draw_polygons_on_image(coords_df, 1, color_cycler, all_roi_img, simplify_contour)
@@ -704,7 +704,7 @@ def select_location(file_path, root, initial_location = ''):
         all_roi_image_path = join(dirname(file_path), f"{base_name}_results", f"{base_name}_{im_index}_with_roi.png")
         save_image(all_roi_img, all_roi_image_path, Step = "Locations", priority_keys=stack_priority_keys)
         
-        # Перезаписываем Excel-файл полностью с комбинированными данными
+        # Completely rewrite Excel file with combined data
         with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
             combined_df.to_excel(writer, sheet_name='ROI_Coordinates', index=False)
 

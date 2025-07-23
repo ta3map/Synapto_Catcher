@@ -1,0 +1,950 @@
+﻿2025-07-23T11:39:27.2507975Z Current runner version: '2.326.0'
+2025-07-23T11:39:27.2534224Z ##[group]Runner Image Provisioner
+2025-07-23T11:39:27.2535242Z Hosted Compute Agent
+2025-07-23T11:39:27.2535746Z Version: 20250711.363
+2025-07-23T11:39:27.2536310Z Commit: 6785254374ce925a23743850c1cb91912ce5c14c
+2025-07-23T11:39:27.2537032Z Build Date: 2025-07-11T20:04:25Z
+2025-07-23T11:39:27.2537621Z ##[endgroup]
+2025-07-23T11:39:27.2538140Z ##[group]Operating System
+2025-07-23T11:39:27.2538751Z Ubuntu
+2025-07-23T11:39:27.2539222Z 24.04.2
+2025-07-23T11:39:27.2539641Z LTS
+2025-07-23T11:39:27.2540145Z ##[endgroup]
+2025-07-23T11:39:27.2540592Z ##[group]Runner Image
+2025-07-23T11:39:27.2541161Z Image: ubuntu-24.04
+2025-07-23T11:39:27.2541659Z Version: 20250720.1.0
+2025-07-23T11:39:27.2542671Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20250720.1/images/ubuntu/Ubuntu2404-Readme.md
+2025-07-23T11:39:27.2544329Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20250720.1
+2025-07-23T11:39:27.2545547Z ##[endgroup]
+2025-07-23T11:39:27.2546651Z ##[group]GITHUB_TOKEN Permissions
+2025-07-23T11:39:27.2548540Z Contents: write
+2025-07-23T11:39:27.2549084Z Metadata: read
+2025-07-23T11:39:27.2549656Z ##[endgroup]
+2025-07-23T11:39:27.2551831Z Secret source: Actions
+2025-07-23T11:39:27.2552571Z Prepare workflow directory
+2025-07-23T11:39:27.2945331Z Prepare all required actions
+2025-07-23T11:39:27.2998597Z Getting action download info
+2025-07-23T11:39:27.7810327Z ##[group]Download immutable action package 'actions/checkout@v4'
+2025-07-23T11:39:27.7811346Z Version: 4.2.2
+2025-07-23T11:39:27.7812361Z Digest: sha256:ccb2698953eaebd21c7bf6268a94f9c26518a7e38e27e0b83c1fe1ad049819b1
+2025-07-23T11:39:27.7813750Z Source commit SHA: 11bd71901bbe5b1630ceea73d27597364c9af683
+2025-07-23T11:39:27.7814499Z ##[endgroup]
+2025-07-23T11:39:27.8786008Z ##[group]Download immutable action package 'actions/setup-python@v4'
+2025-07-23T11:39:27.8786815Z Version: 4.9.1
+2025-07-23T11:39:27.8787614Z Digest: sha256:f03e505388af670b5a108629e0ba26befc08d5c62b41f46146a45fe29ae509a5
+2025-07-23T11:39:27.8788596Z Source commit SHA: 7f4fc3e22c37d6ff65e88745f38bd3157c663f7c
+2025-07-23T11:39:27.8789274Z ##[endgroup]
+2025-07-23T11:39:28.1930355Z ##[group]Download immutable action package 'actions/upload-artifact@v4'
+2025-07-23T11:39:28.1931163Z Version: 4.6.2
+2025-07-23T11:39:28.1931904Z Digest: sha256:290722aa3281d5caf23d0acdc3dbeb3424786a1a01a9cc97e72f147225e37c38
+2025-07-23T11:39:28.1932986Z Source commit SHA: ea165f8d65b6e75b540449e92b4886f43607fa02
+2025-07-23T11:39:28.1934032Z ##[endgroup]
+2025-07-23T11:39:28.3906809Z Complete job name: build-linux
+2025-07-23T11:39:28.4615316Z ##[group]Run actions/checkout@v4
+2025-07-23T11:39:28.4616154Z with:
+2025-07-23T11:39:28.4616551Z   repository: ta3map/Synapto_Catcher
+2025-07-23T11:39:28.4617265Z   token: ***
+2025-07-23T11:39:28.4617642Z   ssh-strict: true
+2025-07-23T11:39:28.4618024Z   ssh-user: git
+2025-07-23T11:39:28.4618426Z   persist-credentials: true
+2025-07-23T11:39:28.4618855Z   clean: true
+2025-07-23T11:39:28.4619267Z   sparse-checkout-cone-mode: true
+2025-07-23T11:39:28.4619737Z   fetch-depth: 1
+2025-07-23T11:39:28.4620121Z   fetch-tags: false
+2025-07-23T11:39:28.4620511Z   show-progress: true
+2025-07-23T11:39:28.4620906Z   lfs: false
+2025-07-23T11:39:28.4621271Z   submodules: false
+2025-07-23T11:39:28.4621655Z   set-safe-directory: true
+2025-07-23T11:39:28.4622289Z ##[endgroup]
+2025-07-23T11:39:28.5767920Z Syncing repository: ta3map/Synapto_Catcher
+2025-07-23T11:39:28.5769904Z ##[group]Getting Git version info
+2025-07-23T11:39:28.5770778Z Working directory is '/home/runner/work/Synapto_Catcher/Synapto_Catcher'
+2025-07-23T11:39:28.5771792Z [command]/usr/bin/git version
+2025-07-23T11:39:28.5803268Z git version 2.50.1
+2025-07-23T11:39:28.5831818Z ##[endgroup]
+2025-07-23T11:39:28.5848063Z Temporarily overriding HOME='/home/runner/work/_temp/795c6b82-94c1-4b5e-9ecc-5ee8e7c75015' before making global git config changes
+2025-07-23T11:39:28.5849425Z Adding repository directory to the temporary git global config as a safe directory
+2025-07-23T11:39:28.5862678Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Synapto_Catcher/Synapto_Catcher
+2025-07-23T11:39:28.5900156Z Deleting the contents of '/home/runner/work/Synapto_Catcher/Synapto_Catcher'
+2025-07-23T11:39:28.5903971Z ##[group]Initializing the repository
+2025-07-23T11:39:28.5908200Z [command]/usr/bin/git init /home/runner/work/Synapto_Catcher/Synapto_Catcher
+2025-07-23T11:39:28.5967670Z hint: Using 'master' as the name for the initial branch. This default branch name
+2025-07-23T11:39:28.5969597Z hint: is subject to change. To configure the initial branch name to use in all
+2025-07-23T11:39:28.5970928Z hint: of your new repositories, which will suppress this warning, call:
+2025-07-23T11:39:28.5972236Z hint:
+2025-07-23T11:39:28.5973167Z hint: 	git config --global init.defaultBranch <name>
+2025-07-23T11:39:28.5974485Z hint:
+2025-07-23T11:39:28.5975554Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2025-07-23T11:39:28.5977227Z hint: 'development'. The just-created branch can be renamed via this command:
+2025-07-23T11:39:28.5978644Z hint:
+2025-07-23T11:39:28.5979264Z hint: 	git branch -m <name>
+2025-07-23T11:39:28.5979973Z hint:
+2025-07-23T11:39:28.5980933Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2025-07-23T11:39:28.5982816Z Initialized empty Git repository in /home/runner/work/Synapto_Catcher/Synapto_Catcher/.git/
+2025-07-23T11:39:28.5985942Z [command]/usr/bin/git remote add origin https://github.com/ta3map/Synapto_Catcher
+2025-07-23T11:39:28.6019580Z ##[endgroup]
+2025-07-23T11:39:28.6020763Z ##[group]Disabling automatic garbage collection
+2025-07-23T11:39:28.6024834Z [command]/usr/bin/git config --local gc.auto 0
+2025-07-23T11:39:28.6055169Z ##[endgroup]
+2025-07-23T11:39:28.6056360Z ##[group]Setting up auth
+2025-07-23T11:39:28.6062952Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-07-23T11:39:28.6094818Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-07-23T11:39:28.6372062Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-07-23T11:39:28.6404210Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-07-23T11:39:28.6634846Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2025-07-23T11:39:28.6671337Z ##[endgroup]
+2025-07-23T11:39:28.6672303Z ##[group]Fetching the repository
+2025-07-23T11:39:28.6680758Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +9a7192a840e7baa3c8d512b62de80624b12c123b:refs/tags/v0.0.12
+2025-07-23T11:39:30.6393150Z From https://github.com/ta3map/Synapto_Catcher
+2025-07-23T11:39:30.6394381Z  * [new ref]         9a7192a840e7baa3c8d512b62de80624b12c123b -> v0.0.12
+2025-07-23T11:39:30.6420789Z ##[endgroup]
+2025-07-23T11:39:30.6421692Z ##[group]Determining the checkout info
+2025-07-23T11:39:30.6423307Z ##[endgroup]
+2025-07-23T11:39:30.6429498Z [command]/usr/bin/git sparse-checkout disable
+2025-07-23T11:39:30.6470946Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2025-07-23T11:39:30.6506284Z ##[group]Checking out the ref
+2025-07-23T11:39:30.6510540Z [command]/usr/bin/git checkout --progress --force refs/tags/v0.0.12
+2025-07-23T11:39:30.7153878Z Note: switching to 'refs/tags/v0.0.12'.
+2025-07-23T11:39:30.7154715Z 
+2025-07-23T11:39:30.7155155Z You are in 'detached HEAD' state. You can look around, make experimental
+2025-07-23T11:39:30.7156086Z changes and commit them, and you can discard any commits you make in this
+2025-07-23T11:39:30.7156828Z state without impacting any branches by switching back to a branch.
+2025-07-23T11:39:30.7157476Z 
+2025-07-23T11:39:30.7157737Z If you want to create a new branch to retain commits you create, you may
+2025-07-23T11:39:30.7158234Z do so (now or later) by using -c with the switch command. Example:
+2025-07-23T11:39:30.7158509Z 
+2025-07-23T11:39:30.7158629Z   git switch -c <new-branch-name>
+2025-07-23T11:39:30.7158820Z 
+2025-07-23T11:39:30.7158940Z Or undo this operation with:
+2025-07-23T11:39:30.7159134Z 
+2025-07-23T11:39:30.7159232Z   git switch -
+2025-07-23T11:39:30.7159391Z 
+2025-07-23T11:39:30.7159626Z Turn off this advice by setting config variable advice.detachedHead to false
+2025-07-23T11:39:30.7159953Z 
+2025-07-23T11:39:30.7160183Z HEAD is now at 9a7192a renaming image processor back for consistency
+2025-07-23T11:39:30.7162060Z ##[endgroup]
+2025-07-23T11:39:30.7204371Z [command]/usr/bin/git log -1 --format=%H
+2025-07-23T11:39:30.7230354Z 9a7192a840e7baa3c8d512b62de80624b12c123b
+2025-07-23T11:39:30.7474763Z ##[group]Run actions/setup-python@v4
+2025-07-23T11:39:30.7475137Z with:
+2025-07-23T11:39:30.7475396Z   python-version: 3.9
+2025-07-23T11:39:30.7475664Z   check-latest: false
+2025-07-23T11:39:30.7476082Z   token: ***
+2025-07-23T11:39:30.7476319Z   update-environment: true
+2025-07-23T11:39:30.7476593Z   allow-prereleases: false
+2025-07-23T11:39:30.7476894Z ##[endgroup]
+2025-07-23T11:39:30.9259537Z ##[group]Installed versions
+2025-07-23T11:39:30.9366001Z Successfully set up CPython (3.9.23)
+2025-07-23T11:39:30.9367132Z ##[endgroup]
+2025-07-23T11:39:30.9506878Z ##[group]Run sudo apt-get update
+2025-07-23T11:39:30.9507343Z [36;1msudo apt-get update[0m
+2025-07-23T11:39:30.9508232Z [36;1msudo apt-get install -y libgl1-mesa-dev libglib2.0-0 libxrender1 libxrandr2 libxss1 libgtk-3-0 libasound2-dev libxtst6 libdrm2 libxcomposite1 libxdamage1 libxfixes3 libgbm1 libxkbcommon0 libfontconfig1 libfreetype6[0m
+2025-07-23T11:39:30.9547709Z shell: /usr/bin/bash -e {0}
+2025-07-23T11:39:30.9548048Z env:
+2025-07-23T11:39:30.9548358Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:30.9548874Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib/pkgconfig
+2025-07-23T11:39:30.9549331Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:30.9549719Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:30.9550108Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:30.9550494Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib
+2025-07-23T11:39:30.9550891Z ##[endgroup]
+2025-07-23T11:39:31.1477185Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2025-07-23T11:39:31.1902730Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2025-07-23T11:39:31.1917673Z Hit:6 https://packages.microsoft.com/repos/azure-cli noble InRelease
+2025-07-23T11:39:31.1918731Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2025-07-23T11:39:31.1971113Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2025-07-23T11:39:31.1985730Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2025-07-23T11:39:31.2064700Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2025-07-23T11:39:31.5246445Z Get:8 https://packages.microsoft.com/ubuntu/24.04/prod noble/main all Packages [643 B]
+2025-07-23T11:39:31.5436305Z Get:9 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [42.4 kB]
+2025-07-23T11:39:31.5475315Z Get:10 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [9413 B]
+2025-07-23T11:39:31.5588301Z Get:11 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [27.9 kB]
+2025-07-23T11:39:31.5668655Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1279 kB]
+2025-07-23T11:39:31.5764975Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [259 kB]
+2025-07-23T11:39:31.5799446Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [163 kB]
+2025-07-23T11:39:31.5824301Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1112 kB]
+2025-07-23T11:39:31.5888040Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [284 kB]
+2025-07-23T11:39:31.5917025Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [377 kB]
+2025-07-23T11:39:31.5947234Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1567 kB]
+2025-07-23T11:39:31.6036868Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [339 kB]
+2025-07-23T11:39:31.6065369Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Components [212 B]
+2025-07-23T11:39:31.6075592Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+2025-07-23T11:39:31.6709590Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [7076 B]
+2025-07-23T11:39:31.6727448Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [28.4 kB]
+2025-07-23T11:39:31.6742193Z Get:24 http://azure.archive.ubuntu.com/ubuntu noble-backports/restricted amd64 Components [216 B]
+2025-07-23T11:39:31.6752252Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-backports/multiverse amd64 Components [212 B]
+2025-07-23T11:39:31.6884254Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [1021 kB]
+2025-07-23T11:39:31.6953852Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [179 kB]
+2025-07-23T11:39:31.6974488Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [21.6 kB]
+2025-07-23T11:39:31.6986957Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [876 kB]
+2025-07-23T11:39:31.7047387Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [193 kB]
+2025-07-23T11:39:31.7069474Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [52.2 kB]
+2025-07-23T11:39:31.7082605Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Packages [1476 kB]
+2025-07-23T11:39:31.7174303Z Get:33 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted Translation-en [321 kB]
+2025-07-23T11:39:31.7201523Z Get:34 http://azure.archive.ubuntu.com/ubuntu noble-security/restricted amd64 Components [212 B]
+2025-07-23T11:39:31.7212509Z Get:35 http://azure.archive.ubuntu.com/ubuntu noble-security/multiverse amd64 Components [208 B]
+2025-07-23T11:39:39.3057331Z Fetched 10.0 MB in 1s (6943 kB/s)
+2025-07-23T11:39:40.0989830Z Reading package lists...
+2025-07-23T11:39:40.1365809Z Reading package lists...
+2025-07-23T11:39:40.3540241Z Building dependency tree...
+2025-07-23T11:39:40.3548840Z Reading state information...
+2025-07-23T11:39:40.6289035Z libglib2.0-0t64 is already the newest version (2.80.0-6ubuntu3.4).
+2025-07-23T11:39:40.6290151Z libglib2.0-0t64 set to manually installed.
+2025-07-23T11:39:40.6291149Z libxrender1 is already the newest version (1:0.9.10-1.1build1).
+2025-07-23T11:39:40.6292246Z libxrender1 set to manually installed.
+2025-07-23T11:39:40.6293115Z libxrandr2 is already the newest version (2:1.5.2-2build1).
+2025-07-23T11:39:40.6294132Z libxrandr2 set to manually installed.
+2025-07-23T11:39:40.6294643Z libxss1 is already the newest version (1:1.2.3-1build3).
+2025-07-23T11:39:40.6295167Z libxss1 set to manually installed.
+2025-07-23T11:39:40.6295720Z libgtk-3-0t64 is already the newest version (3.24.41-4ubuntu1.3).
+2025-07-23T11:39:40.6296303Z libgtk-3-0t64 set to manually installed.
+2025-07-23T11:39:40.6296832Z libxtst6 is already the newest version (2:1.2.3-1.1build1).
+2025-07-23T11:39:40.6297355Z libxtst6 set to manually installed.
+2025-07-23T11:39:40.6297885Z libdrm2 is already the newest version (2.4.122-1~ubuntu0.24.04.1).
+2025-07-23T11:39:40.6298458Z libdrm2 set to manually installed.
+2025-07-23T11:39:40.6299127Z libxcomposite1 is already the newest version (1:0.4.5-1build3).
+2025-07-23T11:39:40.6300700Z libxcomposite1 set to manually installed.
+2025-07-23T11:39:40.6301692Z libxdamage1 is already the newest version (1:1.1.6-1build1).
+2025-07-23T11:39:40.6302848Z libxdamage1 set to manually installed.
+2025-07-23T11:39:40.6304055Z libxfixes3 is already the newest version (1:6.0.0-2build1).
+2025-07-23T11:39:40.6304849Z libxfixes3 set to manually installed.
+2025-07-23T11:39:40.6305722Z libgbm1 is already the newest version (24.2.8-1ubuntu1~24.04.1).
+2025-07-23T11:39:40.6306512Z libgbm1 set to manually installed.
+2025-07-23T11:39:40.6307295Z libxkbcommon0 is already the newest version (1.6.0-1build1).
+2025-07-23T11:39:40.6308188Z libxkbcommon0 set to manually installed.
+2025-07-23T11:39:40.6309115Z libfontconfig1 is already the newest version (2.15.0-1.1ubuntu2).
+2025-07-23T11:39:40.6309924Z libfontconfig1 set to manually installed.
+2025-07-23T11:39:40.6310696Z libfreetype6 is already the newest version (2.13.2+dfsg-1build3).
+2025-07-23T11:39:40.6311439Z libfreetype6 set to manually installed.
+2025-07-23T11:39:40.6312179Z The following additional packages will be installed:
+2025-07-23T11:39:40.6313178Z   libegl-dev libegl-mesa0 libegl1 libgl-dev libgles-dev libgles1 libgles2
+2025-07-23T11:39:40.6314742Z   libglvnd-core-dev libglvnd-dev libglx-dev libopengl-dev libopengl0
+2025-07-23T11:39:40.6315606Z   libpthread-stubs0-dev libx11-dev libxau-dev libxcb1-dev libxdmcp-dev
+2025-07-23T11:39:40.6380534Z   x11proto-dev xorg-sgml-doctools xtrans-dev
+2025-07-23T11:39:40.6381713Z Suggested packages:
+2025-07-23T11:39:40.6382306Z   libasound2-doc libx11-doc libxcb-doc
+2025-07-23T11:39:40.6786844Z The following NEW packages will be installed:
+2025-07-23T11:39:40.6787616Z   libasound2-dev libegl-dev libegl-mesa0 libegl1 libgl-dev libgl1-mesa-dev
+2025-07-23T11:39:40.6788783Z   libgles-dev libgles1 libgles2 libglvnd-core-dev libglvnd-dev libglx-dev
+2025-07-23T11:39:40.6792532Z   libopengl-dev libopengl0 libpthread-stubs0-dev libx11-dev libxau-dev
+2025-07-23T11:39:40.6797330Z   libxcb1-dev libxdmcp-dev x11proto-dev xorg-sgml-doctools xtrans-dev
+2025-07-23T11:39:40.6991155Z 0 upgraded, 22 newly installed, 0 to remove and 18 not upgraded.
+2025-07-23T11:39:40.6991569Z Need to get 2100 kB of archives.
+2025-07-23T11:39:40.7999394Z After this operation, 9601 kB of additional disk space will be used.
+2025-07-23T11:39:40.8000020Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2025-07-23T11:39:40.8000888Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libasound2-dev amd64 1.2.11-1ubuntu0.1 [115 kB]
+2025-07-23T11:39:40.8856001Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libegl-mesa0 amd64 24.2.8-1ubuntu1~24.04.1 [129 kB]
+2025-07-23T11:39:40.9708983Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libegl1 amd64 1.7.0-1build1 [28.7 kB]
+2025-07-23T11:39:41.0558825Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xorg-sgml-doctools all 1:1.11-1.1 [10.9 kB]
+2025-07-23T11:39:41.1392814Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 x11proto-dev all 2023.2-1 [602 kB]
+2025-07-23T11:39:41.3096750Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxau-dev amd64 1:1.0.9-1build6 [9570 B]
+2025-07-23T11:39:41.3969699Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxdmcp-dev amd64 1:1.1.3-0ubuntu6 [26.5 kB]
+2025-07-23T11:39:41.4804192Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xtrans-dev all 1.4.0-1 [68.9 kB]
+2025-07-23T11:39:41.5641413Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libpthread-stubs0-dev amd64 0.4-1build3 [4746 B]
+2025-07-23T11:39:41.6471377Z Get:11 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libxcb1-dev amd64 1.15-1ubuntu2 [85.8 kB]
+2025-07-23T11:39:41.7309805Z Get:12 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libx11-dev amd64 2:1.8.7-1build1 [732 kB]
+2025-07-23T11:39:41.9769099Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libglx-dev amd64 1.7.0-1build1 [14.2 kB]
+2025-07-23T11:39:42.0601885Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libgl-dev amd64 1.7.0-1build1 [102 kB]
+2025-07-23T11:39:42.1448174Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libegl-dev amd64 1.7.0-1build1 [18.2 kB]
+2025-07-23T11:39:42.2281850Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libgles1 amd64 1.7.0-1build1 [11.6 kB]
+2025-07-23T11:39:42.3112888Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libgles2 amd64 1.7.0-1build1 [17.1 kB]
+2025-07-23T11:39:42.3945587Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libgles-dev amd64 1.7.0-1build1 [50.5 kB]
+2025-07-23T11:39:42.4785175Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libopengl0 amd64 1.7.0-1build1 [32.8 kB]
+2025-07-23T11:39:42.5616393Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libopengl-dev amd64 1.7.0-1build1 [3454 B]
+2025-07-23T11:39:42.6446680Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libglvnd-core-dev amd64 1.7.0-1build1 [13.6 kB]
+2025-07-23T11:39:42.7282694Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 libglvnd-dev amd64 1.7.0-1build1 [3198 B]
+2025-07-23T11:39:42.8112719Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 libgl1-mesa-dev amd64 24.2.8-1ubuntu1~24.04.1 [19.2 kB]
+2025-07-23T11:39:43.1116429Z Fetched 2100 kB in 2s (989 kB/s)
+2025-07-23T11:39:43.1338298Z Selecting previously unselected package libasound2-dev:amd64.
+2025-07-23T11:39:43.1575374Z (Reading database ... 
+2025-07-23T11:39:43.1576092Z (Reading database ... 5%
+2025-07-23T11:39:43.1576565Z (Reading database ... 10%
+2025-07-23T11:39:43.1577033Z (Reading database ... 15%
+2025-07-23T11:39:43.1577509Z (Reading database ... 20%
+2025-07-23T11:39:43.1577960Z (Reading database ... 25%
+2025-07-23T11:39:43.1578403Z (Reading database ... 30%
+2025-07-23T11:39:43.1578857Z (Reading database ... 35%
+2025-07-23T11:39:43.1579308Z (Reading database ... 40%
+2025-07-23T11:39:43.1579744Z (Reading database ... 45%
+2025-07-23T11:39:43.1580192Z (Reading database ... 50%
+2025-07-23T11:39:43.1728375Z (Reading database ... 55%
+2025-07-23T11:39:43.1986485Z (Reading database ... 60%
+2025-07-23T11:39:43.2231038Z (Reading database ... 65%
+2025-07-23T11:39:43.2571644Z (Reading database ... 70%
+2025-07-23T11:39:43.2826316Z (Reading database ... 75%
+2025-07-23T11:39:43.3321407Z (Reading database ... 80%
+2025-07-23T11:39:43.3648429Z (Reading database ... 85%
+2025-07-23T11:39:43.4278432Z (Reading database ... 90%
+2025-07-23T11:39:43.4619980Z (Reading database ... 95%
+2025-07-23T11:39:43.4620380Z (Reading database ... 100%
+2025-07-23T11:39:43.4620852Z (Reading database ... 219605 files and directories currently installed.)
+2025-07-23T11:39:43.4665847Z Preparing to unpack .../00-libasound2-dev_1.2.11-1ubuntu0.1_amd64.deb ...
+2025-07-23T11:39:43.4720794Z Unpacking libasound2-dev:amd64 (1.2.11-1ubuntu0.1) ...
+2025-07-23T11:39:43.5148921Z Selecting previously unselected package libegl-mesa0:amd64.
+2025-07-23T11:39:43.5288531Z Preparing to unpack .../01-libegl-mesa0_24.2.8-1ubuntu1~24.04.1_amd64.deb ...
+2025-07-23T11:39:43.5311417Z Unpacking libegl-mesa0:amd64 (24.2.8-1ubuntu1~24.04.1) ...
+2025-07-23T11:39:43.5575727Z Selecting previously unselected package libegl1:amd64.
+2025-07-23T11:39:43.5717595Z Preparing to unpack .../02-libegl1_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:43.5728317Z Unpacking libegl1:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:43.6042675Z Selecting previously unselected package xorg-sgml-doctools.
+2025-07-23T11:39:43.6185737Z Preparing to unpack .../03-xorg-sgml-doctools_1%3a1.11-1.1_all.deb ...
+2025-07-23T11:39:43.6201903Z Unpacking xorg-sgml-doctools (1:1.11-1.1) ...
+2025-07-23T11:39:43.6505928Z Selecting previously unselected package x11proto-dev.
+2025-07-23T11:39:43.6648270Z Preparing to unpack .../04-x11proto-dev_2023.2-1_all.deb ...
+2025-07-23T11:39:43.6663097Z Unpacking x11proto-dev (2023.2-1) ...
+2025-07-23T11:39:43.7213087Z Selecting previously unselected package libxau-dev:amd64.
+2025-07-23T11:39:43.7353299Z Preparing to unpack .../05-libxau-dev_1%3a1.0.9-1build6_amd64.deb ...
+2025-07-23T11:39:43.7363707Z Unpacking libxau-dev:amd64 (1:1.0.9-1build6) ...
+2025-07-23T11:39:43.7641045Z Selecting previously unselected package libxdmcp-dev:amd64.
+2025-07-23T11:39:43.7778945Z Preparing to unpack .../06-libxdmcp-dev_1%3a1.1.3-0ubuntu6_amd64.deb ...
+2025-07-23T11:39:43.7790416Z Unpacking libxdmcp-dev:amd64 (1:1.1.3-0ubuntu6) ...
+2025-07-23T11:39:43.8018463Z Selecting previously unselected package xtrans-dev.
+2025-07-23T11:39:43.8160572Z Preparing to unpack .../07-xtrans-dev_1.4.0-1_all.deb ...
+2025-07-23T11:39:43.8171985Z Unpacking xtrans-dev (1.4.0-1) ...
+2025-07-23T11:39:43.8438814Z Selecting previously unselected package libpthread-stubs0-dev:amd64.
+2025-07-23T11:39:43.8577522Z Preparing to unpack .../08-libpthread-stubs0-dev_0.4-1build3_amd64.deb ...
+2025-07-23T11:39:43.8590356Z Unpacking libpthread-stubs0-dev:amd64 (0.4-1build3) ...
+2025-07-23T11:39:43.8813259Z Selecting previously unselected package libxcb1-dev:amd64.
+2025-07-23T11:39:43.8951725Z Preparing to unpack .../09-libxcb1-dev_1.15-1ubuntu2_amd64.deb ...
+2025-07-23T11:39:43.8964278Z Unpacking libxcb1-dev:amd64 (1.15-1ubuntu2) ...
+2025-07-23T11:39:43.9211819Z Selecting previously unselected package libx11-dev:amd64.
+2025-07-23T11:39:43.9348576Z Preparing to unpack .../10-libx11-dev_2%3a1.8.7-1build1_amd64.deb ...
+2025-07-23T11:39:43.9359920Z Unpacking libx11-dev:amd64 (2:1.8.7-1build1) ...
+2025-07-23T11:39:43.9702969Z Selecting previously unselected package libglx-dev:amd64.
+2025-07-23T11:39:43.9841061Z Preparing to unpack .../11-libglx-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:43.9850347Z Unpacking libglx-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.0082257Z Selecting previously unselected package libgl-dev:amd64.
+2025-07-23T11:39:44.0219518Z Preparing to unpack .../12-libgl-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.0229485Z Unpacking libgl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.0499372Z Selecting previously unselected package libegl-dev:amd64.
+2025-07-23T11:39:44.0640450Z Preparing to unpack .../13-libegl-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.0659419Z Unpacking libegl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.0917110Z Selecting previously unselected package libgles1:amd64.
+2025-07-23T11:39:44.1060377Z Preparing to unpack .../14-libgles1_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.1158647Z Unpacking libgles1:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.1434025Z Selecting previously unselected package libgles2:amd64.
+2025-07-23T11:39:44.1575315Z Preparing to unpack .../15-libgles2_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.1586223Z Unpacking libgles2:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.1817543Z Selecting previously unselected package libgles-dev:amd64.
+2025-07-23T11:39:44.1959254Z Preparing to unpack .../16-libgles-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.1973702Z Unpacking libgles-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.2276481Z Selecting previously unselected package libopengl0:amd64.
+2025-07-23T11:39:44.2414889Z Preparing to unpack .../17-libopengl0_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.2426272Z Unpacking libopengl0:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.2664879Z Selecting previously unselected package libopengl-dev:amd64.
+2025-07-23T11:39:44.2806345Z Preparing to unpack .../18-libopengl-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.2817755Z Unpacking libopengl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.3042928Z Selecting previously unselected package libglvnd-core-dev:amd64.
+2025-07-23T11:39:44.3184612Z Preparing to unpack .../19-libglvnd-core-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.3195585Z Unpacking libglvnd-core-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.3426920Z Selecting previously unselected package libglvnd-dev:amd64.
+2025-07-23T11:39:44.3568299Z Preparing to unpack .../20-libglvnd-dev_1.7.0-1build1_amd64.deb ...
+2025-07-23T11:39:44.3579599Z Unpacking libglvnd-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.3809340Z Selecting previously unselected package libgl1-mesa-dev:amd64.
+2025-07-23T11:39:44.3951744Z Preparing to unpack .../21-libgl1-mesa-dev_24.2.8-1ubuntu1~24.04.1_amd64.deb ...
+2025-07-23T11:39:44.3965238Z Unpacking libgl1-mesa-dev:amd64 (24.2.8-1ubuntu1~24.04.1) ...
+2025-07-23T11:39:44.4390772Z Setting up libglvnd-core-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4423108Z Setting up libpthread-stubs0-dev:amd64 (0.4-1build3) ...
+2025-07-23T11:39:44.4455943Z Setting up libopengl0:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4483993Z Setting up xtrans-dev (1.4.0-1) ...
+2025-07-23T11:39:44.4512592Z Setting up libegl-mesa0:amd64 (24.2.8-1ubuntu1~24.04.1) ...
+2025-07-23T11:39:44.4539430Z Setting up libgles2:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4568447Z Setting up libgles1:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4595699Z Setting up libegl1:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4624096Z Setting up xorg-sgml-doctools (1:1.11-1.1) ...
+2025-07-23T11:39:44.4653259Z Setting up libopengl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:44.4696596Z Setting up libasound2-dev:amd64 (1.2.11-1ubuntu0.1) ...
+2025-07-23T11:39:44.4799528Z Processing triggers for libc-bin (2.39-0ubuntu8.5) ...
+2025-07-23T11:39:44.5092444Z Processing triggers for man-db (2.12.0-4build2) ...
+2025-07-23T11:39:45.9451224Z Processing triggers for sgml-base (1.31) ...
+2025-07-23T11:39:45.9568996Z Setting up x11proto-dev (2023.2-1) ...
+2025-07-23T11:39:45.9600832Z Setting up libxau-dev:amd64 (1:1.0.9-1build6) ...
+2025-07-23T11:39:45.9643598Z Setting up libxdmcp-dev:amd64 (1:1.1.3-0ubuntu6) ...
+2025-07-23T11:39:45.9692937Z Setting up libxcb1-dev:amd64 (1.15-1ubuntu2) ...
+2025-07-23T11:39:45.9727462Z Setting up libx11-dev:amd64 (2:1.8.7-1build1) ...
+2025-07-23T11:39:45.9767542Z Setting up libglx-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:45.9802421Z Setting up libgl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:45.9834092Z Setting up libegl-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:45.9911429Z Setting up libgles-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:45.9946786Z Setting up libglvnd-dev:amd64 (1.7.0-1build1) ...
+2025-07-23T11:39:45.9984592Z Setting up libgl1-mesa-dev:amd64 (24.2.8-1ubuntu1~24.04.1) ...
+2025-07-23T11:39:47.3821209Z 
+2025-07-23T11:39:47.3821653Z Running kernel seems to be up-to-date.
+2025-07-23T11:39:47.3822024Z 
+2025-07-23T11:39:47.3822129Z Restarting services...
+2025-07-23T11:39:47.3897603Z 
+2025-07-23T11:39:47.3898075Z Service restarts being deferred:
+2025-07-23T11:39:47.3900324Z  systemctl restart hosted-compute-agent.service
+2025-07-23T11:39:47.3900649Z 
+2025-07-23T11:39:47.3900967Z No containers need to be restarted.
+2025-07-23T11:39:47.3901252Z 
+2025-07-23T11:39:47.3901395Z No user sessions are running outdated binaries.
+2025-07-23T11:39:47.3901642Z 
+2025-07-23T11:39:47.3901875Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2025-07-23T11:39:48.5335361Z ##[group]Run python -m pip install --upgrade pip
+2025-07-23T11:39:48.5335742Z [36;1mpython -m pip install --upgrade pip[0m
+2025-07-23T11:39:48.5336039Z [36;1mpip install -r requirements.txt[0m
+2025-07-23T11:39:48.5336337Z [36;1mpip install pyinstaller[0m
+2025-07-23T11:39:48.5336626Z [36;1m# Установка дополнительных зависимостей для GUI[0m
+2025-07-23T11:39:48.5336925Z [36;1msudo apt-get install -y python3-tk[0m
+2025-07-23T11:39:48.5367516Z shell: /usr/bin/bash -e {0}
+2025-07-23T11:39:48.5367744Z env:
+2025-07-23T11:39:48.5367998Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:48.5368396Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib/pkgconfig
+2025-07-23T11:39:48.5368782Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:48.5369135Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:48.5369467Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:39:48.5369853Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib
+2025-07-23T11:39:48.5370145Z ##[endgroup]
+2025-07-23T11:39:50.8952166Z Requirement already satisfied: pip in /opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages (25.1.1)
+2025-07-23T11:39:51.5814324Z Collecting ttkthemes (from -r requirements.txt (line 1))
+2025-07-23T11:39:51.5955939Z   Downloading ttkthemes-3.2.2.tar.gz (891 kB)
+2025-07-23T11:39:51.6091900Z      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 891.2/891.2 kB 92.0 MB/s eta 0:00:00
+2025-07-23T11:39:52.3842896Z   Installing build dependencies: started
+2025-07-23T11:39:53.2033554Z   Installing build dependencies: finished with status 'done'
+2025-07-23T11:39:53.2046672Z   Getting requirements to build wheel: started
+2025-07-23T11:39:54.2106707Z   Getting requirements to build wheel: finished with status 'done'
+2025-07-23T11:39:54.2120151Z   Preparing metadata (pyproject.toml): started
+2025-07-23T11:39:54.5449363Z   Preparing metadata (pyproject.toml): finished with status 'done'
+2025-07-23T11:39:54.6363909Z Collecting opencv-python (from -r requirements.txt (line 2))
+2025-07-23T11:39:54.6400919Z   Downloading opencv_python-4.12.0.88-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (19 kB)
+2025-07-23T11:39:54.8454737Z Collecting pillow (from -r requirements.txt (line 3))
+2025-07-23T11:39:54.8501440Z   Downloading pillow-11.3.0-cp39-cp39-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (9.0 kB)
+2025-07-23T11:39:55.0945690Z Collecting numpy (from -r requirements.txt (line 4))
+2025-07-23T11:39:55.0984533Z   Downloading numpy-2.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+2025-07-23T11:39:55.2441052Z Collecting scipy (from -r requirements.txt (line 5))
+2025-07-23T11:39:55.2480248Z   Downloading scipy-1.13.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (60 kB)
+2025-07-23T11:39:55.3318678Z Collecting scikit-image (from -r requirements.txt (line 6))
+2025-07-23T11:39:55.3363947Z   Downloading scikit_image-0.24.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (14 kB)
+2025-07-23T11:39:55.5059701Z Collecting matplotlib (from -r requirements.txt (line 7))
+2025-07-23T11:39:55.5098585Z   Downloading matplotlib-3.9.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (11 kB)
+2025-07-23T11:39:55.6482563Z Collecting pandas (from -r requirements.txt (line 8))
+2025-07-23T11:39:55.6521589Z   Downloading pandas-2.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (91 kB)
+2025-07-23T11:39:55.7451265Z Collecting openpyxl (from -r requirements.txt (line 9))
+2025-07-23T11:39:55.7487234Z   Downloading openpyxl-3.1.5-py2.py3-none-any.whl.metadata (2.5 kB)
+2025-07-23T11:39:55.8233666Z Collecting czifile (from -r requirements.txt (line 10))
+2025-07-23T11:39:55.8274576Z   Downloading czifile-2019.7.2.1-py3-none-any.whl.metadata (5.6 kB)
+2025-07-23T11:39:55.9313233Z Collecting aicspylibczi (from -r requirements.txt (line 11))
+2025-07-23T11:39:55.9367466Z   Downloading aicspylibczi-3.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (10 kB)
+2025-07-23T11:39:56.0221723Z Collecting readlif (from -r requirements.txt (line 12))
+2025-07-23T11:39:56.0269947Z   Downloading readlif-0.6.6-py3-none-any.whl.metadata (4.5 kB)
+2025-07-23T11:39:56.0431338Z Collecting seaborn (from -r requirements.txt (line 13))
+2025-07-23T11:39:56.0467285Z   Downloading seaborn-0.13.2-py3-none-any.whl.metadata (5.4 kB)
+2025-07-23T11:39:56.1282897Z Collecting scikit-posthocs (from -r requirements.txt (line 14))
+2025-07-23T11:39:56.1325510Z   Downloading scikit_posthocs-0.11.4-py3-none-any.whl.metadata (5.8 kB)
+2025-07-23T11:39:56.1768276Z Collecting tqdm (from -r requirements.txt (line 15))
+2025-07-23T11:39:56.1807088Z   Downloading tqdm-4.67.1-py3-none-any.whl.metadata (57 kB)
+2025-07-23T11:39:56.2361210Z Collecting networkx>=2.8 (from scikit-image->-r requirements.txt (line 6))
+2025-07-23T11:39:56.2399642Z   Downloading networkx-3.2.1-py3-none-any.whl.metadata (5.2 kB)
+2025-07-23T11:39:56.2789853Z Collecting imageio>=2.33 (from scikit-image->-r requirements.txt (line 6))
+2025-07-23T11:39:56.2826639Z   Downloading imageio-2.37.0-py3-none-any.whl.metadata (5.2 kB)
+2025-07-23T11:39:56.3421019Z Collecting tifffile>=2022.8.12 (from scikit-image->-r requirements.txt (line 6))
+2025-07-23T11:39:56.3470659Z   Downloading tifffile-2024.8.30-py3-none-any.whl.metadata (31 kB)
+2025-07-23T11:39:56.3717401Z Collecting packaging>=21 (from scikit-image->-r requirements.txt (line 6))
+2025-07-23T11:39:56.3754961Z   Downloading packaging-25.0-py3-none-any.whl.metadata (3.3 kB)
+2025-07-23T11:39:56.3878875Z Collecting lazy-loader>=0.4 (from scikit-image->-r requirements.txt (line 6))
+2025-07-23T11:39:56.3911922Z   Downloading lazy_loader-0.4-py3-none-any.whl.metadata (7.6 kB)
+2025-07-23T11:39:56.4736820Z Collecting contourpy>=1.0.1 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.4777126Z   Downloading contourpy-1.3.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (5.4 kB)
+2025-07-23T11:39:56.4925219Z Collecting cycler>=0.10 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.4958249Z   Downloading cycler-0.12.1-py3-none-any.whl.metadata (3.8 kB)
+2025-07-23T11:39:56.6720506Z Collecting fonttools>=4.22.0 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.6757041Z   Downloading fonttools-4.59.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (107 kB)
+2025-07-23T11:39:56.7528459Z Collecting kiwisolver>=1.3.1 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.7567022Z   Downloading kiwisolver-1.4.7-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl.metadata (6.3 kB)
+2025-07-23T11:39:56.8549368Z Collecting pyparsing>=2.3.1 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.8587538Z   Downloading pyparsing-3.2.3-py3-none-any.whl.metadata (5.0 kB)
+2025-07-23T11:39:56.8758882Z Collecting python-dateutil>=2.7 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.8797058Z   Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl.metadata (8.4 kB)
+2025-07-23T11:39:56.9110989Z Collecting importlib-resources>=3.2.0 (from matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:56.9148512Z   Downloading importlib_resources-6.5.2-py3-none-any.whl.metadata (3.9 kB)
+2025-07-23T11:39:56.9701104Z Collecting pytz>=2020.1 (from pandas->-r requirements.txt (line 8))
+2025-07-23T11:39:56.9740189Z   Downloading pytz-2025.2-py2.py3-none-any.whl.metadata (22 kB)
+2025-07-23T11:39:56.9924788Z Collecting tzdata>=2022.7 (from pandas->-r requirements.txt (line 8))
+2025-07-23T11:39:56.9960195Z   Downloading tzdata-2025.2-py2.py3-none-any.whl.metadata (1.4 kB)
+2025-07-23T11:39:57.0084314Z Collecting et-xmlfile (from openpyxl->-r requirements.txt (line 9))
+2025-07-23T11:39:57.0118612Z   Downloading et_xmlfile-2.0.0-py3-none-any.whl.metadata (2.7 kB)
+2025-07-23T11:39:57.0615371Z Collecting beautifulsoup4>=4.12.3 (from readlif->-r requirements.txt (line 12))
+2025-07-23T11:39:57.0652401Z   Downloading beautifulsoup4-4.13.4-py3-none-any.whl.metadata (3.8 kB)
+2025-07-23T11:39:57.1610733Z Collecting statsmodels (from scikit-posthocs->-r requirements.txt (line 14))
+2025-07-23T11:39:57.1665199Z   Downloading statsmodels-0.14.5-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (9.5 kB)
+2025-07-23T11:39:57.2046266Z Collecting soupsieve>1.2 (from beautifulsoup4>=4.12.3->readlif->-r requirements.txt (line 12))
+2025-07-23T11:39:57.2081029Z   Downloading soupsieve-2.7-py3-none-any.whl.metadata (4.6 kB)
+2025-07-23T11:39:57.2295924Z Collecting typing-extensions>=4.0.0 (from beautifulsoup4>=4.12.3->readlif->-r requirements.txt (line 12))
+2025-07-23T11:39:57.2332021Z   Downloading typing_extensions-4.14.1-py3-none-any.whl.metadata (3.0 kB)
+2025-07-23T11:39:57.2760686Z Collecting zipp>=3.1.0 (from importlib-resources>=3.2.0->matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:57.2798318Z   Downloading zipp-3.23.0-py3-none-any.whl.metadata (3.6 kB)
+2025-07-23T11:39:57.3075974Z Collecting six>=1.5 (from python-dateutil>=2.7->matplotlib->-r requirements.txt (line 7))
+2025-07-23T11:39:57.3112979Z   Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+2025-07-23T11:39:57.3634456Z Collecting patsy>=0.5.6 (from statsmodels->scikit-posthocs->-r requirements.txt (line 14))
+2025-07-23T11:39:57.3670358Z   Downloading patsy-1.0.1-py2.py3-none-any.whl.metadata (3.3 kB)
+2025-07-23T11:39:57.3890194Z Downloading opencv_python-4.12.0.88-cp37-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (67.0 MB)
+2025-07-23T11:39:57.6758161Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.0/67.0 MB 235.7 MB/s eta 0:00:00
+2025-07-23T11:39:57.6798844Z Downloading numpy-2.0.2-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (19.5 MB)
+2025-07-23T11:39:57.7693851Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 19.5/19.5 MB 225.2 MB/s eta 0:00:00
+2025-07-23T11:39:57.7732218Z Downloading pillow-11.3.0-cp39-cp39-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (6.6 MB)
+2025-07-23T11:39:57.8113149Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 6.6/6.6 MB 191.4 MB/s eta 0:00:00
+2025-07-23T11:39:57.8162135Z Downloading scipy-1.13.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (38.6 MB)
+2025-07-23T11:39:57.9855132Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 38.6/38.6 MB 231.7 MB/s eta 0:00:00
+2025-07-23T11:39:57.9902905Z Downloading scikit_image-0.24.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (14.9 MB)
+2025-07-23T11:39:58.0564631Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 14.9/14.9 MB 233.1 MB/s eta 0:00:00
+2025-07-23T11:39:58.0636753Z Downloading matplotlib-3.9.4-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (8.3 MB)
+2025-07-23T11:39:58.1014384Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 8.3/8.3 MB 233.7 MB/s eta 0:00:00
+2025-07-23T11:39:58.1053860Z Downloading pandas-2.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (12.4 MB)
+2025-07-23T11:39:58.1861398Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 12.4/12.4 MB 160.6 MB/s eta 0:00:00
+2025-07-23T11:39:58.1898447Z Downloading openpyxl-3.1.5-py2.py3-none-any.whl (250 kB)
+2025-07-23T11:39:58.1973175Z Downloading czifile-2019.7.2.1-py3-none-any.whl (18 kB)
+2025-07-23T11:39:58.2887903Z Downloading aicspylibczi-3.3.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (1.1 MB)
+2025-07-23T11:39:58.3692346Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.1/1.1 MB 11.0 MB/s eta 0:00:00
+2025-07-23T11:39:58.3737133Z Downloading readlif-0.6.6-py3-none-any.whl (24 kB)
+2025-07-23T11:39:58.3796604Z Downloading seaborn-0.13.2-py3-none-any.whl (294 kB)
+2025-07-23T11:39:58.3871296Z Downloading scikit_posthocs-0.11.4-py3-none-any.whl (33 kB)
+2025-07-23T11:39:58.3929622Z Downloading tqdm-4.67.1-py3-none-any.whl (78 kB)
+2025-07-23T11:39:58.3989915Z Downloading beautifulsoup4-4.13.4-py3-none-any.whl (187 kB)
+2025-07-23T11:39:58.4061826Z Downloading contourpy-1.3.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (321 kB)
+2025-07-23T11:39:58.4136474Z Downloading cycler-0.12.1-py3-none-any.whl (8.3 kB)
+2025-07-23T11:39:58.4198716Z Downloading fonttools-4.59.0-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (4.8 MB)
+2025-07-23T11:39:58.4476122Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.8/4.8 MB 197.2 MB/s eta 0:00:00
+2025-07-23T11:39:58.4515243Z Downloading imageio-2.37.0-py3-none-any.whl (315 kB)
+2025-07-23T11:39:58.4583533Z Downloading importlib_resources-6.5.2-py3-none-any.whl (37 kB)
+2025-07-23T11:39:58.4649577Z Downloading kiwisolver-1.4.7-cp39-cp39-manylinux_2_12_x86_64.manylinux2010_x86_64.whl (1.6 MB)
+2025-07-23T11:39:58.4770633Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 155.5 MB/s eta 0:00:00
+2025-07-23T11:39:58.4806379Z Downloading lazy_loader-0.4-py3-none-any.whl (12 kB)
+2025-07-23T11:39:58.4862057Z Downloading networkx-3.2.1-py3-none-any.whl (1.6 MB)
+2025-07-23T11:39:58.4980346Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.6/1.6 MB 161.1 MB/s eta 0:00:00
+2025-07-23T11:39:58.5015341Z Downloading packaging-25.0-py3-none-any.whl (66 kB)
+2025-07-23T11:39:58.5075221Z Downloading pyparsing-3.2.3-py3-none-any.whl (111 kB)
+2025-07-23T11:39:58.5131964Z Downloading python_dateutil-2.9.0.post0-py2.py3-none-any.whl (229 kB)
+2025-07-23T11:39:58.5196403Z Downloading pytz-2025.2-py2.py3-none-any.whl (509 kB)
+2025-07-23T11:39:58.5274086Z Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+2025-07-23T11:39:58.5330404Z Downloading soupsieve-2.7-py3-none-any.whl (36 kB)
+2025-07-23T11:39:58.5394768Z Downloading tifffile-2024.8.30-py3-none-any.whl (227 kB)
+2025-07-23T11:39:58.5455949Z Downloading typing_extensions-4.14.1-py3-none-any.whl (43 kB)
+2025-07-23T11:39:58.5518590Z Downloading tzdata-2025.2-py2.py3-none-any.whl (347 kB)
+2025-07-23T11:39:58.5586485Z Downloading zipp-3.23.0-py3-none-any.whl (10 kB)
+2025-07-23T11:39:58.5641814Z Downloading et_xmlfile-2.0.0-py3-none-any.whl (18 kB)
+2025-07-23T11:39:58.5705785Z Downloading statsmodels-0.14.5-cp39-cp39-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (10.7 MB)
+2025-07-23T11:39:58.6218435Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 10.7/10.7 MB 218.8 MB/s eta 0:00:00
+2025-07-23T11:39:58.6259859Z Downloading patsy-1.0.1-py2.py3-none-any.whl (232 kB)
+2025-07-23T11:39:58.8520554Z Building wheels for collected packages: ttkthemes
+2025-07-23T11:39:58.8531039Z   Building wheel for ttkthemes (pyproject.toml): started
+2025-07-23T11:40:01.0312729Z   Building wheel for ttkthemes (pyproject.toml): finished with status 'done'
+2025-07-23T11:40:01.0338807Z   Created wheel for ttkthemes: filename=ttkthemes-3.2.2-cp39-cp39-linux_x86_64.whl size=1794057 sha256=a11b994a68302e9ea9d934f453d8f059db6db5abdb357790f4b4aa0994d9a804
+2025-07-23T11:40:01.0341054Z   Stored in directory: /home/runner/.cache/pip/wheels/a4/15/1e/0a6742abdeb53db74a13d9d64d1db6941d654f61173135f604
+2025-07-23T11:40:01.0540492Z Successfully built ttkthemes
+2025-07-23T11:40:01.2995360Z Installing collected packages: pytz, zipp, tzdata, typing-extensions, tqdm, soupsieve, six, pyparsing, pillow, packaging, numpy, networkx, kiwisolver, fonttools, et-xmlfile, cycler, ttkthemes, tifffile, scipy, python-dateutil, patsy, openpyxl, opencv-python, lazy-loader, importlib-resources, imageio, contourpy, beautifulsoup4, aicspylibczi, scikit-image, readlif, pandas, matplotlib, czifile, statsmodels, seaborn, scikit-posthocs
+2025-07-23T11:40:20.2632521Z 
+2025-07-23T11:40:20.2709402Z Successfully installed aicspylibczi-3.3.1 beautifulsoup4-4.13.4 contourpy-1.3.0 cycler-0.12.1 czifile-2019.7.2.1 et-xmlfile-2.0.0 fonttools-4.59.0 imageio-2.37.0 importlib-resources-6.5.2 kiwisolver-1.4.7 lazy-loader-0.4 matplotlib-3.9.4 networkx-3.2.1 numpy-2.0.2 opencv-python-4.12.0.88 openpyxl-3.1.5 packaging-25.0 pandas-2.3.1 patsy-1.0.1 pillow-11.3.0 pyparsing-3.2.3 python-dateutil-2.9.0.post0 pytz-2025.2 readlif-0.6.6 scikit-image-0.24.0 scikit-posthocs-0.11.4 scipy-1.13.1 seaborn-0.13.2 six-1.17.0 soupsieve-2.7 statsmodels-0.14.5 tifffile-2024.8.30 tqdm-4.67.1 ttkthemes-3.2.2 typing-extensions-4.14.1 tzdata-2025.2 zipp-3.23.0
+2025-07-23T11:40:21.4095394Z Collecting pyinstaller
+2025-07-23T11:40:21.4383769Z   Downloading pyinstaller-6.14.2-py3-none-manylinux2014_x86_64.whl.metadata (8.3 kB)
+2025-07-23T11:40:21.4452445Z Requirement already satisfied: setuptools>=42.0.0 in /opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages (from pyinstaller) (58.1.0)
+2025-07-23T11:40:21.4559600Z Collecting altgraph (from pyinstaller)
+2025-07-23T11:40:21.4597818Z   Downloading altgraph-0.17.4-py2.py3-none-any.whl.metadata (7.3 kB)
+2025-07-23T11:40:21.4818061Z Collecting pyinstaller-hooks-contrib>=2025.5 (from pyinstaller)
+2025-07-23T11:40:21.4854770Z   Downloading pyinstaller_hooks_contrib-2025.7-py3-none-any.whl.metadata (16 kB)
+2025-07-23T11:40:21.5255371Z Collecting importlib_metadata>=4.6 (from pyinstaller)
+2025-07-23T11:40:21.5293704Z   Downloading importlib_metadata-8.7.0-py3-none-any.whl.metadata (4.8 kB)
+2025-07-23T11:40:21.5377024Z Requirement already satisfied: packaging>=22.0 in /opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages (from pyinstaller) (25.0)
+2025-07-23T11:40:21.5388660Z Requirement already satisfied: zipp>=3.20 in /opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages (from importlib_metadata>=4.6->pyinstaller) (3.23.0)
+2025-07-23T11:40:21.5548044Z Downloading pyinstaller-6.14.2-py3-none-manylinux2014_x86_64.whl (725 kB)
+2025-07-23T11:40:21.5661176Z    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 725.6/725.6 kB 88.9 MB/s eta 0:00:00
+2025-07-23T11:40:21.5695496Z Downloading importlib_metadata-8.7.0-py3-none-any.whl (27 kB)
+2025-07-23T11:40:21.5760757Z Downloading pyinstaller_hooks_contrib-2025.7-py3-none-any.whl (439 kB)
+2025-07-23T11:40:21.5833768Z Downloading altgraph-0.17.4-py2.py3-none-any.whl (21 kB)
+2025-07-23T11:40:21.7591094Z Installing collected packages: altgraph, importlib_metadata, pyinstaller-hooks-contrib, pyinstaller
+2025-07-23T11:40:22.4501012Z 
+2025-07-23T11:40:22.4574815Z Successfully installed altgraph-0.17.4 importlib_metadata-8.7.0 pyinstaller-6.14.2 pyinstaller-hooks-contrib-2025.7
+2025-07-23T11:40:22.5553626Z Reading package lists...
+2025-07-23T11:40:22.7701560Z Building dependency tree...
+2025-07-23T11:40:22.7709637Z Reading state information...
+2025-07-23T11:40:22.9909533Z The following additional packages will be installed:
+2025-07-23T11:40:22.9923854Z   blt tk8.6-blt2.5
+2025-07-23T11:40:22.9932918Z Suggested packages:
+2025-07-23T11:40:22.9933566Z   blt-demo tix python3-tk-dbg
+2025-07-23T11:40:23.0127485Z The following NEW packages will be installed:
+2025-07-23T11:40:23.0139543Z   blt python3-tk tk8.6-blt2.5
+2025-07-23T11:40:23.0334821Z 0 upgraded, 3 newly installed, 0 to remove and 18 not upgraded.
+2025-07-23T11:40:23.0335365Z Need to get 737 kB of archives.
+2025-07-23T11:40:23.0335700Z After this operation, 2507 kB of additional disk space will be used.
+2025-07-23T11:40:23.0336084Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2025-07-23T11:40:23.2145435Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 tk8.6-blt2.5 amd64 2.5.3+dfsg-7build1 [630 kB]
+2025-07-23T11:40:23.7787211Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 blt amd64 2.5.3+dfsg-7build1 [4840 B]
+2025-07-23T11:40:23.8628430Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 python3-tk amd64 3.12.3-0ubuntu1 [102 kB]
+2025-07-23T11:40:24.1882283Z Fetched 737 kB in 1s (834 kB/s)
+2025-07-23T11:40:24.2075756Z Selecting previously unselected package tk8.6-blt2.5.
+2025-07-23T11:40:24.2131970Z (Reading database ... 
+2025-07-23T11:40:24.2132457Z (Reading database ... 5%
+2025-07-23T11:40:24.2135017Z (Reading database ... 10%
+2025-07-23T11:40:24.2135483Z (Reading database ... 15%
+2025-07-23T11:40:24.2135938Z (Reading database ... 20%
+2025-07-23T11:40:24.2136397Z (Reading database ... 25%
+2025-07-23T11:40:24.2136836Z (Reading database ... 30%
+2025-07-23T11:40:24.2137114Z (Reading database ... 35%
+2025-07-23T11:40:24.2137390Z (Reading database ... 40%
+2025-07-23T11:40:24.2137661Z (Reading database ... 45%
+2025-07-23T11:40:24.2137936Z (Reading database ... 50%
+2025-07-23T11:40:24.2171033Z (Reading database ... 55%
+2025-07-23T11:40:24.2193951Z (Reading database ... 60%
+2025-07-23T11:40:24.2215796Z (Reading database ... 65%
+2025-07-23T11:40:24.2332997Z (Reading database ... 70%
+2025-07-23T11:40:24.2364159Z (Reading database ... 75%
+2025-07-23T11:40:24.2528274Z (Reading database ... 80%
+2025-07-23T11:40:24.2589284Z (Reading database ... 85%
+2025-07-23T11:40:24.2919266Z (Reading database ... 90%
+2025-07-23T11:40:24.3014298Z (Reading database ... 95%
+2025-07-23T11:40:24.3014816Z (Reading database ... 100%
+2025-07-23T11:40:24.3015414Z (Reading database ... 220111 files and directories currently installed.)
+2025-07-23T11:40:24.3062382Z Preparing to unpack .../tk8.6-blt2.5_2.5.3+dfsg-7build1_amd64.deb ...
+2025-07-23T11:40:24.3085484Z Unpacking tk8.6-blt2.5 (2.5.3+dfsg-7build1) ...
+2025-07-23T11:40:24.3406651Z Selecting previously unselected package blt.
+2025-07-23T11:40:24.3554885Z Preparing to unpack .../blt_2.5.3+dfsg-7build1_amd64.deb ...
+2025-07-23T11:40:24.3564361Z Unpacking blt (2.5.3+dfsg-7build1) ...
+2025-07-23T11:40:24.3795671Z Selecting previously unselected package python3-tk:amd64.
+2025-07-23T11:40:24.3948271Z Preparing to unpack .../python3-tk_3.12.3-0ubuntu1_amd64.deb ...
+2025-07-23T11:40:24.3957486Z Unpacking python3-tk:amd64 (3.12.3-0ubuntu1) ...
+2025-07-23T11:40:24.4417342Z Setting up tk8.6-blt2.5 (2.5.3+dfsg-7build1) ...
+2025-07-23T11:40:24.4440212Z Setting up blt (2.5.3+dfsg-7build1) ...
+2025-07-23T11:40:24.4460429Z Setting up python3-tk:amd64 (3.12.3-0ubuntu1) ...
+2025-07-23T11:40:24.5551407Z Processing triggers for libc-bin (2.39-0ubuntu8.5) ...
+2025-07-23T11:40:25.1400182Z 
+2025-07-23T11:40:25.1400809Z Running kernel seems to be up-to-date.
+2025-07-23T11:40:25.1401158Z 
+2025-07-23T11:40:25.1401286Z Restarting services...
+2025-07-23T11:40:25.1469028Z 
+2025-07-23T11:40:25.1469483Z Service restarts being deferred:
+2025-07-23T11:40:25.1470119Z  systemctl restart hosted-compute-agent.service
+2025-07-23T11:40:25.1470505Z 
+2025-07-23T11:40:25.1470666Z No containers need to be restarted.
+2025-07-23T11:40:25.1470930Z 
+2025-07-23T11:40:25.1471106Z No user sessions are running outdated binaries.
+2025-07-23T11:40:25.1471447Z 
+2025-07-23T11:40:25.1471737Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2025-07-23T11:40:26.3214511Z ##[group]Run pyinstaller --onefile --windowed --name "Synapto_Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py
+2025-07-23T11:40:26.3216204Z [36;1mpyinstaller --onefile --windowed --name "Synapto_Catcher" --icon "images/synaptocatcher.png" --add-data "images:images" --add-data "image_processor.py:." --add-data "statistics_processor.py:." --add-data "graphical_processor.py:." app.py[0m
+2025-07-23T11:40:26.3246342Z shell: /usr/bin/bash -e {0}
+2025-07-23T11:40:26.3246569Z env:
+2025-07-23T11:40:26.3246817Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:40:26.3247226Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib/pkgconfig
+2025-07-23T11:40:26.3247616Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:40:26.3247945Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:40:26.3248329Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:40:26.3248674Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib
+2025-07-23T11:40:26.3248966Z ##[endgroup]
+2025-07-23T11:40:26.8830306Z 459 INFO: PyInstaller: 6.14.2, contrib hooks: 2025.7
+2025-07-23T11:40:26.8830855Z 459 INFO: Python: 3.9.23
+2025-07-23T11:40:26.8866633Z 462 INFO: Platform: Linux-6.11.0-1018-azure-x86_64-with-glibc2.39
+2025-07-23T11:40:26.8867428Z 463 INFO: Python environment: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:40:26.8870894Z 463 INFO: wrote /home/runner/work/Synapto_Catcher/Synapto_Catcher/Synapto_Catcher.spec
+2025-07-23T11:40:27.0075138Z 583 INFO: UPX is available but is disabled on non-Windows due to known compatibility problems.
+2025-07-23T11:40:27.0085114Z 584 INFO: Module search paths (PYTHONPATH):
+2025-07-23T11:40:27.0085793Z ['/opt/hostedtoolcache/Python/3.9.23/x64/lib/python39.zip',
+2025-07-23T11:40:27.0086595Z  '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9',
+2025-07-23T11:40:27.0087416Z  '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/lib-dynload',
+2025-07-23T11:40:27.0088536Z  '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages',
+2025-07-23T11:40:27.0089188Z  '/home/runner/work/Synapto_Catcher/Synapto_Catcher']
+2025-07-23T11:40:27.2751776Z 851 INFO: Appending 'datas' from .spec
+2025-07-23T11:40:27.2762573Z 852 INFO: checking Analysis
+2025-07-23T11:40:27.2763616Z 852 INFO: Building Analysis because Analysis-00.toc is non existent
+2025-07-23T11:40:27.2764440Z 852 INFO: Running Analysis Analysis-00.toc
+2025-07-23T11:40:27.2765385Z 852 INFO: Target bytecode optimization level: 0
+2025-07-23T11:40:27.2766074Z 853 INFO: Initializing module dependency graph...
+2025-07-23T11:40:27.2912642Z 867 INFO: Initializing module graph hook caches...
+2025-07-23T11:40:27.3025219Z 878 INFO: Analyzing modules for base_library.zip ...
+2025-07-23T11:40:28.3327774Z 1909 INFO: Processing standard module hook 'hook-encodings.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:30.1233187Z 3699 INFO: Processing standard module hook 'hook-pickle.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:31.1736952Z 4749 INFO: Processing standard module hook 'hook-heapq.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:31.9984044Z 5574 INFO: Caching module dependency graph...
+2025-07-23T11:40:32.0412993Z 5617 INFO: Looking for Python shared library...
+2025-07-23T11:40:32.0535391Z 5629 INFO: Using Python shared library: /opt/hostedtoolcache/Python/3.9.23/x64/lib/libpython3.9.so.1.0
+2025-07-23T11:40:32.0536664Z 5629 INFO: Analyzing /home/runner/work/Synapto_Catcher/Synapto_Catcher/app.py
+2025-07-23T11:40:32.0869017Z 5663 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_find_module_path'
+2025-07-23T11:40:32.0871862Z 5663 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+2025-07-23T11:40:32.2873789Z 5863 WARNING: TclTkInfo: Tcl module directory '/usr/share/tcltk/tcl8' does not exist!
+2025-07-23T11:40:32.3745271Z 5950 INFO: Processing standard module hook 'hook-_tkinter.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:32.4564623Z 6032 INFO: Processing standard module hook 'hook-ttkthemes.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:32.7185665Z 6294 INFO: Processing standard module hook 'hook-PIL.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:32.7918278Z 6367 INFO: Processing standard module hook 'hook-PIL.Image.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:33.0277693Z 6603 INFO: Processing standard module hook 'hook-numpy.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:33.2650565Z 6841 INFO: Processing standard module hook 'hook-platform.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:33.6325697Z 7208 INFO: Processing standard module hook 'hook-sysconfig.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:34.7551431Z 8331 INFO: Processing standard module hook 'hook-difflib.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:34.9655197Z 8541 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:35.1134685Z 8689 INFO: Processing standard module hook 'hook-xml.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:37.0672652Z 10643 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:37.0676349Z 10643 INFO: SetuptoolsInfo: initializing cached setuptools info...
+2025-07-23T11:40:38.3776631Z 11953 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:38.5072625Z 12083 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:38.7371163Z 12313 INFO: Processing standard module hook 'hook-pandas.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:39.7482975Z 13324 INFO: Processing standard module hook 'hook-pytz.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:39.9646274Z 13540 INFO: Processing standard module hook 'hook-scipy.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:40.7415223Z 14317 INFO: Processing standard module hook 'hook-scipy.linalg.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:40.8254915Z 14401 INFO: Processing standard module hook 'hook-scipy.special._ufuncs.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:40.9519742Z 14528 INFO: Processing standard module hook 'hook-scipy.special._ellip_harm_2.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:41.3403700Z 14916 INFO: Processing standard module hook 'hook-scipy.sparse.csgraph.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:42.4002390Z 15976 INFO: Processing standard module hook 'hook-scipy.spatial._ckdtree.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:42.4398896Z 16016 INFO: Processing standard module hook 'hook-matplotlib.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:42.6660524Z 16242 INFO: Processing pre-safe-import-module hook 'hook-packaging.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:42.7278243Z 16304 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:43.6238672Z 17200 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:43.6911902Z 17267 INFO: Processing standard module hook 'hook-matplotlib.pyplot.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:44.2456977Z 17821 INFO: Processing standard module hook 'hook-matplotlib.backend_bases.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:44.9599346Z 18536 INFO: Processing standard module hook 'hook-dateutil.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:45.0125373Z 18588 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:46.3568795Z 19933 INFO: Processing pre-safe-import-module hook 'hook-importlib_resources.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:46.3576429Z 19933 INFO: Processing standard module hook 'hook-importlib_resources.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:46.3786195Z 19954 INFO: Processing pre-safe-import-module hook 'hook-zipp.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:47.4370880Z 21013 INFO: Processing standard module hook 'hook-scipy.spatial.transform.rotation.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:48.3289042Z 21905 INFO: Processing standard module hook 'hook-scipy.stats._stats.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:49.9715762Z 23547 INFO: Processing standard module hook 'hook-pandas.io.formats.style.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:51.4962645Z 25072 INFO: Processing standard module hook 'hook-pandas.plotting.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:52.0816229Z 25657 INFO: Processing standard module hook 'hook-openpyxl.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:53.2785318Z 26854 INFO: Processing standard module hook 'hook-sqlite3.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:53.5313618Z 27107 INFO: Processing standard module hook 'hook-pandas.io.clipboard.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:53.8250072Z 27401 INFO: Processing standard module hook 'hook-xml.dom.domreg.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:54.7028816Z 28279 INFO: Processing standard module hook 'hook-skimage.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:54.8560591Z 28432 INFO: Processing pre-safe-import-module hook 'hook-importlib_metadata.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:40:54.8734083Z 28449 INFO: Processing standard module hook 'hook-importlib_metadata.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:40:54.9188885Z 28495 INFO: Processing standard module hook 'hook-skimage.exposure.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:55.5496403Z 29125 INFO: Processing standard module hook 'hook-skimage.data.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:56.1729104Z 29749 INFO: Processing standard module hook 'hook-skimage.filters.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:57.3242388Z 30900 INFO: Processing standard module hook 'hook-skimage.measure.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:57.9308802Z 31507 INFO: Processing standard module hook 'hook-skimage.morphology.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:58.1910357Z 31767 INFO: Processing standard module hook 'hook-skimage.draw.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:40:59.8365286Z 33412 INFO: Processing standard module hook 'hook-cv2.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:00.4166304Z 33992 INFO: Processing pre-safe-import-module hook 'hook-win32com.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/pre_safe_import_module'
+2025-07-23T11:41:00.8900134Z 34466 INFO: Processing standard module hook 'hook-patsy.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:02.2223177Z 35798 INFO: Processing standard module hook 'hook-statsmodels.tsa.statespace.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:06.0185232Z 39594 INFO: Processing pre-find-module-path hook 'hook-pyi_splash.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_find_module_path'
+2025-07-23T11:41:06.0187332Z 39595 INFO: Adding pyi_splash module to application dependencies.
+2025-07-23T11:41:06.0230898Z 39599 INFO: Processing module hooks (post-graph stage)...
+2025-07-23T11:41:06.0545006Z 39630 INFO: Processing standard module hook 'hook-skimage.transform.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:06.6752753Z 40251 INFO: Processing standard module hook 'hook-skimage.restoration.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:07.3387214Z 40914 INFO: Processing standard module hook 'hook-skimage.io.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:08.9039816Z 42480 INFO: Processing standard module hook 'hook-skimage.color.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:09.5499724Z 43126 INFO: Processing standard module hook 'hook-skimage.feature.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:10.4369600Z 44013 INFO: Processing standard module hook 'hook-skimage.metrics.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:11.3278802Z 44904 INFO: Processing standard module hook 'hook-matplotlib.backends.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:11.3280682Z 44904 INFO: Matplotlib backend selection method: automatic discovery of used backends
+2025-07-23T11:41:11.6228572Z 45198 INFO: Trying determine the default backend as first importable candidate from the list: ['QtAgg', 'Qt5Agg', 'Gtk4Agg', 'Gtk3Agg', 'TkAgg', 'WxAgg']
+2025-07-23T11:41:14.6142753Z 48190 INFO: Selected matplotlib backends: ['TkAgg']
+2025-07-23T11:41:14.8838242Z 48460 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:15.0564199Z 48632 WARNING: Hidden import "importlib_resources.trees" not found!
+2025-07-23T11:41:15.0565424Z 48632 INFO: Processing standard module hook 'hook-_tkinter.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:15.0684112Z 48644 INFO: Processing standard module hook 'hook-imageio.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/_pyinstaller_hooks_contrib/stdhooks'
+2025-07-23T11:41:15.6319309Z 49208 INFO: Processing standard module hook 'hook-pkg_resources.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:16.9244909Z 50500 INFO: Processing pre-safe-import-module hook 'hook-distutils.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_safe_import_module'
+2025-07-23T11:41:16.9247057Z 50500 INFO: Processing pre-find-module-path hook 'hook-distutils.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_find_module_path'
+2025-07-23T11:41:16.9336997Z 50509 INFO: Processing standard module hook 'hook-distutils.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:16.9435114Z 50519 INFO: Processing standard module hook 'hook-distutils.util.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:17.0212400Z 50597 INFO: Processing standard module hook 'hook-_osx_support.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:17.3333896Z 50909 INFO: Performing binary vs. data reclassification (4104 entries)
+2025-07-23T11:41:19.2922727Z 52868 INFO: Looking for ctypes DLLs
+2025-07-23T11:41:19.3478357Z 52924 WARNING: Library user32 required via ctypes not found
+2025-07-23T11:41:19.4068134Z 52983 WARNING: Library msvcrt required via ctypes not found
+2025-07-23T11:41:19.4248841Z 53001 INFO: Analyzing run-time hooks ...
+2025-07-23T11:41:19.4438874Z 53020 INFO: Including run-time hook 'pyi_rth_inspect.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.4460100Z 53022 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.4493003Z 53023 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.4494793Z 53025 INFO: Including run-time hook 'pyi_rth_mplconfig.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.4495936Z 53025 INFO: Processing pre-find-module-path hook 'hook-_pyi_rth_utils.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/pre_find_module_path'
+2025-07-23T11:41:19.4504376Z 53026 INFO: Processing standard module hook 'hook-_pyi_rth_utils.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks'
+2025-07-23T11:41:19.4522227Z 53028 INFO: Including run-time hook 'pyi_rth_pkgres.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.4554505Z 53031 INFO: Including run-time hook 'pyi_rth__tkinter.py' from '/opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/hooks/rthooks'
+2025-07-23T11:41:19.6580087Z 53234 INFO: Creating base_library.zip...
+2025-07-23T11:41:19.6962297Z 53272 INFO: Looking for dynamic libraries
+2025-07-23T11:41:25.7930692Z 59369 INFO: Warnings written to /home/runner/work/Synapto_Catcher/Synapto_Catcher/build/Synapto_Catcher/warn-Synapto_Catcher.txt
+2025-07-23T11:41:25.9377956Z 59513 INFO: Graph cross-reference written to /home/runner/work/Synapto_Catcher/Synapto_Catcher/build/Synapto_Catcher/xref-Synapto_Catcher.html
+2025-07-23T11:41:26.0750747Z 59651 INFO: checking PYZ
+2025-07-23T11:41:26.0751380Z 59651 INFO: Building PYZ because PYZ-00.toc is non existent
+2025-07-23T11:41:26.0752356Z 59651 INFO: Building PYZ (ZlibArchive) /home/runner/work/Synapto_Catcher/Synapto_Catcher/build/Synapto_Catcher/PYZ-00.pyz
+2025-07-23T11:41:27.8997577Z 61475 INFO: Building PYZ (ZlibArchive) /home/runner/work/Synapto_Catcher/Synapto_Catcher/build/Synapto_Catcher/PYZ-00.pyz completed successfully.
+2025-07-23T11:41:27.9381062Z 61514 WARNING: Ignoring icon; supported only on Windows and macOS!
+2025-07-23T11:41:28.0230113Z 61599 INFO: checking PKG
+2025-07-23T11:41:28.0230695Z 61599 INFO: Building PKG because PKG-00.toc is non existent
+2025-07-23T11:41:28.0231345Z 61599 INFO: Building PKG (CArchive) Synapto_Catcher.pkg
+2025-07-23T11:42:25.1962751Z 118772 INFO: Building PKG (CArchive) Synapto_Catcher.pkg completed successfully.
+2025-07-23T11:42:25.2804509Z 118856 INFO: Bootloader /opt/hostedtoolcache/Python/3.9.23/x64/lib/python3.9/site-packages/PyInstaller/bootloader/Linux-64bit-intel/run
+2025-07-23T11:42:25.2806221Z 118856 INFO: checking EXE
+2025-07-23T11:42:25.2807361Z 118856 INFO: Building EXE because EXE-00.toc is non existent
+2025-07-23T11:42:25.2807843Z 118856 INFO: Building EXE from EXE-00.toc
+2025-07-23T11:42:25.2809018Z 118856 INFO: Copying bootloader EXE to /home/runner/work/Synapto_Catcher/Synapto_Catcher/dist/Synapto_Catcher
+2025-07-23T11:42:25.2810071Z 118857 INFO: Appending PKG archive to custom ELF section in EXE
+2025-07-23T11:42:25.7984468Z 119374 INFO: Building EXE from EXE-00.toc completed successfully.
+2025-07-23T11:42:25.8792715Z 119455 INFO: Build complete! The results are available in: /home/runner/work/Synapto_Catcher/Synapto_Catcher/dist
+2025-07-23T11:42:26.1178225Z ##[group]Run # Установка FUSE для AppImage
+2025-07-23T11:42:26.1178555Z [36;1m# Установка FUSE для AppImage[0m
+2025-07-23T11:42:26.1178826Z [36;1msudo apt-get install -y fuse libfuse2[0m
+2025-07-23T11:42:26.1179364Z [36;1mwget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage[0m
+2025-07-23T11:42:26.1179900Z [36;1mchmod +x appimagetool-x86_64.AppImage[0m
+2025-07-23T11:42:26.1209639Z shell: /usr/bin/bash -e {0}
+2025-07-23T11:42:26.1209892Z env:
+2025-07-23T11:42:26.1210130Z   pythonLocation: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:42:26.1210518Z   PKG_CONFIG_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib/pkgconfig
+2025-07-23T11:42:26.1210886Z   Python_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:42:26.1211219Z   Python2_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:42:26.1211544Z   Python3_ROOT_DIR: /opt/hostedtoolcache/Python/3.9.23/x64
+2025-07-23T11:42:26.1211968Z   LD_LIBRARY_PATH: /opt/hostedtoolcache/Python/3.9.23/x64/lib
+2025-07-23T11:42:26.1212245Z ##[endgroup]
+2025-07-23T11:42:26.1490856Z Reading package lists...
+2025-07-23T11:42:26.3713188Z Building dependency tree...
+2025-07-23T11:42:26.3721453Z Reading state information...
+2025-07-23T11:42:26.6789107Z The following packages will be REMOVED:
+2025-07-23T11:42:26.6807647Z   fuse-overlayfs fuse3 ntfs-3g
+2025-07-23T11:42:26.6808436Z The following NEW packages will be installed:
+2025-07-23T11:42:26.6820054Z   fuse libfuse2t64
+2025-07-23T11:42:26.7017510Z 0 upgraded, 2 newly installed, 3 to remove and 18 not upgraded.
+2025-07-23T11:42:26.7018110Z Need to get 117 kB of archives.
+2025-07-23T11:42:26.7018578Z After this operation, 1103 kB disk space will be freed.
+2025-07-23T11:42:26.7019021Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2025-07-23T11:42:26.8026151Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 libfuse2t64 amd64 2.9.9-8.1build1 [89.9 kB]
+2025-07-23T11:42:26.8901276Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fuse amd64 2.9.9-8.1build1 [27.6 kB]
+2025-07-23T11:42:27.2453168Z Fetched 117 kB in 0s (588 kB/s)
+2025-07-23T11:42:27.2650239Z (Reading database ... 
+2025-07-23T11:42:27.2650692Z (Reading database ... 5%
+2025-07-23T11:42:27.2651049Z (Reading database ... 10%
+2025-07-23T11:42:27.2651398Z (Reading database ... 15%
+2025-07-23T11:42:27.2651736Z (Reading database ... 20%
+2025-07-23T11:42:27.2652060Z (Reading database ... 25%
+2025-07-23T11:42:27.2652387Z (Reading database ... 30%
+2025-07-23T11:42:27.2652742Z (Reading database ... 35%
+2025-07-23T11:42:27.2653069Z (Reading database ... 40%
+2025-07-23T11:42:27.2653671Z (Reading database ... 45%
+2025-07-23T11:42:27.2653947Z (Reading database ... 50%
+2025-07-23T11:42:27.2694273Z (Reading database ... 55%
+2025-07-23T11:42:27.2725332Z (Reading database ... 60%
+2025-07-23T11:42:27.2749018Z (Reading database ... 65%
+2025-07-23T11:42:27.2881104Z (Reading database ... 70%
+2025-07-23T11:42:27.2918365Z (Reading database ... 75%
+2025-07-23T11:42:27.3105996Z (Reading database ... 80%
+2025-07-23T11:42:27.3177673Z (Reading database ... 85%
+2025-07-23T11:42:27.3568141Z (Reading database ... 90%
+2025-07-23T11:42:27.3680568Z (Reading database ... 95%
+2025-07-23T11:42:27.3681055Z (Reading database ... 100%
+2025-07-23T11:42:27.3681600Z (Reading database ... 220157 files and directories currently installed.)
+2025-07-23T11:42:27.3743567Z Removing fuse-overlayfs (1.13-1) ...
+2025-07-23T11:42:27.4175182Z Selecting previously unselected package libfuse2t64:amd64.
+2025-07-23T11:42:27.4231400Z (Reading database ... 
+2025-07-23T11:42:27.4231827Z (Reading database ... 5%
+2025-07-23T11:42:27.4232194Z (Reading database ... 10%
+2025-07-23T11:42:27.4232538Z (Reading database ... 15%
+2025-07-23T11:42:27.4232882Z (Reading database ... 20%
+2025-07-23T11:42:27.4233950Z (Reading database ... 25%
+2025-07-23T11:42:27.4234333Z (Reading database ... 30%
+2025-07-23T11:42:27.4234673Z (Reading database ... 35%
+2025-07-23T11:42:27.4235022Z (Reading database ... 40%
+2025-07-23T11:42:27.4235720Z (Reading database ... 45%
+2025-07-23T11:42:27.4236065Z (Reading database ... 50%
+2025-07-23T11:42:27.4262799Z (Reading database ... 55%
+2025-07-23T11:42:27.4289546Z (Reading database ... 60%
+2025-07-23T11:42:27.4311286Z (Reading database ... 65%
+2025-07-23T11:42:27.4434010Z (Reading database ... 70%
+2025-07-23T11:42:27.4466248Z (Reading database ... 75%
+2025-07-23T11:42:27.4638085Z (Reading database ... 80%
+2025-07-23T11:42:27.4699819Z (Reading database ... 85%
+2025-07-23T11:42:27.5033866Z (Reading database ... 90%
+2025-07-23T11:42:27.5134078Z (Reading database ... 95%
+2025-07-23T11:42:27.5134519Z (Reading database ... 100%
+2025-07-23T11:42:27.5135094Z (Reading database ... 220153 files and directories currently installed.)
+2025-07-23T11:42:27.5182391Z Preparing to unpack .../libfuse2t64_2.9.9-8.1build1_amd64.deb ...
+2025-07-23T11:42:27.5202156Z Unpacking libfuse2t64:amd64 (2.9.9-8.1build1) ...
+2025-07-23T11:42:27.5696054Z (Reading database ... 
+2025-07-23T11:42:27.5696414Z (Reading database ... 5%
+2025-07-23T11:42:27.5696644Z (Reading database ... 10%
+2025-07-23T11:42:27.5696849Z (Reading database ... 15%
+2025-07-23T11:42:27.5697074Z (Reading database ... 20%
+2025-07-23T11:42:27.5697270Z (Reading database ... 25%
+2025-07-23T11:42:27.5697477Z (Reading database ... 30%
+2025-07-23T11:42:27.5697672Z (Reading database ... 35%
+2025-07-23T11:42:27.5697878Z (Reading database ... 40%
+2025-07-23T11:42:27.5698075Z (Reading database ... 45%
+2025-07-23T11:42:27.5698270Z (Reading database ... 50%
+2025-07-23T11:42:27.5735005Z (Reading database ... 55%
+2025-07-23T11:42:27.5767890Z (Reading database ... 60%
+2025-07-23T11:42:27.5799573Z (Reading database ... 65%
+2025-07-23T11:42:27.5925219Z (Reading database ... 70%
+2025-07-23T11:42:27.5957175Z (Reading database ... 75%
+2025-07-23T11:42:27.6124044Z (Reading database ... 80%
+2025-07-23T11:42:27.6182444Z (Reading database ... 85%
+2025-07-23T11:42:27.6492165Z (Reading database ... 90%
+2025-07-23T11:42:27.6587784Z (Reading database ... 95%
+2025-07-23T11:42:27.6588192Z (Reading database ... 100%
+2025-07-23T11:42:27.6588733Z (Reading database ... 220164 files and directories currently installed.)
+2025-07-23T11:42:27.6633168Z Removing ntfs-3g (1:2022.10.3-1.2ubuntu3) ...
+2025-07-23T11:42:27.7354555Z dpkg: fuse3: dependency problems, but removing anyway as you requested:
+2025-07-23T11:42:27.7355163Z  snapd depends on fuse3 (>= 3.10.5-1) | fuse; however:
+2025-07-23T11:42:27.7355576Z   Package fuse3 is to be removed.
+2025-07-23T11:42:27.7355917Z   Package fuse is not installed.
+2025-07-23T11:42:27.7356331Z   Package fuse3 which provides fuse is to be removed.
+2025-07-23T11:42:27.7356774Z  snapd depends on fuse3 (>= 3.10.5-1) | fuse; however:
+2025-07-23T11:42:27.7357166Z   Package fuse3 is to be removed.
+2025-07-23T11:42:27.7357487Z   Package fuse is not installed.
+2025-07-23T11:42:27.7357851Z   Package fuse3 which provides fuse is to be removed.
+2025-07-23T11:42:27.7358130Z 
+2025-07-23T11:42:27.7503973Z Removing fuse3 (3.14.0-5build1) ...
+2025-07-23T11:42:27.8217044Z update-initramfs: deferring update (trigger activated)
+2025-07-23T11:42:27.8642966Z Selecting previously unselected package fuse.
+2025-07-23T11:42:27.8697997Z (Reading database ... 
+2025-07-23T11:42:27.8698487Z (Reading database ... 5%
+2025-07-23T11:42:27.8698903Z (Reading database ... 10%
+2025-07-23T11:42:27.8699315Z (Reading database ... 15%
+2025-07-23T11:42:27.8699655Z (Reading database ... 20%
+2025-07-23T11:42:27.8699910Z (Reading database ... 25%
+2025-07-23T11:42:27.8700161Z (Reading database ... 30%
+2025-07-23T11:42:27.8700682Z (Reading database ... 35%
+2025-07-23T11:42:27.8700928Z (Reading database ... 40%
+2025-07-23T11:42:27.8701168Z (Reading database ... 45%
+2025-07-23T11:42:27.8701419Z (Reading database ... 50%
+2025-07-23T11:42:27.8729703Z (Reading database ... 55%
+2025-07-23T11:42:27.8757346Z (Reading database ... 60%
+2025-07-23T11:42:27.8779752Z (Reading database ... 65%
+2025-07-23T11:42:27.8899717Z (Reading database ... 70%
+2025-07-23T11:42:27.8931351Z (Reading database ... 75%
+2025-07-23T11:42:27.9093814Z (Reading database ... 80%
+2025-07-23T11:42:27.9151664Z (Reading database ... 85%
+2025-07-23T11:42:27.9457212Z (Reading database ... 90%
+2025-07-23T11:42:27.9555598Z (Reading database ... 95%
+2025-07-23T11:42:27.9556082Z (Reading database ... 100%
+2025-07-23T11:42:27.9556661Z (Reading database ... 220091 files and directories currently installed.)
+2025-07-23T11:42:27.9607271Z Preparing to unpack .../fuse_2.9.9-8.1build1_amd64.deb ...
+2025-07-23T11:42:27.9617837Z Unpacking fuse (2.9.9-8.1build1) ...
+2025-07-23T11:42:28.0058311Z Setting up libfuse2t64:amd64 (2.9.9-8.1build1) ...
+2025-07-23T11:42:28.0085154Z Setting up fuse (2.9.9-8.1build1) ...
+2025-07-23T11:42:28.0093644Z Installing new version of config file /etc/fuse.conf ...
+2025-07-23T11:42:28.0436814Z update-initramfs: deferring update (trigger activated)
+2025-07-23T11:42:28.0457639Z Processing triggers for libc-bin (2.39-0ubuntu8.5) ...
+2025-07-23T11:42:28.0607570Z Processing triggers for man-db (2.12.0-4build2) ...
+2025-07-23T11:43:23.5804178Z Processing triggers for initramfs-tools (0.142ubuntu25.5) ...
+2025-07-23T11:43:23.6060218Z update-initramfs: Generating /boot/initrd.img-6.11.0-1018-azure
+2025-07-23T11:43:32.5397925Z 
+2025-07-23T11:43:32.5398528Z Running kernel seems to be up-to-date.
+2025-07-23T11:43:32.5398873Z 
+2025-07-23T11:43:32.5398994Z Restarting services...
+2025-07-23T11:43:32.5467910Z 
+2025-07-23T11:43:32.5468650Z Service restarts being deferred:
+2025-07-23T11:43:32.5469160Z  systemctl restart hosted-compute-agent.service
+2025-07-23T11:43:32.5469502Z 
+2025-07-23T11:43:32.5469606Z No containers need to be restarted.
+2025-07-23T11:43:32.5469780Z 
+2025-07-23T11:43:32.5469890Z No user sessions are running outdated binaries.
+2025-07-23T11:43:32.5470083Z 
+2025-07-23T11:43:32.5470269Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2025-07-23T11:43:33.6913946Z --2025-07-23 11:43:33--  https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage
+2025-07-23T11:43:33.7166382Z Resolving github.com (github.com)... 140.82.116.3
+2025-07-23T11:43:33.7350896Z Connecting to github.com (github.com)|140.82.116.3|:443... connected.
+2025-07-23T11:43:33.9214230Z HTTP request sent, awaiting response... 404 Not Found
+2025-07-23T11:43:33.9214925Z 2025-07-23 11:43:33 ERROR 404: Not Found.
+2025-07-23T11:43:33.9215273Z 
+2025-07-23T11:43:33.9243659Z ##[error]Process completed with exit code 8.
+2025-07-23T11:43:33.9349821Z Post job cleanup.
+2025-07-23T11:43:34.0350717Z [command]/usr/bin/git version
+2025-07-23T11:43:34.0388760Z git version 2.50.1
+2025-07-23T11:43:34.0433776Z Temporarily overriding HOME='/home/runner/work/_temp/ef7599b5-6c44-4b79-9ad2-c67af9eae3a2' before making global git config changes
+2025-07-23T11:43:34.0435028Z Adding repository directory to the temporary git global config as a safe directory
+2025-07-23T11:43:34.0440184Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/Synapto_Catcher/Synapto_Catcher
+2025-07-23T11:43:34.0479156Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2025-07-23T11:43:34.0513954Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2025-07-23T11:43:34.0750654Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2025-07-23T11:43:34.0774903Z http.https://github.com/.extraheader
+2025-07-23T11:43:34.0787461Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2025-07-23T11:43:34.0819849Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2025-07-23T11:43:34.1173062Z Cleaning up orphan processes

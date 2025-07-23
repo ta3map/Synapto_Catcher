@@ -22,7 +22,7 @@ import traceback
 
 # Adding current directory to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
-# Используем PNG иконку для кроссплатформенности
+# Use PNG icon for cross-platform compatibility
 icon_path = os.path.join(current_dir, "images", "synaptocatcher.png")
 sys.path.append(current_dir)
 from image_processor import binarize_images, select_location, stack_image
@@ -48,14 +48,14 @@ class ROIAnalyzerApp:
         self.root = root
         self.root.title("Synapto Catcher")
         
-        # Устанавливаем иконку только если файл существует
+        # Set icon only if file exists
         if os.path.exists(icon_path):
             try:
                 import platform
                 if platform.system() == "Windows" and icon_path.endswith('.ico'):
                     self.root.iconbitmap(icon_path)
                 else:
-                    # Для Linux и macOS используем PNG иконку
+                    # For Linux and macOS use PNG icon
                     icon_image = PhotoImage(file=icon_path)
                     self.root.iconphoto(True, icon_image)
             except Exception as e:
@@ -657,7 +657,7 @@ class ROIAnalyzerApp:
                     subprocess.Popen(cmd, shell=True)
                 elif system == "Darwin":  # macOS
                     subprocess.Popen(["open", file_path])
-                else:  # Linux и другие Unix-подобные системы
+                else:  # Linux and other Unix-like systems
                     subprocess.Popen(["xdg-open", file_path])
             except Exception as e:
                 print(f"Failed to open file '{file_path}': {e}")
@@ -941,7 +941,7 @@ class ROIAnalyzerApp:
             
             coords_df = select_location(file_path, self.root)
             
-            # Восстановление главного окна после закрытия PolygonDrawer
+            # Restore main window after closing PolygonDrawer
             self.root.deiconify()
             self.root.lift()
             self.root.focus_force()
@@ -1260,11 +1260,11 @@ if __name__ == "__main__":
     # Apply a theme to the main window widgets
     root.after(100, lambda: theme_manager.apply_theme(root))
     
-    # Универсальное решение для всех ОС - просто устанавливаем размер на весь экран
+            # Universal solution for all OS - simply set size to full screen
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
 
-    # Устанавливаем размер окна на весь экран
+            # Set window size to full screen
     root.geometry(f'{screen_width}x{screen_height}+0+0')
 
     # Bring the window to the foreground

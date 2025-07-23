@@ -498,12 +498,12 @@ class ThumbnailViewer:
         self.thumbnail_frame.destroy()
         
 def create_excel_snapshot_to_image(excel_file, sheet_name=None, rows=10, cols=5):
-    # Чтение Excel файла
+    # Reading Excel file
     df = pd.read_excel(excel_file, sheet_name=sheet_name)
     
-    # Если файл содержит несколько листов, выбираем первый лист
+    # If file contains multiple sheets, select the first sheet
     if isinstance(df, dict):
-        # Если указано имя листа, используем его
+        # If sheet name is specified, use it
         if sheet_name is not None:
             df = df[sheet_name]
         else:
