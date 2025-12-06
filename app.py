@@ -513,6 +513,14 @@ class ROIAnalyzerApp:
 
             
     def on_entry_change(self, key, value, on_change=None, delay=1000):
+        # Нормализуем десятичные числовые значения перед сохранением
+        if key == 'pixel_to_micron_ratio' and isinstance(value, str):
+            value = value.replace(',', '.')
+            # Обновляем значение в поле ввода, если оно было изменено
+            entry_var = getattr(self, f"selected_{key}", None)
+            if entry_var and entry_var.get() != value:
+                entry_var.set(value)
+        
         self.root.after(300, lambda: self.save_params(key, value))
         # Checking to see if an update is already in progress
         if not self._update_in_progress:
@@ -521,6 +529,14 @@ class ROIAnalyzerApp:
             self.root.after(delay, lambda: self._complete_change(key, value, on_change))
 
     def _complete_change(self, key, value, on_change):
+        # Обновляем pixel_to_micron_ratio при изменении значения
+        if key == 'pixel_to_micron_ratio':
+            try:
+                normalized_value = value.replace(',', '.') if isinstance(value, str) else str(value).replace(',', '.')
+                self.pixel_to_micron_ratio = float(normalized_value)
+            except (ValueError, AttributeError):
+                pass
+        
         # Call on_change if it is passed
         if on_change:
             on_change()
@@ -1302,7 +1318,11 @@ class ROIAnalyzerApp:
         if os.path.exists(TEMP_FILE):
             try:
                 with open(TEMP_FILE, 'r') as f:
-                    return json.load(f)
+                    params = json.load(f)
+                    # Нормализуем десятичные числовые значения (запятая -> точка)
+                    if 'pixel_to_micron_ratio' in params and isinstance(params['pixel_to_micron_ratio'], str):
+                        params['pixel_to_micron_ratio'] = params['pixel_to_micron_ratio'].replace(',', '.')
+                    return params
             except (json.JSONDecodeError, KeyError):
                 os.remove(TEMP_FILE)
         return {}
