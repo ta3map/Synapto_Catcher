@@ -20,6 +20,25 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     exit 1
 fi
 
+# Проверяем авторизацию git
+if [ -z "$(git config user.name)" ] || [ -z "$(git config user.email)" ]; then
+    echo -e "${RED}❌ Git не настроен. Установите user.name и user.email${NC}"
+    exit 1
+fi
+
+# Проверяем наличие remote origin
+if ! git remote get-url origin > /dev/null 2>&1; then
+    echo -e "${RED}❌ Remote origin не настроен${NC}"
+    exit 1
+fi
+
+# Проверяем права на push
+echo -e "${BLUE}🔐 Проверка прав доступа...${NC}"
+if ! git push --dry-run origin HEAD > /dev/null 2>&1; then
+    echo -e "${RED}❌ Нет прав на push в репозиторий${NC}"
+    exit 1
+fi
+
 # Коммитим изменения если есть
 if ! git diff-index --quiet HEAD --; then
     echo -e "${BLUE}📝 Коммитим изменения...${NC}"
