@@ -151,7 +151,7 @@ class ROIAnalyzerApp:
         self.create_label_and_entry(self.canvas1,"additional channel:", default_value='4', attr_name="second_ch")
         self.create_label_and_entry(self.canvas1,"pixel_to_micron_ratio:", default_value='0.141', attr_name="pixel_to_micron_ratio")
 
-        self.pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get())
+        self.pixel_to_micron_ratio = float(self.pixel_to_micron_ratio_entry.get().replace(',', '.'))
 
         self.create_separator(self.canvas1)
         self.create_label_and_entry(self.canvas1,"Filter radius:", default_value=17, attr_name="filter_radius")
